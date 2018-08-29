@@ -1,0 +1,8 @@
+# Display options
+display:
+  name: NFive
+  game: Custom
+  map: Los Santos
+
+log:
+  level: Debug

@@ -1,0 +1,12 @@
+# MySQL database connection
+connection:
+  host: db
+  port: 3306
+  database: fivem
+  user: root
+  password: password
+  charset: utf8mb4
+  logging: false
+
+migrations:
+  automatic: true

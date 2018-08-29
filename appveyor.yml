@@ -1,0 +1,45 @@
+version: 0.1.0.{build}
+
+image: Visual Studio 2017
+configuration: Release
+platform: Any CPU
+clone_depth: 1
+
+branches:
+  only:
+  - master
+
+cache:
+- packages -> packages.config
+
+test: off
+
+assembly_info:
+  patch: true
+  file: Properties\AssemblyInfo.cs
+  assembly_version: "{version}"
+  assembly_file_version: "{version}"
+  assembly_informational_version: "{version}"
+
+environment:
+  nuget_user:
+    secure: jn6S3LW7c4LqYxO0GghvD0GssUbVNUpIlsHWe95nmNs=
+  nuget_password:
+    secure: 9Ln/XxumE0phe7UoBNN9AxgzlgTwWt4741hkVOCEADYgQ4Hn9FEaIAnv0NqlRkgs
+
+install:
+- cmd: nuget sources add -name AppVeyor -source https://ci.appveyor.com/nuget/nfive -UserName %nuget_user% -Password %nuget_password%
+
+before_build:
+- cmd: nuget restore
+
+build:
+  project: NFive.SDK.Server.sln
+  verbosity: minimal
+
+after_build:
+- cmd: 7z a nfive.zip *.dll nfive.yml __resource.lua config\
+
+artifacts:
+- path: nfive.zip
+  name: NFive
