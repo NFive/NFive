@@ -1,5 +1,6 @@
 # NFive
 [![License](https://img.shields.io/github/license/NFive/NFive.svg)](LICENSE)
+[![Build Status](https://img.shields.io/appveyor/ci/NFive/nfive.svg)](https://ci.appveyor.com/project/NFive/nfive)
 [![Release Version](https://img.shields.io/github/release/NFive/NFive/all.svg)](https://github.com/NFive/NFive/releases)
 
 Complete plugin framework for GTAV [FiveM](https://fivem.net/) servers built entirely in managed C#.
