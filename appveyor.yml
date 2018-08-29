@@ -34,7 +34,7 @@ before_build:
 - cmd: nuget restore
 
 build:
-  project: NFive.SDK.Server.sln
+  project: NFive.sln
   verbosity: minimal
 
 after_build:
