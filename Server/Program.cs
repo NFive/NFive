@@ -28,7 +28,6 @@ namespace NFive.Server
 
 		public Program()
 		{
-
 			// Set the AppDomain working directory to the current resource root
 			Environment.CurrentDirectory = FileManager.ResolveResourcePath();
 
@@ -46,7 +45,6 @@ namespace NFive.Server
 
 			// Load core controllers
 			this.controllers.Add(new DatabaseController(new Logger("Database"), events, new RpcHandler(), ConfigurationManager.Load<DatabaseConfiguration>("database")));
-			this.controllers.Add(new SessionController(new Logger("Session"), events, new RpcHandler()));
 			this.controllers.Add(new ClientController(new Logger("Client"), events, new RpcHandler()));
 
 

@@ -88,7 +88,6 @@
     <Compile Include="Configuration\FileManager.cs" />
     <Compile Include="Controllers\ClientController.cs" />
     <Compile Include="Controllers\DatabaseController.cs" />
-    <Compile Include="Controllers\SessionController.cs" />
     <Compile Include="Diagnostics\Logger.cs" />
     <Compile Include="Events\EventManager.cs" />
     <Compile Include="Migrations\201806120038097_Init.cs" />
