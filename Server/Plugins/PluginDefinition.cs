@@ -8,9 +8,9 @@ namespace NFive.Server.Plugins
 	{
 		public string Name { get; set; }
 
-		public string Version { get; set; } = "1.0.0";
+		public string Version { get; set; }
 
-		public PluginTypes Type { get; set; } = PluginTypes.Plugin;
+		public string FullName => $"{this.Name}@{this.Version}";
 
 		public string Description { get; set; }
 
@@ -20,11 +20,15 @@ namespace NFive.Server.Plugins
 
 		public string Website { get; set; }
 
-		public RepositoryDefinition Repository { get; set; } = new RepositoryDefinition();
-
 		public ComponentDefinition Server { get; set; } = new ComponentDefinition();
 
 		public ComponentDefinition Client { get; set; } = new ComponentDefinition();
+
+		public Dictionary<string, string> Dependencies { get; set; }
+
+		public List<ComponentDefinition> DependencyNodes { get; set; }
+
+		public List<RepositoryDefinition> Repositories { get; set; }
 	}
 
 	[PublicAPI]
