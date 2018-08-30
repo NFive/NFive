@@ -7,8 +7,8 @@ namespace NFive.Server.Plugins
 {
 	public static class PluginManager
 	{
-		public const string DefinitionFile = "plugin.yml";
-		public const string PluginPath = "Plugins";
+		public const string DefinitionFile = "nfive.yml";
+		public const string PluginPath = "plugins";
 		public const string ConfigurationPath = "config";
 
 		public static ServerPluginDefinition LoadDefinition(string file = DefinitionFile)
