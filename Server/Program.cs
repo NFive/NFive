@@ -9,14 +9,15 @@ using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using NFive.SDK.Server.Configuration;
 using NFive.SDK.Server.Controllers;
-using NFive.SDK.Server.Migrations;
 using NFive.Server.Configuration;
 using NFive.Server.Controllers;
 using NFive.Server.Diagnostics;
 using NFive.Server.Events;
-using NFive.Server.Plugins;
 using NFive.Server.Rpc;
 using JetBrains.Annotations;
+using NFive.SDK.Plugins;
+using NFive.SDK.Plugins.Models;
+using NFive.SDK.Server.Migrations;
 
 namespace NFive.Server
 {
@@ -31,7 +32,7 @@ namespace NFive.Server
 			// Set the AppDomain working directory to the current resource root
 			Environment.CurrentDirectory = FileManager.ResolveResourcePath();
 
-			var config = ConfigurationManager.Load<CoreConfiguration>("NFive");
+			var config = ConfigurationManager.Load<CoreConfiguration>("nfive");
 
 			ServerConfiguration.LogLevel = config.Log.Level;
 			API.SetMapName(config.Display.Map);
@@ -42,40 +43,37 @@ namespace NFive.Server
 
 			var events = new EventManager();
 
-
 			// Load core controllers
 			this.controllers.Add(new DatabaseController(new Logger("Database"), events, new RpcHandler(), ConfigurationManager.Load<DatabaseConfiguration>("database")));
 			this.controllers.Add(new ClientController(new Logger("Client"), events, new RpcHandler()));
 
-
-			// Parse the master plugin definition file
-			ServerPluginDefinition definition = PluginManager.LoadDefinition();
-
 			// Resolve dependencies
-			PluginDefinitionGraph dependencyGraph = definition.ResolveDependencies();
+			var graph = DefinitionGraph.Load("nfive.lock");
 
 			// Load plugins into the AppDomain
-			foreach (ServerPluginDefinition plugin in dependencyGraph.Definitions)
+			foreach (var plugin in graph.Definitions)
 			{
+				this.logger.Info($"Loading {plugin.FullName}");
+
 				// Load include files
-				foreach (string includeName in plugin.Definition.Server.Include)
+				foreach (string includeName in plugin.Server.Include ?? new List<string>())
 				{
-					string includeFile = Path.Combine(plugin.Location, $"{includeName}.net.dll");
+					string includeFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{includeName}.dll");
 					if (!File.Exists(includeFile)) throw new FileNotFoundException(includeFile);
 
 					AppDomain.CurrentDomain.Load(File.ReadAllBytes(includeFile));
 				}
 
 				// Load main files
-				foreach (string mainName in plugin.Definition.Server.Main)
+				foreach (string mainName in plugin.Server.Main ?? new List<string>())
 				{
-					string mainFile = Path.Combine(plugin.Location, $"{mainName}.net.dll");
+					string mainFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{mainName}.net.dll");
 					if (!File.Exists(mainFile)) throw new FileNotFoundException(mainFile);
-
+					
 					var assembly = Assembly.LoadFrom(mainFile);
 					var types = Assembly.LoadFrom(mainFile).GetTypes().Where(t => !t.IsAbstract && t.IsClass).ToList();
 
-					//logger.Debug($"{mainName}: {types.Count} {string.Join(Environment.NewLine, types)}");
+					//this.logger.Debug($"{mainName}: {types.Count} {string.Join(Environment.NewLine, types)}");
 
 					// Find migrations
 					foreach (Type migrationType in types.Where(t => t.BaseType != null && t.BaseType.IsGenericType && t.BaseType.GetGenericTypeDefinition() == typeof(MigrationConfiguration<>)))
@@ -85,8 +83,8 @@ namespace NFive.Server
 
 						if (!migrator.GetPendingMigrations().Any()) continue;
 
-						if (!ServerConfiguration.AutomaticMigrations) throw new MigrationsPendingException($"Plugin {plugin.Definition.Name}@{plugin.Definition.Version} has pending migrations but automatic migrations are disabled");
-						
+						if (!ServerConfiguration.AutomaticMigrations) throw new MigrationsPendingException($"Plugin {plugin.FullName} has pending migrations but automatic migrations are disabled");
+
 						migrator.Update();
 					}
 
@@ -95,7 +93,7 @@ namespace NFive.Server
 					{
 						List<object> constructorArgs = new List<object>
 						{
-							new Logger($"Plugin|{plugin.Definition.Name}"),
+							new Logger($"Plugin|{plugin.Name}"),
 							events,
 							new RpcHandler()
 						};
@@ -106,11 +104,11 @@ namespace NFive.Server
 							// Get controller configuration type
 							Type configurationType = controllerType.BaseType.GetGenericArguments()[0];
 
-							string configFile = Path.Combine(PluginManager.ConfigurationPath, $"{plugin.Definition.Name}.yml");
+							string configFile = Path.Combine("config", $"{plugin.Name}.yml");
 							if (!File.Exists(configFile)) throw new FileNotFoundException("Unable to find plugin configuration file", configFile);
 
 							// Load configuration
-							object configuration = ConfigurationManager.Load(plugin.Definition.Name, configurationType);
+							object configuration = ConfigurationManager.Load(plugin.Name.Project, configurationType);
 
 							constructorArgs.Add(configuration);
 						}
@@ -123,7 +121,7 @@ namespace NFive.Server
 				}
 			}
 
-			this.logger.Info($"Plugins loaded, {this.controllers.Count} controller(s) created");
+			this.logger.Info($"{graph.Definitions.Count} plugins loaded, {this.controllers.Count} controller(s) created");
 		}
 	}
 }

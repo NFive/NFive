@@ -56,7 +56,6 @@
       <HintPath>..\packages\NFive.SDK.Core.0.1.0.3\lib\net452\NFive.SDK.Core.net.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Diagnostics\Logger.cs" />
@@ -78,7 +77,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="CopyLinkedContentFiles" BeforeTargets="Build">
-    <Copy SourceFiles="..\lib\System.ComponentModel.DataAnnotations.dll" DestinationFiles="..\System.ComponentModel.DataAnnotations.dll" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
     <Copy SourceFiles="..\packages\Newtonsoft.Json.11.0.2\lib\portable-net40+sl5+win8+wp8+wpa81\Newtonsoft.Json.dll" DestinationFiles="..\Newtonsoft.Json.dll" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
   </Target>
 </Project>

@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  nfive:
+    image: joebiellik/fivem
+    volumes:
+      - ./:/srv/resources/nfive:Z
+      - ./debug/server.cfg:/srv/server.cfg
+      - ./debug/cache:/srv/cache:Z
+    ports:
+      - "30120:30120/tcp"
+      - "30120:30120/udp"
+
+  db:
+    image: mariadb
+    restart: unless-stopped
+    command: --max-allowed-packet=64M --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_520_ci
+    environment:
+     - MYSQL_ROOT_PASSWORD=password
+    volumes:
+     - ./debug/db:/var/lib/mysql:Z
+    expose:
+     - "3306"

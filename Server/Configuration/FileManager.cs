@@ -1,16 +1,15 @@
 ﻿using System;
 using System.IO;
 using CitizenFX.Core.Native;
-using NFive.Server.Plugins;
 
 namespace NFive.Server.Configuration
 {
 	public static class FileManager
 	{
-		public static string ResolveResourcePath(string searchFile = PluginManager.DefinitionFile)
+		public static string ResolveResourcePath(string searchFile = "nfive.yml")
 		{
 			var basePath = AppDomain.CurrentDomain.BaseDirectory;
-			var resourcePath = "NFive";
+			var resourcePath = "nfive";
 
 			try
 			{

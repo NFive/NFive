@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using NFive.Server.Plugins;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -15,7 +14,7 @@ namespace NFive.Server.Configuration
 				//.IgnoreUnmatchedProperties()
 				.Build();
 
-			return deserializer.Deserialize(File.ReadAllText(Path.Combine(PluginManager.ConfigurationPath, $"{name}.yml")), type);
+			return deserializer.Deserialize(File.ReadAllText(Path.Combine("config", $"{name}.yml")), type);
 		}
 
 		public static T Load<T>(string name)
