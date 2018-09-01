@@ -21,15 +21,6 @@ assembly_info:
   assembly_file_version: "{version}"
   assembly_informational_version: "{version}"
 
-environment:
-  nuget_user:
-    secure: jn6S3LW7c4LqYxO0GghvD0GssUbVNUpIlsHWe95nmNs=
-  nuget_password:
-    secure: 9Ln/XxumE0phe7UoBNN9AxgzlgTwWt4741hkVOCEADYgQ4Hn9FEaIAnv0NqlRkgs
-
-install:
-- cmd: nuget sources add -name AppVeyor -source https://ci.appveyor.com/nuget/nfive -UserName %nuget_user% -Password %nuget_password%
-
 before_build:
 - cmd: nuget restore
 
