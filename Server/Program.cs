@@ -45,7 +45,6 @@ namespace NFive.Server
 
 			// Load core controllers
 			this.controllers.Add(new DatabaseController(new Logger("Database"), events, new RpcHandler(), ConfigurationManager.Load<DatabaseConfiguration>("database")));
-			this.controllers.Add(new ClientController(new Logger("Client"), events, new RpcHandler()));
 
 			// Resolve dependencies
 			var graph = DefinitionGraph.Load("nfive.lock");
