@@ -55,7 +55,7 @@ namespace NFive.Server
 				this.logger.Info($"Loading {plugin.FullName}");
 
 				// Load include files
-				foreach (string includeName in plugin.Server.Include ?? new List<string>())
+				foreach (string includeName in plugin.Server?.Include ?? new List<string>())
 				{
 					string includeFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{includeName}.dll");
 					if (!File.Exists(includeFile)) throw new FileNotFoundException(includeFile);
@@ -69,7 +69,6 @@ namespace NFive.Server
 					string mainFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{mainName}.net.dll");
 					if (!File.Exists(mainFile)) throw new FileNotFoundException(mainFile);
 					
-					var assembly = Assembly.LoadFrom(mainFile);
 					var types = Assembly.LoadFrom(mainFile).GetTypes().Where(t => !t.IsAbstract && t.IsClass).ToList();
 
 					//this.logger.Debug($"{mainName}: {types.Count} {string.Join(Environment.NewLine, types)}");
@@ -83,6 +82,8 @@ namespace NFive.Server
 						if (!migrator.GetPendingMigrations().Any()) continue;
 
 						if (!ServerConfiguration.AutomaticMigrations) throw new MigrationsPendingException($"Plugin {plugin.FullName} has pending migrations but automatic migrations are disabled");
+
+						this.logger.Debug($"{mainName}: Running migrations {string.Join(", ", migrator.GetPendingMigrations())}");
 
 						migrator.Update();
 					}
