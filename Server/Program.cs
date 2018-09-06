@@ -64,7 +64,7 @@ namespace NFive.Server
 				}
 
 				// Load main files
-				foreach (string mainName in plugin.Server.Main ?? new List<string>())
+				foreach (string mainName in plugin.Server?.Main ?? new List<string>())
 				{
 					string mainFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{mainName}.net.dll");
 					if (!File.Exists(mainFile)) throw new FileNotFoundException(mainFile);
