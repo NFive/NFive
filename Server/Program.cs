@@ -104,7 +104,7 @@ namespace NFive.Server
 							// Get controller configuration type
 							Type configurationType = controllerType.BaseType.GetGenericArguments()[0];
 
-							string configFile = Path.Combine("config", $"{plugin.Name}.yml");
+							string configFile = Path.Combine("config", $"{plugin.Name.Project}.yml");
 							if (!File.Exists(configFile)) throw new FileNotFoundException("Unable to find plugin configuration file", configFile);
 
 							// Load configuration
