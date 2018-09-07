@@ -10,7 +10,7 @@ namespace NFive.Server.Configuration
 		public static object Load(string name, Type type)
 		{
 			Deserializer deserializer = new DeserializerBuilder()
-				.WithNamingConvention(new CamelCaseNamingConvention())
+				.WithNamingConvention(new UnderscoredNamingConvention())
 				//.IgnoreUnmatchedProperties()
 				.Build();
 
