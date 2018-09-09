@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NFive.SDK.Server.Events;
 using NFive.Server.Diagnostics;
@@ -36,6 +37,18 @@ namespace NFive.Server.Events
 		public void On<T1, T2, T3, T4>(string @event, Action<T1, T2, T3, T4> action) => InternalOn(@event, action);
 
 		public void On<T1, T2, T3, T4, T5>(string @event, Action<T1, T2, T3, T4, T5> action) => InternalOn(@event, action);
+
+		public void OnRequest<TReturn>(string @event, Func<TReturn> action) => InternalOn("request:" + @event, action);
+
+		public void OnRequest<T1, TReturn>(string @event, Func<T1, TReturn> action) => InternalOn("request:" + @event, action);
+
+		public void OnRequest<T1, T2, TReturn>(string @event, Func<T1, T2, TReturn> action) => InternalOn("request:" + @event, action);
+
+		public void OnRequest<T1, T2, T3, TReturn>(string @event, Func<T1, T2, T3, TReturn> action) => InternalOn("request:" + @event, action);
+
+		public void OnRequest<T1, T2, T3, T4, TReturn>(string @event, Func<T1, T2, T3, T4, TReturn> action) => InternalOn("request:" + @event, action);
+
+		public void OnRequest<T1, T2, T3, T4, T5, TReturn>(string @event, Func<T1, T2, T3, T4, T5, TReturn> action) => InternalOn("request:" + @event, action);
 
 
 		private void InternalRaise(string @event, params object[] args)
@@ -86,6 +99,29 @@ namespace NFive.Server.Events
 		public Task RaiseAsync<T1, T2, T3, T4, T5>(string @event, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5) => InternalRaiseAsync(@event, p1, p2, p3, p4, p5);
 
 
+		private TReturn InternalRequest<TReturn>(string @event, params object[] args)
+		{
+			@event = "request:" + @event;
+			LogCall(@event, args);
+			lock (this.subscriptions)
+			{
+				return this.subscriptions.Single(s => s.Key == @event).Value.Single().Handle<TReturn>(args);
+			}
+		}
+
+		public TReturn Request<TReturn>(string @event) => InternalRequest<TReturn>(@event);
+
+		public TReturn Request<T1, TReturn>(string @event, T1 arg) => InternalRequest<TReturn>(@event, arg);
+
+		public TReturn Request<T1, T2, TReturn>(string @event, T1 arg) => InternalRequest<TReturn>(@event, arg);
+
+		public TReturn Request<T1, T2, T3, TReturn>(string @event, T1 arg) => InternalRequest<TReturn>(@event, arg);
+
+		public TReturn Request<T1, T2, T3, T4, TReturn>(string @event, T1 arg) => InternalRequest<TReturn>(@event, arg);
+
+		public TReturn Request<T1, T2, T3, T4, T5, TReturn>(string @event, T1 arg) => InternalRequest<TReturn>(@event, arg);
+
+
 		private void LogAttach(string @event, Delegate callback)
 		{
 			this.logger.Debug($"\"{@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
@@ -113,6 +149,8 @@ namespace NFive.Server.Events
 
 				return cancel;
 			}
+
+			public TReturn Handle<TReturn>(params object[] args) => (TReturn)this.handler.DynamicInvoke(args);
 		}
 	}
 }
