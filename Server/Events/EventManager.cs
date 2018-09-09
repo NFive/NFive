@@ -1,12 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NFive.SDK.Server.Events;
+using NFive.Server.Diagnostics;
 
 namespace NFive.Server.Events
 {
 	public class EventManager : IEventManager
 	{
+		private readonly Logger logger = new Logger("Events");
 		private readonly Dictionary<string, List<Subscription>> subscriptions = new Dictionary<string, List<Subscription>>();
 
 		private void InternalOn(string @event, Delegate action)
@@ -19,6 +21,7 @@ namespace NFive.Server.Events
 				}
 
 				this.subscriptions[@event].Add(new Subscription(action));
+				LogAttach(@event, action);
 			}
 		}
 
@@ -37,6 +40,7 @@ namespace NFive.Server.Events
 
 		private void InternalRaise(string @event, params object[] args)
 		{
+			LogCall(@event, args);
 			lock (this.subscriptions)
 			{
 				if (!this.subscriptions.ContainsKey(@event)) return;
@@ -82,7 +86,17 @@ namespace NFive.Server.Events
 		public Task RaiseAsync<T1, T2, T3, T4, T5>(string @event, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5) => InternalRaiseAsync(@event, p1, p2, p3, p4, p5);
 
 
-		public class Subscription
+		private void LogAttach(string @event, Delegate callback)
+		{
+			this.logger.Debug($"\"{@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
+		}
+
+		private void LogCall(string @event, params object[] args)
+		{
+			this.logger.Debug($"Fire: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a.ToString()))}");
+		}
+
+		private class Subscription
 		{
 			private readonly Delegate handler;
 
