@@ -16,7 +16,6 @@ using NFive.Server.Events;
 using NFive.Server.Rpc;
 using JetBrains.Annotations;
 using NFive.SDK.Plugins;
-using NFive.SDK.Plugins.Models;
 using NFive.SDK.Server.Migrations;
 
 namespace NFive.Server
@@ -120,6 +119,8 @@ namespace NFive.Server
 					}
 				}
 			}
+
+			events.Raise("serverInitialized");
 
 			this.logger.Info($"{graph.Definitions.Count} plugins loaded, {this.controllers.Count} controller(s) created");
 		}
