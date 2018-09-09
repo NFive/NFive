@@ -60,14 +60,14 @@
       <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="NFive.SDK.Core.net, Version=0.1.0.6, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NFive.SDK.Core.0.1.0.6\lib\net452\NFive.SDK.Core.net.dll</HintPath>
+    <Reference Include="NFive.SDK.Core.net, Version=0.1.0.10, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NFive.SDK.Core.0.1.0.10\lib\net452\NFive.SDK.Core.net.dll</HintPath>
     </Reference>
     <Reference Include="NFive.SDK.Plugins, Version=0.1.0.3, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NFive.SDK.Plugins.0.1.0.3\lib\net452\NFive.SDK.Plugins.dll</HintPath>
     </Reference>
-    <Reference Include="NFive.SDK.Server.net, Version=0.1.0.7, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NFive.SDK.Server.0.1.0.7\lib\net452\NFive.SDK.Server.net.dll</HintPath>
+    <Reference Include="NFive.SDK.Server.net, Version=0.1.0.8, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NFive.SDK.Server.0.1.0.8\lib\net452\NFive.SDK.Server.net.dll</HintPath>
     </Reference>
     <Reference Include="SemVer, Version=1.2.0.0, Culture=neutral, PublicKeyToken=a89bb7dc6f7a145c, processorArchitecture=MSIL">
       <HintPath>..\packages\SemanticVersioning.1.2.0\lib\net45\SemVer.dll</HintPath>
@@ -86,9 +86,9 @@
     <Compile Include="Controllers\DatabaseController.cs" />
     <Compile Include="Diagnostics\Logger.cs" />
     <Compile Include="Events\EventManager.cs" />
-    <Compile Include="Migrations\201809020019078_Init.cs" />
-    <Compile Include="Migrations\201809020019078_Init.Designer.cs">
-      <DependentUpon>201809020019078_Init.cs</DependentUpon>
+    <Compile Include="Migrations\201809090203043_Init.cs" />
+    <Compile Include="Migrations\201809090203043_Init.Designer.cs">
+      <DependentUpon>201809090203043_Init.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Program.cs" />
@@ -108,8 +108,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201809020019078_Init.resx">
-      <DependentUpon>201809020019078_Init.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201809090203043_Init.resx">
+      <DependentUpon>201809090203043_Init.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
