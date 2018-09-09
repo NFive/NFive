@@ -13,7 +13,7 @@ namespace NFive.Server.Migrations
         
         string IMigrationMetadata.Id
         {
-            get { return "201809020019078_Init"; }
+            get { return "201809090203043_Init"; }
         }
         
         string IMigrationMetadata.Source

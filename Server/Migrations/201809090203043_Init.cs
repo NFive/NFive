@@ -20,7 +20,6 @@ namespace NFive.Server.Migrations
                     })
                 .PrimaryKey(t => t.Id)
                 .Index(t => t.SteamId, unique: true);
-            
         }
         
         public override void Down()
