@@ -2,7 +2,7 @@
 
 namespace NFive.Server.Configuration
 {
-	public class DatabaseConfiguration : IControllerConfiguration
+	public class DatabaseConfiguration : ControllerConfiguration
 	{
 		public DatabaseConnectionConfiguration Connection { get; set; } = new DatabaseConnectionConfiguration();
 
@@ -22,14 +22,14 @@ namespace NFive.Server.Configuration
 
 			public string Charset { get; set; } = "utf8mb4";
 
-			public bool Logging { get; set; }
+			public bool Logging { get; set; } = false;
 
 			public override string ToString() => $"Host={this.Host};Port={this.Port};Database={this.Database};User Id={this.User};Password={this.Password};CharSet={this.Charset};SSL Mode=None;Logging={this.Logging}";
 		}
 
 		public class DatabaseMigrationsConfiguration
 		{
-			public bool Automatic { get; set; }
+			public bool Automatic { get; set; } = true;
 		}
 	}
 }
