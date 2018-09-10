@@ -15,8 +15,12 @@ using NFive.Server.Diagnostics;
 using NFive.Server.Events;
 using NFive.Server.Rpc;
 using JetBrains.Annotations;
+using NFive.SDK.Core.Controllers;
 using NFive.SDK.Plugins;
 using NFive.SDK.Server.Migrations;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
+using YamlDotNet.Serialization.TypeInspectors;
 
 namespace NFive.Server
 {
@@ -31,7 +35,7 @@ namespace NFive.Server
 			// Set the AppDomain working directory to the current resource root
 			Environment.CurrentDirectory = FileManager.ResolveResourcePath();
 
-			var config = ConfigurationManager.Load<CoreConfiguration>("nfive");
+			var config = ConfigurationManager.Load<CoreConfiguration>("nfive.yml");
 
 			ServerConfiguration.LogLevel = config.Log.Level;
 			API.SetMapName(config.Display.Map);
@@ -43,7 +47,7 @@ namespace NFive.Server
 			var events = new EventManager();
 
 			// Load core controllers
-			this.controllers.Add(new DatabaseController(new Logger("Database"), events, new RpcHandler(), ConfigurationManager.Load<DatabaseConfiguration>("database")));
+			this.controllers.Add(new DatabaseController(new Logger("Database"), events, new RpcHandler(), ConfigurationManager.Load<DatabaseConfiguration>("database.yml")));
 
 			// Resolve dependencies
 			var graph = DefinitionGraph.Load("nfive.lock");
@@ -67,7 +71,7 @@ namespace NFive.Server
 				{
 					string mainFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{mainName}.net.dll");
 					if (!File.Exists(mainFile)) throw new FileNotFoundException(mainFile);
-					
+
 					var types = Assembly.LoadFrom(mainFile).GetTypes().Where(t => !t.IsAbstract && t.IsClass).ToList();
 
 					//this.logger.Debug($"{mainName}: {types.Count} {string.Join(Environment.NewLine, types)}");
@@ -103,11 +107,24 @@ namespace NFive.Server
 							// Get controller configuration type
 							Type configurationType = controllerType.BaseType.GetGenericArguments()[0];
 
-							string configFile = Path.Combine("config", $"{plugin.Name.Project}.yml");
-							if (!File.Exists(configFile)) throw new FileNotFoundException("Unable to find plugin configuration file", configFile);
+							var configurationObject = (ControllerConfiguration)Activator.CreateInstance(configurationType);
+
+							if (!File.Exists(Path.Combine("config", plugin.Name.Vendor, plugin.Name.Project, $"{configurationObject.FileName}.yml")))
+							{
+								Directory.CreateDirectory(Path.Combine("config", plugin.Name.Vendor, plugin.Name.Project));
+
+								var yml = new SerializerBuilder()
+									.WithNamingConvention(new UnderscoredNamingConvention())
+									.EmitDefaults()
+									.WithTypeInspector(i => new PluginTypeInspector(i))
+									.Build()
+									.Serialize(Activator.CreateInstance(configurationType));
+
+								File.WriteAllText(Path.Combine("config", plugin.Name.Vendor, plugin.Name.Project, $"{configurationObject.FileName}.yml"), yml);
+							}
 
 							// Load configuration
-							object configuration = ConfigurationManager.Load(plugin.Name.Project, configurationType);
+							object configuration = ConfigurationManager.Load(plugin.Name, configurationObject.FileName, configurationType);
 
 							constructorArgs.Add(configuration);
 						}
@@ -124,5 +141,20 @@ namespace NFive.Server
 
 			this.logger.Info($"{graph.Definitions.Count} plugins loaded, {this.controllers.Count} controller(s) created");
 		}
+	}
+
+	public class PluginTypeInspector : TypeInspectorSkeleton
+	{
+		private readonly ITypeInspector inspector;
+
+		public PluginTypeInspector(ITypeInspector inspector)
+		{
+			this.inspector = inspector;
+		}
+
+		public override IEnumerable<IPropertyDescriptor> GetProperties(Type type, object container) => this.inspector
+			.GetProperties(type, container)
+			.Where(p => p.CanWrite)
+			.Where(p => p.Name != "file_name");
 	}
 }

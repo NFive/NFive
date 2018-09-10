@@ -12,11 +12,11 @@ namespace NFive.Server.Configuration
 
 		public class DisplayConfiguration
 		{
-			public string Name { get; set; }
+			public string Name { get; set; } = "NFive";
 
-			public string Game { get; set; }
+			public string Game { get; set; } = "Custom";
 
-			public string Map { get; set; }
+			public string Map { get; set; } = "Los Santos";
 		}
 
 		public class LogConfiguration
