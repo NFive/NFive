@@ -2,6 +2,7 @@
 [![License](https://img.shields.io/github/license/NFive/NFive.svg)](LICENSE)
 [![Build Status](https://img.shields.io/appveyor/ci/NFive/nfive.svg)](https://ci.appveyor.com/project/NFive/nfive)
 [![Release Version](https://img.shields.io/github/release/NFive/NFive/all.svg)](https://github.com/NFive/NFive/releases)
+<a href="https://discord.gg/uNFzvHk"><img src="https://discordapp.com/api/guilds/392156382830264334/widget.png" alt="NFive's server"></a>	
 
 Complete plugin framework for GTAV [FiveM](https://fivem.net/) servers built entirely in managed C#.
 This project aims to replace existing FiveM server resources with a single managed framework to build upon.
