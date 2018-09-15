@@ -1,13 +1,17 @@
-﻿using System.Diagnostics;
-using System.Linq;
+﻿using MySql.Data.MySqlClient;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Server.Configuration;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Events;
 using NFive.SDK.Server.Rpc;
 using NFive.Server.Configuration;
+using NFive.Server.Models;
 using NFive.Server.Storage;
-using MySql.Data.MySqlClient;
+using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+using CitizenFX.Core;
 
 namespace NFive.Server.Controllers
 {
@@ -33,9 +37,36 @@ namespace NFive.Server.Controllers
 					context.Database.CreateIfNotExists();
 				}
 
-				// Prime the connection cache
-				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				context.Users.FirstOrDefault();
+				context.BootHistory.Add(new BootHistory());
+				context.SaveChanges();
+			}
+
+			Task.Factory.StartNew(UpdateBootHistory);
+		}
+
+		private async Task UpdateBootHistory()
+		{
+
+			while (true)
+			{
+				try
+				{
+					using (var context = new StorageContext())
+					using (var transaction = context.Database.BeginTransaction())
+					{
+						context.BootHistory.OrderByDescending(b => b.Created).First().LastActive = DateTime.UtcNow;
+						await context.SaveChangesAsync();
+						transaction.Commit();
+					}
+				}
+				catch (Exception ex)
+				{
+					this.Logger.Error(ex);
+				}
+				finally
+				{
+					await BaseScript.Delay(this.Configuration.BootHistoryFrequency);
+				}
 			}
 		}
 	}

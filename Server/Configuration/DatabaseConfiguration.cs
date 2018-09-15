@@ -1,4 +1,5 @@
-﻿using NFive.SDK.Core.Controllers;
+﻿using System;
+using NFive.SDK.Core.Controllers;
 
 namespace NFive.Server.Configuration
 {
@@ -7,6 +8,14 @@ namespace NFive.Server.Configuration
 		public DatabaseConnectionConfiguration Connection { get; set; } = new DatabaseConnectionConfiguration();
 
 		public DatabaseMigrationsConfiguration Migrations { get; set; } = new DatabaseMigrationsConfiguration();
+
+		private int bootHistoryFrequency = 15000;
+
+		public int BootHistoryFrequency
+		{
+			get => this.bootHistoryFrequency;
+			set => this.bootHistoryFrequency = Math.Max(value, 10000);
+		}
 
 		public class DatabaseConnectionConfiguration
 		{
