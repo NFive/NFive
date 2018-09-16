@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity.Migrations;
 using System.Data.Entity.Migrations.Infrastructure;
@@ -15,14 +15,10 @@ using NFive.Server.Diagnostics;
 using NFive.Server.Events;
 using NFive.Server.Rpc;
 using JetBrains.Annotations;
-using NFive.SDK.Core.Controllers;
 using NFive.SDK.Plugins;
 using NFive.SDK.Plugins.Configuration;
 using NFive.SDK.Plugins.Models;
 using NFive.SDK.Server.Migrations;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
-using YamlDotNet.Serialization.TypeInspectors;
 
 namespace NFive.Server
 {
@@ -30,7 +26,7 @@ namespace NFive.Server
 	public class Program : BaseScript
 	{
 		private readonly Logger logger = new Logger();
-		private readonly List<Controller> controllers = new List<Controller>();
+		private readonly Dictionary<Name, List<Controller>> controllers = new Dictionary<Name, List<Controller>>();
 
 		public Program()
 		{
@@ -48,8 +44,52 @@ namespace NFive.Server
 
 			var events = new EventManager();
 
+			// TODO: Create a dedicated RconController and move this horrible mess out of here.
+			new RpcHandler().Event("rconCommand").OnRaw(new Action<string, List<object>>(
+				(command, objArgs) =>
+				{
+					if (command.ToLowerInvariant() != "reload") return;
+					try
+					{
+						new Logger("NFive").Debug("Reload command called");
+						var args = objArgs.Select(a => new Name(a.ToString())).ToList();
+						if (args.Count == 0) args = this.controllers.Keys.ToList();
+						foreach (var pluginName in args)
+						{
+							if (!this.controllers.ContainsKey(pluginName)) continue;
+							foreach (var controller in this.controllers[pluginName])
+							{
+								var controllerType = controller.GetType();
+								if (controllerType.BaseType != null && controllerType.BaseType.IsGenericType && controllerType.BaseType.GetGenericTypeDefinition() == typeof(ConfigurableController<>))
+								{
+									controllerType.GetMethods().FirstOrDefault(m => m.DeclaringType == controllerType && m.Name == "Reload")?.Invoke(
+										controller,
+										new[]
+										{
+											ConfigurationManager.InitializeConfig(pluginName, controllerType.BaseType.GetGenericArguments()[0])
+										}
+									);
+								}
+								else
+								{
+									controller.Reload();
+								}
+							}
+						}
+					}
+					catch (Exception ex)
+					{
+
+					}
+					finally
+					{
+						Function.Call(Hash.CANCEL_EVENT);
+					}
+				}));
+
 			// Load core controllers
-			this.controllers.Add(new DatabaseController(new Logger("Database"), events, new RpcHandler(), ConfigurationManager.Load<DatabaseConfiguration>("database.yml")));
+			var dbController = new DatabaseController(new Logger("Database"), events, new RpcHandler(), ConfigurationManager.Load<DatabaseConfiguration>("database.yml"));
+			this.controllers.Add(new Name("NFive/Server"), new List<Controller> { dbController });
 
 			// Resolve dependencies
 			var graph = DefinitionGraph.Load("nfive.lock");
@@ -108,12 +148,13 @@ namespace NFive.Server
 						{
 							// Initialize the controller configuration
 							constructorArgs.Add(ConfigurationManager.InitializeConfig(plugin.Name, controllerType.BaseType.GetGenericArguments()[0]));
-							}
+						}
 
 						// Construct controller instance
 						Controller controller = (Controller)Activator.CreateInstance(controllerType, constructorArgs.ToArray());
 
-						this.controllers.Add(controller);
+						if (!this.controllers.ContainsKey(plugin.Name)) this.controllers.Add(plugin.Name, new List<Controller>());
+						this.controllers[plugin.Name].Add(controller);
 					}
 				}
 			}
