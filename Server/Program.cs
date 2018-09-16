@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity.Migrations;
 using System.Data.Entity.Migrations.Infrastructure;
@@ -17,6 +17,8 @@ using NFive.Server.Rpc;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Controllers;
 using NFive.SDK.Plugins;
+using NFive.SDK.Plugins.Configuration;
+using NFive.SDK.Plugins.Models;
 using NFive.SDK.Server.Migrations;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -104,30 +106,9 @@ namespace NFive.Server
 						// Check if controller is configurable
 						if (controllerType.BaseType != null && controllerType.BaseType.IsGenericType && controllerType.BaseType.GetGenericTypeDefinition() == typeof(ConfigurableController<>))
 						{
-							// Get controller configuration type
-							Type configurationType = controllerType.BaseType.GetGenericArguments()[0];
-
-							var configurationObject = (ControllerConfiguration)Activator.CreateInstance(configurationType);
-
-							if (!File.Exists(Path.Combine("config", plugin.Name.Vendor, plugin.Name.Project, $"{configurationObject.FileName}.yml")))
-							{
-								Directory.CreateDirectory(Path.Combine("config", plugin.Name.Vendor, plugin.Name.Project));
-
-								var yml = new SerializerBuilder()
-									.WithNamingConvention(new UnderscoredNamingConvention())
-									.EmitDefaults()
-									.WithTypeInspector(i => new PluginTypeInspector(i))
-									.Build()
-									.Serialize(Activator.CreateInstance(configurationType));
-
-								File.WriteAllText(Path.Combine("config", plugin.Name.Vendor, plugin.Name.Project, $"{configurationObject.FileName}.yml"), yml);
+							// Initialize the controller configuration
+							constructorArgs.Add(ConfigurationManager.InitializeConfig(plugin.Name, controllerType.BaseType.GetGenericArguments()[0]));
 							}
-
-							// Load configuration
-							object configuration = ConfigurationManager.Load(plugin.Name, configurationObject.FileName, configurationType);
-
-							constructorArgs.Add(configuration);
-						}
 
 						// Construct controller instance
 						Controller controller = (Controller)Activator.CreateInstance(controllerType, constructorArgs.ToArray());
@@ -141,20 +122,5 @@ namespace NFive.Server
 
 			this.logger.Info($"{graph.Definitions.Count} plugins loaded, {this.controllers.Count} controller(s) created");
 		}
-	}
-
-	public class PluginTypeInspector : TypeInspectorSkeleton
-	{
-		private readonly ITypeInspector inspector;
-
-		public PluginTypeInspector(ITypeInspector inspector)
-		{
-			this.inspector = inspector;
-		}
-
-		public override IEnumerable<IPropertyDescriptor> GetProperties(Type type, object container) => this.inspector
-			.GetProperties(type, container)
-			.Where(p => p.CanWrite)
-			.Where(p => p.Name != "file_name");
 	}
 }
