@@ -8,8 +8,10 @@ using NFive.Server.Configuration;
 using NFive.Server.Models;
 using NFive.Server.Storage;
 using System;
+using System.Data.Entity.Migrations;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CitizenFX.Core;
 
@@ -17,6 +19,9 @@ namespace NFive.Server.Controllers
 {
 	public class DatabaseController : ConfigurableController<DatabaseConfiguration>
 	{
+		private BootHistory lastBoot;
+		private readonly BootHistory currentBoot;
+
 		public DatabaseController(ILogger logger, IEventManager events, IRpcHandler rpc, DatabaseConfiguration configuration) : base(logger, events, rpc, configuration)
 		{
 			// Set global database options
@@ -37,11 +42,18 @@ namespace NFive.Server.Controllers
 					context.Database.CreateIfNotExists();
 				}
 
-				context.BootHistory.Add(new BootHistory());
+				this.lastBoot = context.BootHistory.OrderByDescending(b => b.Created).FirstOrDefault() ?? new BootHistory();
+
+				this.currentBoot = new BootHistory();
+				context.BootHistory.Add(this.currentBoot);
 				context.SaveChanges();
 			}
 
 			Task.Factory.StartNew(UpdateBootHistory);
+
+			this.Events.OnRequest("serverBootTime", () => this.currentBoot.Created);
+			this.Events.OnRequest("lastServerBootTime", () => this.lastBoot.Created);
+			this.Events.OnRequest("lastServerActiveTime", () => this.lastBoot.LastActive);
 		}
 
 		private async Task UpdateBootHistory()
@@ -54,7 +66,8 @@ namespace NFive.Server.Controllers
 					using (var context = new StorageContext())
 					using (var transaction = context.Database.BeginTransaction())
 					{
-						context.BootHistory.OrderByDescending(b => b.Created).First().LastActive = DateTime.UtcNow;
+						this.currentBoot.LastActive = DateTime.UtcNow;
+						context.BootHistory.AddOrUpdate(this.currentBoot);
 						await context.SaveChangesAsync();
 						transaction.Commit();
 					}
