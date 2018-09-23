@@ -19,6 +19,7 @@ namespace NFive.Server.Models
 		{
 			this.Id = GuidGenerator.GenerateTimeBasedGuid();
 			this.Created = DateTime.UtcNow;
+			this.LastActive = DateTime.UtcNow;
 		}
 	}
 }
