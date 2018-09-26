@@ -1,4 +1,5 @@
 ﻿using CitizenFX.Core;
+using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Rpc;
 using NFive.SDK.Server.Rpc;
 using NFive.Server.Diagnostics;
@@ -7,23 +8,19 @@ namespace NFive.Server.Rpc
 {
 	public static class RpcManager
 	{
-		private static readonly Logger Logger;
-		private static readonly Serializer Serializer;
-		private static readonly RpcTrigger Trigger;
+		private static Logger logger;
+		private static Serializer serializer;
+		private static RpcTrigger trigger;
 		private static ClientHandler handler;
 
-		static RpcManager()
+		public static void Configure(LogLevel level, EventHandlerDictionary events)
 		{
-			Logger = new Logger("RPC");
-			Serializer = new Serializer();
-			Trigger = new RpcTrigger(Logger, Serializer);
-		}
-
-		public static void Configure(EventHandlerDictionary events)
-		{
+			logger = new Logger(level, "RPC");
+			serializer = new Serializer();
+			trigger = new RpcTrigger(logger, serializer);
 			handler = new ClientHandler(events);
 		}
 
-		public static IRpc Event(string @event) => new Rpc(@event, Logger, handler, Trigger, Serializer);
+		public static IRpc Event(string @event) => new Rpc(@event, logger, handler, trigger, serializer);
 	}
 }

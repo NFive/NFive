@@ -4,5 +4,16 @@ display:
   game: Custom
   map: Los Santos
 
+# Set logging output level per component
+# Levels: Debug|Info|Warn|Error
 log:
-  level: Debug
+  core: Debug
+  rpc: Debug
+  events: Debug
+
+  plugins:
+    # Default log level for plugins unless overriden
+    default: Debug
+
+    # Set indervidual plguin log level
+    NFive/plugin-example: Error

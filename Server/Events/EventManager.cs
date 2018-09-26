@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Server.Events;
 using NFive.Server.Diagnostics;
 
@@ -9,8 +10,13 @@ namespace NFive.Server.Events
 {
 	public class EventManager : IEventManager
 	{
-		private readonly Logger logger = new Logger("Events");
+		private readonly Logger logger;
 		private readonly Dictionary<string, List<Subscription>> subscriptions = new Dictionary<string, List<Subscription>>();
+
+		public EventManager(LogLevel level)
+		{
+			this.logger = new Logger(level, "Events");
+		}
 
 		private void InternalOn(string @event, Delegate action)
 		{

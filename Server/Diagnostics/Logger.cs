@@ -1,15 +1,17 @@
 ﻿using System;
 using NFive.SDK.Core.Diagnostics;
-using NFive.SDK.Server.Configuration;
 
 namespace NFive.Server.Diagnostics
 {
 	public class Logger : ILogger
 	{
+		public LogLevel Level { get; }
+
 		public string Prefix { get; }
 
-		public Logger(string prefix = "")
+		public Logger(LogLevel minLevel = LogLevel.Info, string prefix = "")
 		{
+			this.Level = minLevel;
 			this.Prefix = prefix;
 		}
 
@@ -35,7 +37,7 @@ namespace NFive.Server.Diagnostics
 
 		public void Log(string message, LogLevel level)
 		{
-			if (ServerConfiguration.LogLevel > level) return;
+			if (this.Level > level) return;
 
 			var output = $"{DateTime.Now:s} [{level}]";
 

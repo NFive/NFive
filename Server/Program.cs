@@ -1,31 +1,31 @@
-﻿using System;
+﻿using CitizenFX.Core;
+using CitizenFX.Core.Native;
+using JetBrains.Annotations;
+using NFive.SDK.Core.Diagnostics;
+using NFive.SDK.Plugins;
+using NFive.SDK.Plugins.Configuration;
+using NFive.SDK.Plugins.Models;
+using NFive.SDK.Server.Configuration;
+using NFive.SDK.Server.Controllers;
+using NFive.SDK.Server.Migrations;
+using NFive.Server.Configuration;
+using NFive.Server.Controllers;
+using NFive.Server.Diagnostics;
+using NFive.Server.Events;
+using NFive.Server.Rpc;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity.Migrations;
 using System.Data.Entity.Migrations.Infrastructure;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using CitizenFX.Core;
-using CitizenFX.Core.Native;
-using NFive.SDK.Server.Configuration;
-using NFive.SDK.Server.Controllers;
-using NFive.Server.Configuration;
-using NFive.Server.Controllers;
-using NFive.Server.Diagnostics;
-using NFive.Server.Events;
-using NFive.Server.Rpc;
-using JetBrains.Annotations;
-using NFive.SDK.Plugins;
-using NFive.SDK.Plugins.Configuration;
-using NFive.SDK.Plugins.Models;
-using NFive.SDK.Server.Migrations;
 
 namespace NFive.Server
 {
 	[UsedImplicitly]
 	public class Program : BaseScript
 	{
-		private readonly Logger logger = new Logger();
 		private readonly Dictionary<Name, List<Controller>> controllers = new Dictionary<Name, List<Controller>>();
 
 		public Program()
@@ -35,14 +35,16 @@ namespace NFive.Server
 
 			var config = ConfigurationManager.Load<CoreConfiguration>("nfive.yml");
 
-			ServerConfiguration.LogLevel = config.Log.Level;
+			Logger logger = new Logger(config.Log.Core);
+
+			//ServerConfiguration.LogLevel = config.Log.Level;
+			API.SetGameType(config.Display.Game);
 			API.SetMapName(config.Display.Map);
-			API.SetGameType(config.Display.Map);
 
 			// Setup RPC handlers
-			RpcManager.Configure(this.EventHandlers);
+			RpcManager.Configure(config.Log.Rpc, this.EventHandlers);
 
-			var events = new EventManager();
+			var events = new EventManager(config.Log.Events);
 
 			// TODO: Create a dedicated RconController and move this horrible mess out of here.
 			new RpcHandler().Event("rconCommand").OnRaw(new Action<string, List<object>>(
@@ -51,7 +53,7 @@ namespace NFive.Server
 					if (command.ToLowerInvariant() != "reload") return;
 					try
 					{
-						new Logger("NFive").Debug("Reload command called");
+						new Logger(config.Log.Core, "NFive").Debug("Reload command called");
 						var args = objArgs.Select(a => new Name(a.ToString())).ToList();
 						if (args.Count == 0) args = this.controllers.Keys.ToList();
 						foreach (var pluginName in args)
@@ -88,16 +90,18 @@ namespace NFive.Server
 				}));
 
 			// Load core controllers
-			var dbController = new DatabaseController(new Logger("Database"), events, new RpcHandler(), ConfigurationManager.Load<DatabaseConfiguration>("database.yml"));
+			var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), events, new RpcHandler(), ConfigurationManager.Load<DatabaseConfiguration>("database.yml"));
 			this.controllers.Add(new Name("NFive/Server"), new List<Controller> { dbController });
 
 			// Resolve dependencies
 			var graph = DefinitionGraph.Load("nfive.lock");
 
+			var pluginDefaultLogLevel = config.Log.Plugins.ContainsKey("default") ? config.Log.Plugins["default"] : LogLevel.Info;
+
 			// Load plugins into the AppDomain
 			foreach (var plugin in graph.Definitions)
 			{
-				this.logger.Info($"Loading {plugin.FullName}");
+				logger.Info($"Loading {plugin.FullName}");
 
 				// Load include files
 				foreach (string includeName in plugin.Server?.Include ?? new List<string>())
@@ -116,7 +120,7 @@ namespace NFive.Server
 
 					var types = Assembly.LoadFrom(mainFile).GetTypes().Where(t => !t.IsAbstract && t.IsClass).ToList();
 
-					//this.logger.Debug($"{mainName}: {types.Count} {string.Join(Environment.NewLine, types)}");
+					//logger.Debug($"{mainName}: {types.Count} {string.Join(Environment.NewLine, types)}");
 
 					// Find migrations
 					foreach (Type migrationType in types.Where(t => t.BaseType != null && t.BaseType.IsGenericType && t.BaseType.GetGenericTypeDefinition() == typeof(MigrationConfiguration<>)))
@@ -128,7 +132,7 @@ namespace NFive.Server
 
 						if (!ServerConfiguration.AutomaticMigrations) throw new MigrationsPendingException($"Plugin {plugin.FullName} has pending migrations but automatic migrations are disabled");
 
-						this.logger.Debug($"{mainName}: Running migrations {string.Join(", ", migrator.GetPendingMigrations())}");
+						logger.Debug($"{mainName}: Running migrations {string.Join(", ", migrator.GetPendingMigrations())}");
 
 						migrator.Update();
 					}
@@ -136,9 +140,11 @@ namespace NFive.Server
 					// Find controllers
 					foreach (Type controllerType in types.Where(t => t.IsSubclassOf(typeof(Controller)) || t.IsSubclassOf(typeof(ConfigurableController<>))))
 					{
+						var logLevel = config.Log.Plugins.ContainsKey(plugin.Name) ? config.Log.Plugins[plugin.Name] : pluginDefaultLogLevel;
+
 						List<object> constructorArgs = new List<object>
 						{
-							new Logger($"Plugin|{plugin.Name}"),
+							new Logger(logLevel, $"Plugin|{plugin.Name}"),
 							events,
 							new RpcHandler()
 						};
@@ -161,7 +167,7 @@ namespace NFive.Server
 
 			events.Raise("serverInitialized");
 
-			this.logger.Info($"{graph.Definitions.Count} plugins loaded, {this.controllers.Count} controller(s) created");
+			logger.Info($"{graph.Definitions.Count} plugins loaded, {this.controllers.Count} controller(s) created");
 		}
 	}
 }
