@@ -29,7 +29,7 @@ build:
   verbosity: minimal
 
 after_build:
-- cmd: 7z a nfive.zip *.dll nfive.yml nfive.lock __resource.lua config\
+- cmd: 7z a nfive.zip *.dll nfive.yml nfive.lock __resource.lua index.html config\
 
 artifacts:
 - path: nfive.zip
