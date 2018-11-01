@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	<head>
+		<meta charset="utf-8">
+		<title>NFive</title>
+
+		<style type="text/css">
+			body {
+				margin: 0px;
+				padding: 0px;
+				background-color: transparent;
+			}
+
+			iframe {
+				position: absolute;
+				left: 0px;
+				right: 0px;
+				top: 0px;
+				bottom: 0px;
+				border: 0px;
+				width: 100%;
+				height: 100%;
+			}
+		</style>
+
+		<script type="module">
+			import * as EventEmitter from 'https://unpkg.com/eventemitter3@latest/umd/eventemitter3.min.js';
+
+			class NFive extends EventEmitter3 {
+				constructor(name, frame) {
+					super();
+
+					this.name = name;
+					this.frame = frame;
+				}
+
+				get pluginName() {
+					return this.name;
+				}
+
+				show() {
+					this.frame.style.visibility = 'visible';
+				}
+
+				hide() {
+					this.frame.style.visibility = 'hidden';
+				}
+
+				async send(event, data = {}) {
+					return await fetch('http://nfive/' + this.name + '/' + event, {
+						method: 'post',
+						headers: {
+							'Content-type': 'application/json; charset=UTF-8'
+						},
+						body: JSON.stringify(data)
+					});
+				}
+			}
+
+			const frames = [];
+
+			function load(plugin, url) {
+				const frame = document.createElement('iframe');
+				frame.style.visibility = 'hidden';
+				frame.allow = 'microphone *;';
+				frame.src = url;
+
+				document.body.appendChild(frame);
+
+				frame.contentWindow.nfive = new NFive(plugin, frame);
+
+				frames[plugin] = frame;
+			};
+
+			window.addEventListener('message', e => {
+				if (e.data === undefined) return;
+				if (e.data.event === undefined) return;
+
+				const event = e.data.event;
+				const plugin = e.data.plugin || null;
+				const data = e.data.data || null;
+
+				console.log('[NUI RECV]: ' + plugin + ' - ' + event);
+
+				if (event == 'load-overlay') {
+					load(plugin, 'plugins/' + plugin + '/Overlays/' + data.file);
+					return;
+				}
+
+				for (let frame in frames) {
+					if (frame != plugin) continue;
+
+					if (event == 'destroy-overlay') {
+						document.body.removeChild(frames[frame]);
+						continue;
+					}
+
+					if (event == 'show') {
+						frames[frame].contentWindow.nfive.show();
+						continue;
+					}
+
+					if (event == 'hide') {
+						frames[frame].contentWindow.nfive.hide();
+						continue;
+					}
+
+					console.log('Sending ' + event + ' to ' + frame);
+
+					frames[frame].contentWindow.nfive.emit(event, data);
+				}
+			});
+		</script>
+	</head>
+
+	<body></body>
+</html>

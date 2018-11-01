@@ -18,4 +18,7 @@ files {
 	'System.ComponentModel.DataAnnotations.dll',
 	'NFive.SDK.Core.net.dll',
 	'NFive.SDK.Client.net.dll',
+	'index.html',
 }
+
+ui_page 'index.html'

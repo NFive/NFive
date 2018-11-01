@@ -2,9 +2,6 @@
 using CitizenFX.Core.Native;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
-using NFive.SDK.Plugins;
-using NFive.SDK.Plugins.Configuration;
-using NFive.SDK.Plugins.Models;
 using NFive.SDK.Server.Configuration;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Migrations;
@@ -20,6 +17,9 @@ using System.Data.Entity.Migrations.Infrastructure;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using NFive.SDK.Core.Plugins;
+using NFive.SDK.Plugins;
+using NFive.SDK.Plugins.Configuration;
 
 namespace NFive.Server
 {
@@ -79,9 +79,9 @@ namespace NFive.Server
 							}
 						}
 					}
-					catch (Exception ex)
+					catch (Exception)
 					{
-
+						// TODO
 					}
 					finally
 					{
@@ -94,12 +94,12 @@ namespace NFive.Server
 			this.controllers.Add(new Name("NFive/Server"), new List<Controller> { dbController });
 
 			// Resolve dependencies
-			var graph = DefinitionGraph.Load("nfive.lock");
+			var graph = DefinitionGraph.Load();
 
 			var pluginDefaultLogLevel = config.Log.Plugins.ContainsKey("default") ? config.Log.Plugins["default"] : LogLevel.Info;
 
 			// Load plugins into the AppDomain
-			foreach (var plugin in graph.Definitions)
+			foreach (var plugin in graph.Plugins)
 			{
 				logger.Info($"Loading {plugin.FullName}");
 
@@ -165,9 +165,11 @@ namespace NFive.Server
 				}
 			}
 
+			new RpcHandler().Event("clientPlugins").On(e => e.Reply(graph.Plugins));
+
 			events.Raise("serverInitialized");
 
-			logger.Info($"{graph.Definitions.Count} plugins loaded, {this.controllers.Count} controller(s) created");
+			logger.Info($"{graph.Plugins.Count} plugins loaded, {this.controllers.Count} controller(s) created");
 		}
 	}
 }
