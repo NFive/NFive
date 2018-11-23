@@ -106,7 +106,7 @@ namespace NFive.Server
 				// Load include files
 				foreach (string includeName in plugin.Server?.Include ?? new List<string>())
 				{
-					string includeFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{includeName}.dll");
+					string includeFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{includeName}.net.dll");
 					if (!File.Exists(includeFile)) throw new FileNotFoundException(includeFile);
 
 					AppDomain.CurrentDomain.Load(File.ReadAllBytes(includeFile));
