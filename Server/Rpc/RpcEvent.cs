@@ -28,7 +28,7 @@ namespace NFive.Server.Rpc
 					context.Configuration.ProxyCreationEnabled = false;
 					context.Configuration.LazyLoadingEnabled = false;
 
-					return context.Users.Single(u => u.SteamId == this.Client.SteamId);
+					return context.Users.Single(u => u.License == this.Client.License);
 				}
 			});
 		}
