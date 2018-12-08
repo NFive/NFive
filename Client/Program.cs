@@ -37,8 +37,8 @@ namespace NFive.Client
 			var rpc = new RpcHandler();
 			var nui = new NuiManager(this.EventHandlers);
 
-			var user = await rpc.Event("clientInitialize").Request<User>("1.0.0");
-			var plugins = await rpc.Event("clientPlugins").Request<List<Plugin>>();
+			var user = await rpc.Event(SDK.Core.Rpc.RpcEvents.ClientInitialize).Request<User>("1.0.0");
+			var plugins = await rpc.Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).Request<List<Plugin>>();
 
 			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
 			{
@@ -74,7 +74,7 @@ namespace NFive.Client
 
 			this.logger.Info("Plugins started");
 
-			rpc.Event("clientInitialized").Trigger();
+			rpc.Event(SDK.Core.Rpc.RpcEvents.ClientInitialized).Trigger();
 		}
 	}
 }
