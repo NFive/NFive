@@ -50,9 +50,9 @@ namespace NFive.Server.Controllers
 
 			Task.Factory.StartNew(UpdateBootHistory);
 
-			this.Events.OnRequest("serverBootTime", () => this.currentBoot.Created);
-			this.Events.OnRequest("lastServerBootTime", () => this.lastBoot.Created);
-			this.Events.OnRequest("lastServerActiveTime", () => this.lastBoot.LastActive);
+			this.Events.OnRequest(BootEvents.GetTime, () => this.currentBoot.Created);
+			this.Events.OnRequest(BootEvents.GetLastTime, () => this.lastBoot.Created);
+			this.Events.OnRequest(BootEvents.GetLastActiveTime, () => this.lastBoot.LastActive);
 		}
 
 		private async Task UpdateBootHistory()

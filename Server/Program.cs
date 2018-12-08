@@ -144,7 +144,7 @@ namespace NFive.Server
 
 						List<object> constructorArgs = new List<object>
 						{
-							new Logger(logLevel, $"Plugin|{plugin.Name}"),
+							new Logger(logLevel, plugin.Name),
 							events,
 							new RpcHandler()
 						};
@@ -167,7 +167,7 @@ namespace NFive.Server
 
 			new RpcHandler().Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).On(e => e.Reply(graph.Plugins));
 
-			events.Raise(SDK.Core.Rpc.RpcEvents.ServerInitialized);
+			events.Raise(SDK.Server.Events.ServerEvents.ServerInitialized);
 
 			logger.Info($"{graph.Plugins.Count} plugins loaded, {this.controllers.Count} controller(s) created");
 		}
