@@ -165,9 +165,9 @@ namespace NFive.Server
 				}
 			}
 
-			new RpcHandler().Event("clientPlugins").On(e => e.Reply(graph.Plugins));
+			new RpcHandler().Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).On(e => e.Reply(graph.Plugins));
 
-			events.Raise("serverInitialized");
+			events.Raise(SDK.Core.Rpc.RpcEvents.ServerInitialized);
 
 			logger.Info($"{graph.Plugins.Count} plugins loaded, {this.controllers.Count} controller(s) created");
 		}

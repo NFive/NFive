@@ -52,8 +52,8 @@
     <Reference Include="NFive.SDK.Client.net, Version=0.1.0.13, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NFive.SDK.Client.0.1.0.13\lib\net452\NFive.SDK.Client.net.dll</HintPath>
     </Reference>
-    <Reference Include="NFive.SDK.Core.net, Version=0.1.0.15, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NFive.SDK.Core.0.1.0.15\lib\net452\NFive.SDK.Core.net.dll</HintPath>
+    <Reference Include="NFive.SDK.Core.net, Version=0.1.0.16, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NFive.SDK.Core.0.1.0.16\lib\net452\NFive.SDK.Core.net.dll</HintPath>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>
