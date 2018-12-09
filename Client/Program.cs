@@ -22,7 +22,7 @@ namespace NFive.Client
 		private readonly List<Service> services = new List<Service>();
 
 		/// <summary>
-		/// Primary client entrypoint.
+		/// Primary client entry point.
 		/// Initializes a new instance of the <see cref="Program"/> class.
 		/// </summary>
 		public Program() => Startup();

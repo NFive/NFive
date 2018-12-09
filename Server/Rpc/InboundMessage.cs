@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace NFive.Server.Rpc
 {
+	[PublicAPI]
 	public class InboundMessage
 	{
 		public int Source { get; set; }

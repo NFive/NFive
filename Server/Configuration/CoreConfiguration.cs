@@ -11,6 +11,7 @@ namespace NFive.Server.Configuration
 
 		public LogConfiguration Log { get; set; } = new LogConfiguration();
 
+		[PublicAPI]
 		public class DisplayConfiguration
 		{
 			public string Name { get; set; } = "NFive";

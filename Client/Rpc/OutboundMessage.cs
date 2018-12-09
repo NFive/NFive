@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using CitizenFX.Core;
+using JetBrains.Annotations;
 
 namespace NFive.Client.Rpc
 {
+	[PublicAPI]
 	public class OutboundMessage
 	{
 		public int Source { get; set; } = Game.Player.ServerId;

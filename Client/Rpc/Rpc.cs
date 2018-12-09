@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using NFive.Client.Diagnostics;
 using NFive.SDK.Client.Rpc;
 using NFive.SDK.Core.Rpc;
 
 namespace NFive.Client.Rpc
 {
+	[PublicAPI]
 	public class Rpc : IRpc
 	{
 		private readonly string @event;

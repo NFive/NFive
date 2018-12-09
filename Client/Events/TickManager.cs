@@ -7,12 +7,12 @@ namespace NFive.Client.Events
 	public class TickManager : ITickManager
 	{
 		private readonly Action<Func<Task>> attachCallback;
-		private readonly Action<Func<Task>> deachCallback;
+		private readonly Action<Func<Task>> detachCallback;
 
-		public TickManager(Action<Func<Task>> attachCallback, Action<Func<Task>> deachCallback)
+		public TickManager(Action<Func<Task>> attachCallback, Action<Func<Task>> detachCallback)
 		{
 			this.attachCallback = attachCallback;
-			this.deachCallback = deachCallback;
+			this.detachCallback = detachCallback;
 		}
 
 		public void Attach(Func<Task> callback)
@@ -22,7 +22,7 @@ namespace NFive.Client.Events
 
 		public void Detach(Func<Task> callback)
 		{
-			this.deachCallback(callback);
+			this.detachCallback(callback);
 		}
 	}
 }

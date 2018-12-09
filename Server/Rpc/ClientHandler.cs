@@ -1,8 +1,10 @@
 ﻿using System;
 using CitizenFX.Core;
+using JetBrains.Annotations;
 
 namespace NFive.Server.Rpc
 {
+	[PublicAPI]
 	public class ClientHandler
 	{
 		private readonly EventHandlerDictionary events;
