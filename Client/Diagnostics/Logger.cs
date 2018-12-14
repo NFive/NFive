@@ -13,6 +13,11 @@ namespace NFive.Client.Diagnostics
 			this.Prefix = prefix;
 		}
 
+		public void Trace(string message)
+		{
+			Log(message, LogLevel.Trace);
+		}
+
 		public void Debug(string message)
 		{
 			Log(message, LogLevel.Debug);
@@ -31,6 +36,11 @@ namespace NFive.Client.Diagnostics
 		public void Error(Exception exception)
 		{
 			Log($"ERROR: {exception.Message}", LogLevel.Error);
+		}
+
+		public void Error(Exception exception, string message)
+		{
+			Log($"{message}: {exception.Message}", LogLevel.Error);
 		}
 
 		public void Log(string message, LogLevel level)
