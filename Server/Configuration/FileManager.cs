@@ -13,7 +13,7 @@ namespace NFive.Server.Configuration
 
 			try
 			{
-				resourcePath = API.GetCurrentResourceName();
+				resourcePath = API.GetCurrentResourceName(); // TODO: https://runtime.fivem.net/doc/natives/#_0x76A9EE1F
 			}
 			catch (Exception)
 			{

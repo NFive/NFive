@@ -92,7 +92,7 @@ namespace NFive.Client.Events
 
 			public bool Handle(params object[] args)
 			{
-				bool cancel = false;
+				var cancel = false;
 
 				this.handler.DynamicInvoke(args);
 
