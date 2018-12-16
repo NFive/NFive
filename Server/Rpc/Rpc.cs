@@ -111,8 +111,10 @@ namespace NFive.Server.Rpc
 		{
 			this.handler.Attach(this.@event, new Action<string>(json =>
 			{
-				InboundMessage message = this.serializer.Deserialize<InboundMessage>(json);
+				var message = this.serializer.Deserialize<InboundMessage>(json);
 				message.Received = DateTime.UtcNow;
+
+				this.logger.Trace($"Received {message.Event} from {message.Source} with {message.Payloads.Count} payloads(s)");
 
 				var args = new List<object>
 				{
@@ -127,7 +129,7 @@ namespace NFive.Server.Rpc
 
 		private void LogCallback(Delegate callback)
 		{
-			this.logger.Debug($"\"{this.@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
+			this.logger.Trace($"\"{this.@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 		}
 	}
 }
