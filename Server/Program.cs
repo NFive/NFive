@@ -2,6 +2,9 @@
 using CitizenFX.Core.Native;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
+using NFive.SDK.Core.Plugins;
+using NFive.SDK.Plugins;
+using NFive.SDK.Plugins.Configuration;
 using NFive.SDK.Server.Configuration;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Migrations;
@@ -17,9 +20,6 @@ using System.Data.Entity.Migrations.Infrastructure;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using NFive.SDK.Core.Plugins;
-using NFive.SDK.Plugins;
-using NFive.SDK.Plugins.Configuration;
 
 namespace NFive.Server
 {
@@ -35,7 +35,7 @@ namespace NFive.Server
 
 			var config = ConfigurationManager.Load<CoreConfiguration>("nfive.yml");
 
-			Logger logger = new Logger(config.Log.Core);
+			var logger = new Logger(config.Log.Core);
 
 			//ServerConfiguration.LogLevel = config.Log.Level;
 			API.SetGameType(config.Display.Game);
@@ -46,52 +46,11 @@ namespace NFive.Server
 
 			var events = new EventManager(config.Log.Events);
 
-			// TODO: Create a dedicated RconController and move this horrible mess out of here.
-			new RpcHandler().Event("rconCommand").OnRaw(new Action<string, List<object>>(
-				(command, objArgs) =>
-				{
-					if (command.ToLowerInvariant() != "reload") return;
-					try
-					{
-						new Logger(config.Log.Core, "NFive").Debug("Reload command called");
-						var args = objArgs.Select(a => new Name(a.ToString())).ToList();
-						if (args.Count == 0) args = this.controllers.Keys.ToList();
-						foreach (var pluginName in args)
-						{
-							if (!this.controllers.ContainsKey(pluginName)) continue;
-							foreach (var controller in this.controllers[pluginName])
-							{
-								var controllerType = controller.GetType();
-								if (controllerType.BaseType != null && controllerType.BaseType.IsGenericType && controllerType.BaseType.GetGenericTypeDefinition() == typeof(ConfigurableController<>))
-								{
-									controllerType.GetMethods().FirstOrDefault(m => m.DeclaringType == controllerType && m.Name == "Reload")?.Invoke(
-										controller,
-										new[]
-										{
-											ConfigurationManager.InitializeConfig(pluginName, controllerType.BaseType.GetGenericArguments()[0])
-										}
-									);
-								}
-								else
-								{
-									controller.Reload();
-								}
-							}
-						}
-					}
-					catch (Exception)
-					{
-						// TODO
-					}
-					finally
-					{
-						Function.Call(Hash.CANCEL_EVENT);
-					}
-				}));
-
 			// Load core controllers
+			this.controllers.Add(new Name("NFive/Server"), new List<Controller>());
+
 			var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), events, new RpcHandler(), ConfigurationManager.Load<DatabaseConfiguration>("database.yml"));
-			this.controllers.Add(new Name("NFive/Server"), new List<Controller> { dbController });
+			this.controllers[new Name("NFive/Server")].Add(dbController);
 
 			// Resolve dependencies
 			var graph = DefinitionGraph.Load();
@@ -104,18 +63,18 @@ namespace NFive.Server
 				logger.Info($"Loading {plugin.FullName}");
 
 				// Load include files
-				foreach (string includeName in plugin.Server?.Include ?? new List<string>())
+				foreach (var includeName in plugin.Server?.Include ?? new List<string>())
 				{
-					string includeFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{includeName}.net.dll");
+					var includeFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{includeName}.net.dll");
 					if (!File.Exists(includeFile)) throw new FileNotFoundException(includeFile);
 
 					AppDomain.CurrentDomain.Load(File.ReadAllBytes(includeFile));
 				}
 
 				// Load main files
-				foreach (string mainName in plugin.Server?.Main ?? new List<string>())
+				foreach (var mainName in plugin.Server?.Main ?? new List<string>())
 				{
-					string mainFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{mainName}.net.dll");
+					var mainFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{mainName}.net.dll");
 					if (!File.Exists(mainFile)) throw new FileNotFoundException(mainFile);
 
 					var types = Assembly.LoadFrom(mainFile).GetTypes().Where(t => !t.IsAbstract && t.IsClass).ToList();
@@ -123,7 +82,7 @@ namespace NFive.Server
 					//logger.Debug($"{mainName}: {types.Count} {string.Join(Environment.NewLine, types)}");
 
 					// Find migrations
-					foreach (Type migrationType in types.Where(t => t.BaseType != null && t.BaseType.IsGenericType && t.BaseType.GetGenericTypeDefinition() == typeof(MigrationConfiguration<>)))
+					foreach (var migrationType in types.Where(t => t.BaseType != null && t.BaseType.IsGenericType && t.BaseType.GetGenericTypeDefinition() == typeof(MigrationConfiguration<>)))
 					{
 						var configuration = (DbMigrationsConfiguration)Activator.CreateInstance(migrationType);
 						var migrator = new DbMigrator(configuration);
@@ -138,11 +97,11 @@ namespace NFive.Server
 					}
 
 					// Find controllers
-					foreach (Type controllerType in types.Where(t => t.IsSubclassOf(typeof(Controller)) || t.IsSubclassOf(typeof(ConfigurableController<>))))
+					foreach (var controllerType in types.Where(t => t.IsSubclassOf(typeof(Controller)) || t.IsSubclassOf(typeof(ConfigurableController<>))))
 					{
 						var logLevel = config.Log.Plugins.ContainsKey(plugin.Name) ? config.Log.Plugins[plugin.Name] : pluginDefaultLogLevel;
 
-						List<object> constructorArgs = new List<object>
+						var constructorArgs = new List<object>
 						{
 							new Logger(logLevel, plugin.Name),
 							events,
@@ -157,7 +116,7 @@ namespace NFive.Server
 						}
 
 						// Construct controller instance
-						Controller controller = (Controller)Activator.CreateInstance(controllerType, constructorArgs.ToArray());
+						var controller = (Controller)Activator.CreateInstance(controllerType, constructorArgs.ToArray());
 
 						if (!this.controllers.ContainsKey(plugin.Name)) this.controllers.Add(plugin.Name, new List<Controller>());
 						this.controllers[plugin.Name].Add(controller);
@@ -168,6 +127,10 @@ namespace NFive.Server
 			new RpcHandler().Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).On(e => e.Reply(graph.Plugins));
 
 			events.Raise(SDK.Server.Events.ServerEvents.ServerInitialized);
+
+			// Load Rcon controller
+			var rconController = new RconController(this.controllers, new Logger(config.Log.Core, "Rcon"), events, new RpcHandler());
+			this.controllers[new Name("NFive/Server")].Add(rconController);
 
 			logger.Info($"{graph.Plugins.Count} plugins loaded, {this.controllers.Count} controller(s) created");
 		}

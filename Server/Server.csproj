@@ -87,6 +87,7 @@
     <Compile Include="Configuration\DatabaseConfiguration.cs" />
     <Compile Include="Configuration\FileManager.cs" />
     <Compile Include="Controllers\DatabaseController.cs" />
+    <Compile Include="Controllers\RconController.cs" />
     <Compile Include="Diagnostics\Logger.cs" />
     <Compile Include="Events\EventManager.cs" />
     <Compile Include="Migrations\201809152125115_Init.cs" />
