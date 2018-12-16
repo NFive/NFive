@@ -18,7 +18,6 @@ namespace NFive.Server.Controllers
 {
 	public class DatabaseController : ConfigurableController<DatabaseConfiguration>
 	{
-		private BootHistory lastBoot;
 		private readonly BootHistory currentBoot;
 
 		public DatabaseController(ILogger logger, IEventManager events, IRpcHandler rpc, DatabaseConfiguration configuration) : base(logger, events, rpc, configuration)
@@ -31,6 +30,8 @@ namespace NFive.Server.Controllers
 			MySqlTrace.Switch.Level = SourceLevels.All;
 			MySqlTrace.Listeners.Add(new ConsoleTraceListener());
 
+			BootHistory lastBoot;
+
 			using (var context = new StorageContext())
 			{
 				// Create database if needed
@@ -41,7 +42,7 @@ namespace NFive.Server.Controllers
 					context.Database.CreateIfNotExists();
 				}
 
-				this.lastBoot = context.BootHistory.OrderByDescending(b => b.Created).FirstOrDefault() ?? new BootHistory();
+				lastBoot = context.BootHistory.OrderByDescending(b => b.Created).FirstOrDefault() ?? new BootHistory();
 
 				this.currentBoot = new BootHistory();
 				context.BootHistory.Add(this.currentBoot);
@@ -51,8 +52,8 @@ namespace NFive.Server.Controllers
 			Task.Factory.StartNew(UpdateBootHistory);
 
 			this.Events.OnRequest(BootEvents.GetTime, () => this.currentBoot.Created);
-			this.Events.OnRequest(BootEvents.GetLastTime, () => this.lastBoot.Created);
-			this.Events.OnRequest(BootEvents.GetLastActiveTime, () => this.lastBoot.LastActive);
+			this.Events.OnRequest(BootEvents.GetLastTime, () => lastBoot.Created);
+			this.Events.OnRequest(BootEvents.GetLastActiveTime, () => lastBoot.LastActive);
 		}
 
 		private async Task UpdateBootHistory()

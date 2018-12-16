@@ -149,6 +149,8 @@ namespace NFive.Server.Events
 
 			public bool Handle(params object[] args)
 			{
+				// TODO: Implement this
+
 				var cancel = false;
 
 				this.handler.DynamicInvoke(args);

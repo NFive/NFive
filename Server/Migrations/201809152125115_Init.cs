@@ -1,3 +1,5 @@
+// ReSharper disable all
+
 namespace NFive.Server.Migrations
 {
 	using System.Data.Entity.Migrations;
