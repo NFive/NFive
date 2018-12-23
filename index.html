@@ -96,12 +96,11 @@
 					}
 
 					if (event == 'show') {
-						frames[frame].contentWindow.nfive.show();
-						continue;
-					}
-
-					if (event == 'hide') {
-						frames[frame].contentWindow.nfive.hide();
+						if (data) {
+							frames[frame].contentWindow.nfive.show();
+						} else {
+							frames[frame].contentWindow.nfive.hide();
+						}
 						continue;
 					}
 
