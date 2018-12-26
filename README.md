@@ -1,5 +1,6 @@
 # NFive
 [![License](https://img.shields.io/github/license/NFive/NFive.svg)](LICENSE)
+[![Discord](https://img.shields.io/discord/525451790876016651.svg)](https://discord.nfive.io/)
 [![Build Status](https://img.shields.io/appveyor/ci/NFive/nfive.svg)](https://ci.appveyor.com/project/NFive/nfive)
 [![Release Version](https://img.shields.io/github/release/NFive/NFive/all.svg)](https://github.com/NFive/NFive/releases)
 
