@@ -37,7 +37,7 @@ namespace NFive.Server.Rpc
 		{
 			this.trigger.Fire(new OutboundMessage
 			{
-				Target = client as Client,
+				Target = (Client)client,
 				Event = this.@event,
 				Payloads = payloads.Select(p => this.serializer.Serialize(p)).ToList()
 			});
