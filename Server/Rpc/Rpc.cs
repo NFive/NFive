@@ -33,6 +33,16 @@ namespace NFive.Server.Rpc
 			});
 		}
 
+		public void Trigger(IClient client, params object[] payloads)
+		{
+			this.trigger.Fire(new OutboundMessage
+			{
+				Target = (Client)client,
+				Event = this.@event,
+				Payloads = payloads.Select(p => this.serializer.Serialize(p)).ToList()
+			});
+		}
+
 		public void OnRaw(Delegate callback)
 		{
 			LogCallback(callback);
