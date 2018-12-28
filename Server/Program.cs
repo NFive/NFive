@@ -20,6 +20,7 @@ using System.Data.Entity.Migrations.Infrastructure;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using NFive.Server.Rcon;
 
 namespace NFive.Server
 {
@@ -45,11 +46,12 @@ namespace NFive.Server
 			RpcManager.Configure(config.Log.Rpc, this.EventHandlers);
 
 			var events = new EventManager(config.Log.Events);
+			var rcon = new RconManager(new RpcHandler());
 
 			// Load core controllers
 			this.controllers.Add(new Name("NFive/Server"), new List<Controller>());
 
-			var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), events, new RpcHandler(), ConfigurationManager.Load<DatabaseConfiguration>("database.yml"));
+			var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), events, new RpcHandler(), rcon, ConfigurationManager.Load<DatabaseConfiguration>("database.yml"));
 			this.controllers[new Name("NFive/Server")].Add(dbController);
 
 			// Resolve dependencies
@@ -105,7 +107,8 @@ namespace NFive.Server
 						{
 							new Logger(logLevel, plugin.Name),
 							events,
-							new RpcHandler()
+							new RpcHandler(),
+							rcon
 						};
 
 						// Check if controller is configurable
@@ -124,14 +127,12 @@ namespace NFive.Server
 				}
 			}
 
+			rcon.Controllers = this.controllers;
+
 			new RpcHandler().Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).On(e => e.Reply(graph.Plugins));
 
 			events.Raise(SDK.Server.Events.ServerEvents.ServerInitialized);
-
-			// Load Rcon controller
-			var rconController = new RconController(this.controllers, new Logger(config.Log.Core, "Rcon"), events, new RpcHandler());
-			this.controllers[new Name("NFive/Server")].Add(rconController);
-
+			
 			logger.Info($"{graph.Plugins.Count} plugins loaded, {this.controllers.Count} controller(s) created");
 		}
 	}

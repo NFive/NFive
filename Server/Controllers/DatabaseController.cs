@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using CitizenFX.Core;
+using NFive.SDK.Server.Rcon;
 
 namespace NFive.Server.Controllers
 {
@@ -20,7 +21,7 @@ namespace NFive.Server.Controllers
 	{
 		private readonly BootHistory currentBoot;
 
-		public DatabaseController(ILogger logger, IEventManager events, IRpcHandler rpc, DatabaseConfiguration configuration) : base(logger, events, rpc, configuration)
+		public DatabaseController(ILogger logger, IEventManager events, IRpcHandler rpc, IRconManager rcon, DatabaseConfiguration configuration) : base(logger, events, rpc, rcon, configuration)
 		{
 			// Set global database options
 			ServerConfiguration.DatabaseConnection = this.Configuration.Connection.ToString();
