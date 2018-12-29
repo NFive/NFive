@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using NFive.Client.Commands;
 
 namespace NFive.Client
 {
@@ -35,6 +36,7 @@ namespace NFive.Client
 			var ticks = new TickManager(c => this.Tick += c, c => this.Tick -= c);
 			var events = new EventManager();
 			var rpc = new RpcHandler();
+			var commands = new CommandManager(rpc);
 			var nui = new NuiManager(this.EventHandlers);
 
 			var user = await rpc.Event(SDK.Core.Rpc.RpcEvents.ClientInitialize).Request<User>("1.0.0");
@@ -59,7 +61,7 @@ namespace NFive.Client
 				{
 					this.logger.Info($"\t\t{type.FullName}");
 
-					var service = (Service)Activator.CreateInstance(type, new Logger($"Plugin|{type.Name}"), ticks, events, rpc, new OverlayManager(plugin.Name, nui), user);
+					var service = (Service)Activator.CreateInstance(type, new Logger($"Plugin|{type.Name}"), ticks, events, rpc, commands, new OverlayManager(plugin.Name, nui), user);
 					await service.Loaded();
 
 					this.services.Add(service);
