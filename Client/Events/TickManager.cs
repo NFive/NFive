@@ -1,6 +1,6 @@
+using NFive.SDK.Client.Events;
 using System;
 using System.Threading.Tasks;
-using NFive.SDK.Client.Events;
 
 namespace NFive.Client.Events
 {
@@ -15,9 +15,19 @@ namespace NFive.Client.Events
 			this.detachCallback = detachCallback;
 		}
 
+		public void Attach(Action callback)
+		{
+			this.attachCallback(() => Task.Factory.StartNew(callback));
+		}
+
 		public void Attach(Func<Task> callback)
 		{
 			this.attachCallback(callback);
+		}
+
+		public void Detach(Action callback)
+		{
+			this.detachCallback(() => Task.Factory.StartNew(callback));
 		}
 
 		public void Detach(Func<Task> callback)

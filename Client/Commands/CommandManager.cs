@@ -1,46 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using NFive.SDK.Client.Commands;
+﻿using NFive.SDK.Client.Commands;
 using NFive.SDK.Client.Rpc;
 using NFive.SDK.Core.Arguments;
 using NFive.SDK.Core.Chat;
 using NFive.SDK.Core.Rpc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NFive.Client.Commands
 {
 	public class CommandManager : ICommandManager
 	{
-		public class Subscription
-		{
-			private readonly Delegate handler;
-
-			public Subscription(Delegate handler)
-			{
-				this.handler = handler;
-			}
-
-			public void Handle(IEnumerable<string> args) => this.handler.DynamicInvoke(args);
-		}
-
-		private Dictionary<string, Subscription> Callbacks { get; set; } = new Dictionary<string, Subscription>();
+		private readonly Dictionary<string, Action<IEnumerable<string>>> callbacks = new Dictionary<string, Action<IEnumerable<string>>>();
 
 		public CommandManager(IRpcHandler rpc)
 		{
 			rpc.Event(RpcEvents.ChatSendMessage).On<ChatMessage>(Handle);
 		}
 
-		public void Register<T>(string command, Action<T> callback)
-		{
-			this.Callbacks.Add(command.ToLowerInvariant(), new Subscription(new Action<IEnumerable<string>>(args =>
-			{
-				callback(Argument.Parse<T>(args));
-			})));
-		}
-
 		public void Register(string command, Action callback)
 		{
-			this.Callbacks.Add(command.ToLowerInvariant(), new Subscription(callback));
+			this.callbacks.Add(command.ToLowerInvariant(), a => callback());
+		}
+
+		public void Register(string command, Action<string> callback)
+		{
+			this.callbacks.Add(command.ToLowerInvariant(), a => callback(string.Join(" ", a)));
+		}
+
+		public void Register(string command, Action<IEnumerable<string>> callback)
+		{
+			this.callbacks.Add(command.ToLowerInvariant(), callback);
+		}
+
+		public void Register<T>(string command, Action<T> callback)
+		{
+			this.callbacks.Add(command.ToLowerInvariant(), a => callback(Argument.Parse<T>(a)));
 		}
 
 		private void Handle(IRpcEvent e, ChatMessage message)
@@ -49,10 +44,11 @@ namespace NFive.Client.Commands
 			if (!content.StartsWith("/")) return;
 
 			var commandArgs = content.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-			var command = commandArgs.First().Substring(1);
-			if (!this.Callbacks.ContainsKey(command.ToLowerInvariant())) return;
 
-			this.Callbacks[command].Handle(commandArgs.Skip(1).ToList());
+			var command = commandArgs.First().Substring(1).ToLowerInvariant();
+			if (!this.callbacks.ContainsKey(command)) return;
+
+			this.callbacks[command](commandArgs.Skip(1));
 		}
 	}
 }
