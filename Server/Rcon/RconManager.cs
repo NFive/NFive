@@ -41,6 +41,11 @@ namespace NFive.Server.Rcon
 			})));
 		}
 
+		public void Register(string command, Action callback)
+		{
+			this.Callbacks.Add(command.ToLowerInvariant(), new Subscription(callback));
+		}
+
 		private void Handle(string command, IEnumerable<object> objArgs)
 		{
 			if (this.Callbacks.ContainsKey(command.ToLowerInvariant()))
