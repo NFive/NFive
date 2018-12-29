@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using NFive.SDK.Client.Commands;
 using NFive.SDK.Client.Rpc;
 using NFive.SDK.Core.Arguments;
 using NFive.SDK.Core.Chat;
@@ -8,7 +9,7 @@ using NFive.SDK.Core.Rpc;
 
 namespace NFive.Client.Commands
 {
-	public class CommandManager
+	public class CommandManager : ICommandManager
 	{
 		public class Subscription
 		{
