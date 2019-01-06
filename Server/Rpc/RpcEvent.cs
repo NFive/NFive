@@ -35,7 +35,7 @@ namespace NFive.Server.Rpc
 
 		public void Reply(params object[] payloads)
 		{
-			this.Client.Event(this.Event).Trigger(payloads);
+			this.Client.Event(this.Event).Trigger(Client, payloads);
 		}
 	}
 }
