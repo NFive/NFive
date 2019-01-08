@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("NFive")]
 [assembly: AssemblyProduct("NFive Server")]
-[assembly: AssemblyCopyright("Copyright © NFive 2018")]
+[assembly: AssemblyCopyright("Copyright © NFive 2018-2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
