@@ -178,7 +178,7 @@ namespace NFive.Client.Rpc
 			{
 				var message = this.serializer.Deserialize<InboundMessage>(json);
 
-				this.logger.Trace($"Received {message.Event} with {message.Payloads.Count} payloads(s)");
+				this.logger.Trace($"Received {message.Event} with {message.Payloads.Count} payload(s)");
 
 				tcs.SetResult(message);
 			});
@@ -204,7 +204,7 @@ namespace NFive.Client.Rpc
 				var message = this.serializer.Deserialize<InboundMessage>(json);
 				message.Received = DateTime.UtcNow;
 
-				this.logger.Trace($"Received {message.Event} with {message.Payloads.Count} payloads(s)");
+				this.logger.Trace($"Received {message.Event} with {message.Payloads.Count} payload(s)");
 
 				var rpcEvent = new RpcEvent
 				{
