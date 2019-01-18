@@ -10,7 +10,7 @@ branches:
   - master
 
 cache:
-- packages -> packages.config
+- packages -> **\packages.config
 
 test: off
 
@@ -34,3 +34,18 @@ after_build:
 artifacts:
 - path: nfive.zip
   name: NFive
+
+for:
+-
+  branches:
+    only:
+      - master
+
+  environment:
+    BT_USER:
+      secure: WeKwDVyYUZltHMzCsNlq5w==
+    BT_KEY:
+      secure: piTpGhOfvdvWqMnPTWkLyuX/b1lHDazzSWt37UbgqUHCAdfsEb+0exY7AUnYzT7Z
+
+  deploy_script:
+  - curl -s -w "\n" -T "nfive.zip" -u"%BT_USER%:%BT_KEY%" "https://api.bintray.com/content/nfive/NFive/NFive/%BUILD_VERSION_FILE%/%BUILD_VERSION_FILE%/nfive.zip?publish=1"
