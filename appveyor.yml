@@ -1,18 +1,39 @@
-version: 0.1.0.{build}
+version: "{build}"
 
 image: Visual Studio 2017
 configuration: Release
 platform: Any CPU
 clone_depth: 1
 
-branches:
-  only:
-  - master
-
 cache:
 - packages -> **\packages.config
 
-test: off
+install:
+- ps: >-
+    $env:BUILD_VERSION = Select-String -Path Server\Properties\AssemblyInfo.cs -Pattern 'AssemblyFileVersion\(\"(.*)\"\)' | %{ $_.Matches[0].Groups[1].Value }
+
+    If ($env:APPVEYOR_REPO_TAG -eq $true) {
+      $env:BUILD_VERSION = $env:APPVEYOR_REPO_TAG_NAME.TrimStart("v")
+    }
+
+    $env:BUILD_VERSION_FILE = "$env:BUILD_VERSION.$env:APPVEYOR_BUILD_NUMBER"
+
+    Update-AppveyorBuild -Version $env:BUILD_VERSION_FILE
+
+    $version = $env:BUILD_VERSION -split '-'
+
+    $env:BUILD_VERSION_FRIENDLY = $version[0] -replace "(\.0)$"
+
+    If ($version[1]) {
+      $env:BUILD_VERSION_FILE = "$($version[0]).$env:APPVEYOR_BUILD_NUMBER"
+
+      Update-AppveyorBuild -Version "$env:BUILD_VERSION_FILE-$($version[1])"
+
+      $end = (Get-Culture).TextInfo.ToTitleCase($version[1].Replace("rc", "RC"))
+      $env:BUILD_VERSION_FRIENDLY += " " + $end -replace "([a-z]+)(\d+)",'$1 $2'
+    }
+
+    $env:BUILD_VERSION_FRIENDLY += " Build $env:APPVEYOR_BUILD_NUMBER"
 
 assembly_info:
   patch: true
@@ -22,18 +43,25 @@ assembly_info:
   assembly_informational_version: "{version}"
 
 before_build:
-- cmd: nuget restore
+- nuget restore
 
 build:
   project: NFive.sln
   verbosity: minimal
 
 after_build:
-- cmd: 7z a nfive.zip *.dll nfive.yml nfive.lock __resource.lua index.html config\
+- 7z a nfive.zip *.dll nfive.yml nfive.lock __resource.lua index.html config\
 
 artifacts:
 - path: nfive.zip
-  name: NFive
+
+deploy:
+- provider: GitHub
+  release: $(APPVEYOR_REPO_TAG_NAME)
+  auth_token:
+    secure: 11Aj9GejhzBxJlpQAwmcgJKINliGVNQ/mWTTFZCylmKiwglzys7hWxRZiRfT7INp
+  on:
+    APPVEYOR_REPO_TAG: true
 
 for:
 -
