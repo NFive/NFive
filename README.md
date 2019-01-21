@@ -1,6 +1,6 @@
 # NFive
 
-<img style="float: right;" alt="NFive Logo" src="https://user-images.githubusercontent.com/43646/51492915-5558b200-1dab-11e9-9032-c79621407df7.png">
+<img align="right" alt="NFive Logo" src="https://user-images.githubusercontent.com/43646/51492915-5558b200-1dab-11e9-9032-c79621407df7.png">
 
 [![License](https://img.shields.io/github/license/NFive/NFive.svg)](LICENSE)
 [![Discord](https://img.shields.io/discord/525451790876016651.svg)](https://discord.nfive.io/)
