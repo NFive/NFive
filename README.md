@@ -1,4 +1,7 @@
 # NFive
+
+<img style="float: right;" alt="NFive Logo" src="https://user-images.githubusercontent.com/43646/51492915-5558b200-1dab-11e9-9032-c79621407df7.png">
+
 [![License](https://img.shields.io/github/license/NFive/NFive.svg)](LICENSE)
 [![Discord](https://img.shields.io/discord/525451790876016651.svg)](https://discord.nfive.io/)
 [![Build Status](https://img.shields.io/appveyor/ci/NFive/nfive.svg)](https://ci.appveyor.com/project/NFive/nfive)
@@ -18,11 +21,11 @@ It is strongly recommended that you use [NFive Package Manager](https://github.c
 
 ### Quick Start
 
-1. Download [nfpm](https://github.com/NFive/nfpm) and place it in an empty directory.
+1. Download [nfpm](https://dl.nfive.io/nfpm.exe) and place it in an empty directory.
 
 2. Run `nfpm setup` and answer the prompts to automatically download and install a FiveM server and NFive.
 
-3. Install the plugins you want to use on your server with `nfpm install <plugin>`, see `nfpm search` and the documentation for details.
+3. Install the plugins you want to use on your server with `nfpm install <plugin>`, see `nfpm search` and the [NFive plugin hub](https://hub.nfive.io/).
 
 4. Run `nfpm start` to boot the server and try connecting to `localhost` with your FiveM client.
 
