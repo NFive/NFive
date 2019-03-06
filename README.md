@@ -7,7 +7,7 @@
 [![Build Status](https://img.shields.io/appveyor/ci/NFive/nfive.svg)](https://ci.appveyor.com/project/NFive/nfive)
 [![Release Version](https://img.shields.io/github/release/NFive/NFive/all.svg)](https://github.com/NFive/NFive/releases)
 
-Complete plugin framework for GTAV [FiveM](https://fivem.net/) servers built entirely in managed C#.
+[NFive](https://nfive.io/) is a complete plugin framework for GTAV [FiveM](https://fivem.net/) servers built entirely in managed C#.
 This project aims to replace existing FiveM server resources with a single managed framework to build upon.
 
 On its own NFive provides no extra game mechanics or functionality, all extra features are introduced via plugins.
@@ -17,20 +17,23 @@ On its own NFive provides no extra game mechanics or functionality, all extra fe
 This project is still subject to breaking changes at anytime, use at your own risk!
 
 ## Usage
-It is strongly recommended that you use [NFive Package Manager](https://github.com/NFive/nfpm) to install and use NFive.
+It is strongly recommended that you use [NFive Package Manager](https://github.com/NFive/nfpm) (`nfpm`) to install and manage NFive.
+
+> See the [NFive *Getting Started* documentation](https://nfive.io/docs/overview) for more information.
 
 ### Quick Start
+1. [Download nfpm](https://dl.nfive.io/nfpm.exe) and place it in an empty directory.
 
-1. Download [nfpm](https://dl.nfive.io/nfpm.exe) and place it in an empty directory.
+2. Run `nfpm setup .` and answer the prompts to automatically download and install a FiveM server and NFive into the current directory.
 
-2. Run `nfpm setup` and answer the prompts to automatically download and install a FiveM server and NFive.
-
-3. Install the plugins you want to use on your server with `nfpm install <plugin>`, see `nfpm search` and the [NFive plugin hub](https://hub.nfive.io/).
+3. Install the plugins you want to use on your server with `nfpm install <plugin>`, see `nfpm search` and the [NFive plugin hub](https://hub.nfive.io/) for available plugins.
 
 4. Run `nfpm start` to boot the server and try connecting to `localhost` with your FiveM client.
 
+   > See the [NFive *Database Setup* documentation](https://nfive.io/docs/database) for how to correctly configure the your MySQL server.
+
 ## Development
-Building the project will require [Visual Studio 2017](https://www.visualstudio.com/). A MySQL database is required for storage, [MariaDB](https://mariadb.org/) is recommended.
+Building NFive will require [Visual Studio 2017](https://visualstudio.microsoft.com/). A MySQL database is required for storage, [MariaDB](https://mariadb.org/) is recommended.
 
 This resource currently replaces *all* stock server resources; make sure you remove them from your configuration. The server will always try to load `sessionmanager`, even if it is not in your configuration, so you must delete or rename the resource folder.
 
@@ -49,10 +52,13 @@ This resource currently replaces *all* stock server resources; make sure you rem
 
 4. Edit `config\database.yml` with your database connection information as needed.
 
-Note: For full Unicode support you will need to manually preconfigure your MySQL server's default character set. For MySQL/MariaDB add `--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_520_ci` to the server arguments before the database is created.
+Note: For full Unicode support you will need to manually preconfigure your MySQL server's default character set. For MySQL/MariaDB add `--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_520_ci` to the server arguments before the database is created. See the [documentation](https://nfive.io/docs/database) for details.
 
 ### Migrations
-1. Drop the database.
+Its strongly recommended you use [`nfpm migrate`](https://nfive.io/docs/nfpm/command-reference) for automated migrations.
+
+#### Manual
+1. Drop the existing database.
 
 2. Open the Package Manager Console in Visual Studio: `View > Other Windows > Package Manager Console`
 
