@@ -5,7 +5,7 @@ display:
   map: Los Santos
 
 # Set logging output level per component
-# Levels: Debug|Info|Warn|Error
+# Levels: Trace|Debug|Info|Warn|Error
 log:
   core: Debug
   rpc: Debug
@@ -15,5 +15,5 @@ log:
     # Default log level for plugins unless overriden
     default: Debug
 
-    # Set indervidual plguin log level
+    # Override indervidual plugin log level
     NFive/plugin-example: Error

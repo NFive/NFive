@@ -16,8 +16,8 @@ services:
     restart: unless-stopped
     command: --max-allowed-packet=64M --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_520_ci
     environment:
-     - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=password
     volumes:
-     - ./debug/db:/var/lib/mysql:Z
+      - ./debug/db:/var/lib/mysql:Z
     expose:
-     - "3306"
+      - "3306"

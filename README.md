@@ -30,7 +30,7 @@ It is strongly recommended that you use [NFive Package Manager](https://github.c
 
 4. Run `nfpm start` to boot the server and try connecting to `localhost` with your FiveM client.
 
-   > See the [NFive *Database Setup* documentation](https://nfive.io/docs/database) for how to correctly configure the your MySQL server.
+    > See the [NFive *Database Setup* documentation](https://nfive.io/docs/database) for how to correctly configure the your MySQL server.
 
 ## Development
 Building NFive will require [Visual Studio 2017](https://visualstudio.microsoft.com/). A MySQL database is required for storage, [MariaDB](https://mariadb.org/) is recommended.
