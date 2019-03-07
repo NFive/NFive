@@ -7,13 +7,13 @@ display:
 # Set logging output level per component
 # Levels: Trace|Debug|Info|Warn|Error
 log:
-  core: Debug
-  rpc: Debug
-  events: Debug
+  core: Trace
+  rpc: Trace
+  events: Trace
 
   plugins:
     # Default log level for plugins unless overriden
-    default: Debug
+    default: Trace
 
     # Override indervidual plugin log level
     NFive/plugin-example: Error

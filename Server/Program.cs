@@ -1,4 +1,4 @@
-﻿using CitizenFX.Core;
+using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
@@ -132,8 +132,8 @@ namespace NFive.Server
 			new RpcHandler().Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).On(e => e.Reply(graph.Plugins));
 
 			events.Raise(SDK.Server.Events.ServerEvents.ServerInitialized);
-			
-			logger.Info($"{graph.Plugins.Count} plugins loaded, {this.controllers.Count} controller(s) created");
+
+			logger.Debug($"{graph.Plugins.Count} plugin(s) loaded, {this.controllers.Count} controller(s) created");
 		}
 	}
 }

@@ -21,14 +21,17 @@ namespace NFive.Client.Rpc
 		{
 			var serializedMessage = this.serializer.Serialize(message);
 			var serializedMessageSize = serializedMessage.Length * 16;
-			//this.logger.Debug($"Fire: \"{message.Event}\" with {message.Payloads.Count} payload(s) ({serializedMessage.Length * 16} bits): {string.Join(", ", message.Payloads)}");
+
 			bandwidth += serializedMessageSize;
-			this.logger.Debug($"Fire: \"{message.Event}\" with {message.Payloads.Count} payload(s) of total size '{serializedMessageSize}' bits");
+
+			this.logger.Trace($"Fire: \"{message.Event}\" with {message.Payloads.Count} payload(s) of total size {serializedMessageSize} bits");
+
 			BaseScript.TriggerServerEvent(message.Event, serializedMessage);
 
 			if (Game.GameTime <= bandwidthTime + 1000) return;
+
 			bandwidthTime = Game.GameTime;
-			this.logger.Debug($"RPC bits per second: {bandwidth}");
+			this.logger.Trace($"RPC bits per second: {bandwidth}");
 			bandwidth = 0;
 		}
 	}

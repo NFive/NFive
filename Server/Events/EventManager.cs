@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -130,12 +130,12 @@ namespace NFive.Server.Events
 
 		private void LogAttach(string @event, Delegate callback)
 		{
-			this.logger.Debug($"\"{@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
+			this.logger.Trace($"\"{@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 		}
 
 		private void LogCall(string @event, params object[] args)
 		{
-			this.logger.Debug($"Fire: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a.ToString()))}");
+			this.logger.Trace($"Fire: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a.ToString()))}");
 		}
 
 		private class Subscription
