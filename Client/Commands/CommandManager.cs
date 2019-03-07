@@ -1,4 +1,4 @@
-﻿using NFive.SDK.Client.Commands;
+using NFive.SDK.Client.Commands;
 using NFive.SDK.Client.Rpc;
 using NFive.SDK.Core.Arguments;
 using NFive.SDK.Core.Chat;

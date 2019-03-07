@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NFive.SDK.Core.Diagnostics;
 
 namespace NFive.Server.Diagnostics
