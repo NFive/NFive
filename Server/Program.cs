@@ -120,12 +120,17 @@ namespace NFive.Server
 
 						// Construct controller instance
 						var controller = (Controller)Activator.CreateInstance(controllerType, constructorArgs.ToArray());
+						await controller.Loaded();
 
 						if (!this.controllers.ContainsKey(plugin.Name)) this.controllers.Add(plugin.Name, new List<Controller>());
 						this.controllers[plugin.Name].Add(controller);
 					}
 				}
 			}
+
+#pragma warning disable 4014
+			foreach (var controller in this.controllers.SelectMany(c => c.Value)) controller.Started();
+#pragma warning restore 4014
 
 			rcon.Controllers = this.controllers;
 
