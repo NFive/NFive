@@ -1,4 +1,4 @@
-﻿using MySql.Data.MySqlClient;
+using MySql.Data.MySqlClient;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Server.Configuration;
 using NFive.SDK.Server.Controllers;
@@ -59,7 +59,6 @@ namespace NFive.Server.Controllers
 
 		private async Task UpdateBootHistory()
 		{
-
 			while (true)
 			{
 				try
@@ -79,7 +78,7 @@ namespace NFive.Server.Controllers
 				}
 				finally
 				{
-					await BaseScript.Delay(this.Configuration.BootHistoryFrequency);
+					await Task.Delay(this.Configuration.BootHistory.UpdateFrequency);
 				}
 			}
 		}

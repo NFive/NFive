@@ -11,5 +11,6 @@ connection:
 migrations:
   automatic: true
 
-# How often the server uptime log is updated (in msecs, minimum 10000)
-boot_history_frequency: 15000
+# How often the server uptime log is updated
+boot_history:
+  update_frequency: 15 secs # Minimum is 10 seconds

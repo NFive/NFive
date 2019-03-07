@@ -1,12 +1,15 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NFive.SDK.Core.Diagnostics;
 using JetBrains.Annotations;
+using NFive.SDK.Core.Controllers;
 
 namespace NFive.Server.Configuration
 {
 	[PublicAPI]
-	public class CoreConfiguration
+	public class CoreConfiguration : ControllerConfiguration
 	{
+		public override string FileName => "nfive";
+
 		public DisplayConfiguration Display { get; set; } = new DisplayConfiguration();
 
 		public LogConfiguration Log { get; set; } = new LogConfiguration();

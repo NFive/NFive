@@ -1,21 +1,17 @@
-﻿using System;
+using System;
 using NFive.SDK.Core.Controllers;
 
 namespace NFive.Server.Configuration
 {
 	public class DatabaseConfiguration : ControllerConfiguration
 	{
+		public override string FileName => "database";
+
 		public DatabaseConnectionConfiguration Connection { get; set; } = new DatabaseConnectionConfiguration();
 
 		public DatabaseMigrationsConfiguration Migrations { get; set; } = new DatabaseMigrationsConfiguration();
 
-		private int bootHistoryFrequency = 15000;
-
-		public int BootHistoryFrequency
-		{
-			get => this.bootHistoryFrequency;
-			set => this.bootHistoryFrequency = Math.Max(value, 10000);
-		}
+		public DatabaseBootHistoryConfiguration BootHistory { get; set; } = new DatabaseBootHistoryConfiguration();
 
 		public class DatabaseConnectionConfiguration
 		{
@@ -39,6 +35,17 @@ namespace NFive.Server.Configuration
 		public class DatabaseMigrationsConfiguration
 		{
 			public bool Automatic { get; set; } = true;
+		}
+
+		public class DatabaseBootHistoryConfiguration
+		{
+			private TimeSpan updateFrequency = TimeSpan.FromSeconds(15);
+
+			public TimeSpan UpdateFrequency
+			{
+				get => this.updateFrequency;
+				set => this.updateFrequency = TimeSpan.FromSeconds(Math.Max(value.TotalSeconds, 10));
+			}
 		}
 	}
 }

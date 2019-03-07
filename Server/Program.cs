@@ -12,6 +12,7 @@ using NFive.Server.Configuration;
 using NFive.Server.Controllers;
 using NFive.Server.Diagnostics;
 using NFive.Server.Events;
+using NFive.Server.Rcon;
 using NFive.Server.Rpc;
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,6 @@ using System.Data.Entity.Migrations.Infrastructure;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using NFive.Server.Rcon;
 
 namespace NFive.Server
 {
@@ -29,7 +29,9 @@ namespace NFive.Server
 	{
 		private readonly Dictionary<Name, List<Controller>> controllers = new Dictionary<Name, List<Controller>>();
 
-		public Program()
+		public Program() => Startup();
+
+		private async void Startup()
 		{
 			// Set the AppDomain working directory to the current resource root
 			Environment.CurrentDirectory = FileManager.ResolveResourcePath();
@@ -49,10 +51,8 @@ namespace NFive.Server
 			var rcon = new RconManager(new RpcHandler());
 
 			// Load core controllers
-			this.controllers.Add(new Name("NFive/Server"), new List<Controller>());
-
 			var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), events, new RpcHandler(), rcon, ConfigurationManager.Load<DatabaseConfiguration>("database.yml"));
-			this.controllers[new Name("NFive/Server")].Add(dbController);
+			this.controllers.Add(new Name("NFive/Database"), new List<Controller> { dbController });
 
 			// Resolve dependencies
 			var graph = DefinitionGraph.Load();
