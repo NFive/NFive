@@ -72,8 +72,8 @@
     <Reference Include="NFive.SDK.Plugins, Version=0.1.0.25, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NFive.SDK.Plugins.0.1.0.25\lib\net452\NFive.SDK.Plugins.dll</HintPath>
     </Reference>
-    <Reference Include="NFive.SDK.Server.net, Version=0.1.0.33, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NFive.SDK.Server.0.1.0.33\lib\net452\NFive.SDK.Server.net.dll</HintPath>
+    <Reference Include="NFive.SDK.Server.net, Version=0.1.0.34, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NFive.SDK.Server.0.1.0.34\lib\net452\NFive.SDK.Server.net.dll</HintPath>
     </Reference>
     <Reference Include="SemVer, Version=1.2.0.0, Culture=neutral, PublicKeyToken=a89bb7dc6f7a145c, processorArchitecture=MSIL">
       <HintPath>..\packages\SemanticVersioning.1.2.0\lib\net45\SemVer.dll</HintPath>
@@ -89,13 +89,12 @@
     <Compile Include="Configuration\CoreConfiguration.cs" />
     <Compile Include="Configuration\DatabaseConfiguration.cs" />
     <Compile Include="Configuration\FileManager.cs" />
+    <Compile Include="Configuration\SessionConfiguration.cs" />
     <Compile Include="Controllers\DatabaseController.cs" />
+    <Compile Include="Controllers\SessionController.cs" />
     <Compile Include="Diagnostics\Logger.cs" />
     <Compile Include="Events\EventManager.cs" />
-    <Compile Include="Migrations\201809152125115_Init.cs" />
-    <Compile Include="Migrations\201809152125115_Init.Designer.cs">
-      <DependentUpon>201809152125115_Init.cs</DependentUpon>
-    </Compile>
+    <Compile Include="Migrations\201903061834456_Init.cs" />
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\BootHistory.cs" />
     <Compile Include="Program.cs" />
@@ -116,11 +115,6 @@
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Migrations\201809152125115_Init.resx">
-      <DependentUpon>201809152125115_Init.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="CopyLinkedContentFiles" BeforeTargets="Build">

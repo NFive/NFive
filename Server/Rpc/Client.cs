@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Linq;
 using CitizenFX.Core;
+using CitizenFX.Core.Native;
 using NFive.SDK.Server.Rpc;
 
 namespace NFive.Server.Rpc
@@ -17,7 +18,14 @@ namespace NFive.Server.Rpc
 
 		public string EndPoint { get; }
 
-		public int Ping { get; }
+		public int Ping
+		{
+			get
+			{
+				if (this.Handle > ushort.MaxValue) return -1;
+				return API.GetPlayerPing(this.Handle.ToString());
+			}
+		}
 
 		public Client(int handle)
 		{
@@ -29,7 +37,6 @@ namespace NFive.Server.Rpc
 			this.License = player.Identifiers["license"];
 			this.SteamId = player.Identifiers.Contains("steam") ? long.Parse(player.Identifiers["steam"], NumberStyles.HexNumber) : default(long?);
 			this.EndPoint = player.EndPoint;
-			this.Ping = player.Ping;
 		}
 
 		public IRpcTrigger Event(string @event) => RpcManager.Event(@event);

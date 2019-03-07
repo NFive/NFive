@@ -54,6 +54,9 @@ namespace NFive.Server
 			var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), events, new RpcHandler(), rcon, ConfigurationManager.Load<DatabaseConfiguration>("database.yml"));
 			this.controllers.Add(new Name("NFive/Database"), new List<Controller> { dbController });
 
+			var sessionController = new SessionController(new Logger(config.Log.Core, "Session"), events, new RpcHandler(), rcon, ConfigurationManager.Load<SessionConfiguration>("session.yml"));
+			this.controllers.Add(new Name("NFive/Session"), new List<Controller> { sessionController });
+
 			// Resolve dependencies
 			var graph = DefinitionGraph.Load();
 
