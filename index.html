@@ -24,9 +24,9 @@
 		</style>
 
 		<script type="module">
-			import * as EventEmitter from 'https://unpkg.com/eventemitter3@latest/umd/eventemitter3.min.js';
+			import EventEmitter from 'https://unpkg.com/event-e3@^7/EventEmitter3.mjs';
 
-			class NFive extends EventEmitter3 {
+			class NFive extends EventEmitter {
 				constructor(name, frame) {
 					super();
 
@@ -36,6 +36,10 @@
 
 				get pluginName() {
 					return this.name;
+				}
+
+				log(...args) {
+					console.log(...args);
 				}
 
 				show() {
