@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Server.Rpc;

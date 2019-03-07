@@ -1,4 +1,4 @@
-﻿using CitizenFX.Core;
+using CitizenFX.Core;
 using NFive.Client.Diagnostics;
 using NFive.SDK.Core.Rpc;
 

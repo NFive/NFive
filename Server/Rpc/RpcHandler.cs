@@ -1,4 +1,4 @@
-﻿using NFive.SDK.Server.Rpc;
+using NFive.SDK.Server.Rpc;
 
 namespace NFive.Server.Rpc
 {
