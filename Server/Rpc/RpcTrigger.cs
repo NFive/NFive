@@ -15,8 +15,11 @@ namespace NFive.Server.Rpc
 			this.serializer = serializer;
 		}
 
-		public void Fire(OutboundMessage message)
+		public async void Fire(OutboundMessage message)
 		{
+			// Marshall back to the main thread in order to use a native call.
+			await BaseScript.Delay(0);
+
 			this.logger.Debug($"Fire: \"{message.Event}\" with {message.Payloads.Count} payload(s): {string.Join(", ", message.Payloads)}");
 
 			if (message.Target != null)
