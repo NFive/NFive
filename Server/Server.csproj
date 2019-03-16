@@ -69,8 +69,8 @@
     <Reference Include="NFive.SDK.Core.net, Version=0.1.0.34, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NFive.SDK.Core.0.1.0.34\lib\net452\NFive.SDK.Core.net.dll</HintPath>
     </Reference>
-    <Reference Include="NFive.SDK.Plugins, Version=0.1.0.25, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NFive.SDK.Plugins.0.1.0.25\lib\net452\NFive.SDK.Plugins.dll</HintPath>
+    <Reference Include="NFive.SDK.Plugins, Version=0.1.0.26, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NFive.SDK.Plugins.0.1.0.26\lib\net452\NFive.SDK.Plugins.dll</HintPath>
     </Reference>
     <Reference Include="NFive.SDK.Server.net, Version=0.1.0.34, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NFive.SDK.Server.0.1.0.34\lib\net452\NFive.SDK.Server.net.dll</HintPath>
@@ -81,8 +81,8 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Data" />
-    <Reference Include="YamlDotNet, Version=5.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\YamlDotNet.5.4.0\lib\net45\YamlDotNet.dll</HintPath>
+    <Reference Include="YamlDotNet, Version=6.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
+      <HintPath>..\packages\YamlDotNet.6.0.0\lib\net45\YamlDotNet.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
