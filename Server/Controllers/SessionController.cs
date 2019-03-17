@@ -9,7 +9,6 @@ using NFive.SDK.Server.Events;
 using NFive.SDK.Server.Rcon;
 using NFive.SDK.Server.Rpc;
 using NFive.Server.Configuration;
-using NFive.Server.Events;
 using NFive.Server.Storage;
 using System;
 using System.Collections.Concurrent;
@@ -29,7 +28,7 @@ namespace NFive.Server.Controllers
 	public class SessionController : ConfigurableController<SessionConfiguration>
 	{
 		private readonly List<Action> sessionCallbacks = new List<Action>();
-		private readonly ConcurrentBag<Session> sessions = new ConcurrentBag<Session>();
+		private readonly ConcurrentDictionary<Guid, Session> sessions = new ConcurrentDictionary<Guid, Session>();
 		private readonly Dictionary<Session, Tuple<Task, CancellationTokenSource>> threads = new Dictionary<Session, Tuple<Task, CancellationTokenSource>>();
 
 		public Player CurrentHost { get; private set; }
@@ -204,7 +203,7 @@ namespace NFive.Server.Controllers
 
 			if (user == null || session == null) throw new Exception($"Failed to create session for {player.Name}");
 
-			this.sessions.Add(session);
+			this.sessions[session.Id] = session;
 			var threadCancellationToken = new CancellationTokenSource();
 			lock (this.threads)
 			{
@@ -216,7 +215,7 @@ namespace NFive.Server.Controllers
 
 			await this.Events.RaiseAsync(SessionEvents.SessionCreated, client, session, deferrals);
 
-			if (this.sessions.Any(s => s.User.Id == user.Id && s.Id != session.Id)) Reconnecting(client, session);
+			if (this.sessions.Any(s => s.Value.User.Id == user.Id && s.Key != session.Id)) Reconnecting(client, session);
 
 			await this.Events.RaiseAsync(SessionEvents.ClientConnected, client, session);
 			this.Logger.Info($"[{session.Id}] Player \"{user.Name}\" connected from {session.IpAddress}");
@@ -225,7 +224,7 @@ namespace NFive.Server.Controllers
 		public async void Reconnecting(Client client, Session session)
 		{
 			this.Logger.Debug($"Client reconnecting: {session.UserId}");
-			var oldSession = this.sessions.OrderBy(s => s.Created).FirstOrDefault(s => s.User.Id == session.UserId);
+			var oldSession = this.sessions.Select(s => s.Value).OrderBy(s => s.Created).FirstOrDefault(s => s.User.Id == session.UserId);
 			if (oldSession == null) return;
 			await this.Events.RaiseAsync(SessionEvents.ClientReconnecting, client, session, oldSession);
 
@@ -243,7 +242,7 @@ namespace NFive.Server.Controllers
 				}
 			}
 
-			this.sessions.TryTake(out oldSession);
+			this.sessions.TryRemove(oldSession.Id, out oldSession);
 			await this.Events.RaiseAsync(SessionEvents.ClientReconnected, client, session, oldSession);
 		}
 
@@ -319,7 +318,7 @@ namespace NFive.Server.Controllers
 		{
 			this.Logger.Debug($"Client Initialized: {e.Client.Name}");
 			var client = new Client(e.Client.Handle);
-			var session = this.sessions.Single(s => s.User.Id == e.User.Id);
+			var session = this.sessions.Select(s => s.Value).Single(s => s.User.Id == e.User.Id);
 			using (var context = new StorageContext())
 			using (var transaction = context.Database.BeginTransaction())
 			{
@@ -350,7 +349,7 @@ namespace NFive.Server.Controllers
 				await BaseScript.Delay(100);
 			}
 
-			this.sessions.TryTake(out session);
+			this.sessions.TryRemove(session.Id, out session);
 		}
 	}
 }
