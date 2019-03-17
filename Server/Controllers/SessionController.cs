@@ -20,7 +20,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NFive.SDK.Server;
-using NFive.Server.Models;
 using NFive.Server.Rpc;
 
 namespace NFive.Server.Controllers
@@ -31,7 +30,7 @@ namespace NFive.Server.Controllers
 		private readonly ConcurrentDictionary<Guid, Session> sessions = new ConcurrentDictionary<Guid, Session>();
 		private readonly Dictionary<Session, Tuple<Task, CancellationTokenSource>> threads = new Dictionary<Session, Tuple<Task, CancellationTokenSource>>();
 
-		public Player CurrentHost { get; private set; }
+		private Player CurrentHost { get; set; }
 
 		public SessionController(ILogger logger, IEventManager events, IRpcHandler rpc, IRconManager rcon, SessionConfiguration configuration) : base(logger, events, rpc, rcon, configuration)
 		{
@@ -123,7 +122,7 @@ namespace NFive.Server.Controllers
 			this.CurrentHost = null;
 		}
 
-		public async void Connecting([FromSource] Player player, string playerName, CallbackDelegate drop, ExpandoObject callbacks)
+		private async void Connecting([FromSource] Player player, string playerName, CallbackDelegate drop, ExpandoObject callbacks)
 		{
 			var client = new Client(int.Parse(player.Handle));
 			var deferrals = new Deferrals(callbacks, drop);
@@ -221,7 +220,7 @@ namespace NFive.Server.Controllers
 			this.Logger.Info($"[{session.Id}] Player \"{user.Name}\" connected from {session.IpAddress}");
 		}
 
-		public async void Reconnecting(Client client, Session session)
+		private async void Reconnecting(Client client, Session session)
 		{
 			this.Logger.Debug($"Client reconnecting: {session.UserId}");
 			var oldSession = this.sessions.Select(s => s.Value).OrderBy(s => s.Created).FirstOrDefault(s => s.User.Id == session.UserId);
@@ -246,7 +245,7 @@ namespace NFive.Server.Controllers
 			await this.Events.RaiseAsync(SessionEvents.ClientReconnected, client, session, oldSession);
 		}
 
-		public void Dropped([FromSource] Player player, string disconnectMessage, CallbackDelegate drop)
+		private void Dropped([FromSource] Player player, string disconnectMessage, CallbackDelegate drop)
 		{
 			this.Logger.Debug($"Player Dropped: {player.Name} | Reason: {disconnectMessage}");
 			var client = new Client(int.Parse(player.Handle));
@@ -254,12 +253,12 @@ namespace NFive.Server.Controllers
 			Disconnecting(client, disconnectMessage);
 		}
 
-		public void Disconnect(IRpcEvent e, string reason)
+		private static void Disconnect(IRpcEvent e, string reason)
 		{
 			API.DropPlayer(e.Client.Handle.ToString(), reason);
 		}
 
-		public async void Disconnecting(Client client, string disconnectMessage)
+		private async void Disconnecting(Client client, string disconnectMessage)
 		{
 			await this.Events.RaiseAsync(SessionEvents.ClientDisconnecting, client);
 
@@ -305,7 +304,7 @@ namespace NFive.Server.Controllers
 			}
 		}
 
-		public async void Initialize(IRpcEvent e, string clientVersion)
+		private async void Initialize(IRpcEvent e, string clientVersion)
 		{
 			var client = new Client(e.Client.Handle);
 
@@ -314,7 +313,7 @@ namespace NFive.Server.Controllers
 			e.Reply(e.User);
 		}
 
-		public async void Initialized(IRpcEvent e)
+		private async void Initialized(IRpcEvent e)
 		{
 			this.Logger.Debug($"Client Initialized: {e.Client.Name}");
 			var client = new Client(e.Client.Handle);
@@ -331,7 +330,7 @@ namespace NFive.Server.Controllers
 			this.Events.Raise(SessionEvents.ClientInitialized, client, session);
 		}
 
-		public async Task MonitorSession(Session session, Client client)
+		private async Task MonitorSession(Session session, Client client)
 		{
 			while (session.IsConnected && !this.threads[session].Item2.Token.IsCancellationRequested)
 			{
