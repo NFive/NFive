@@ -28,7 +28,8 @@ namespace NFive.Server.Controllers
 	{
 		private readonly List<Action> sessionCallbacks = new List<Action>();
 		private readonly ConcurrentDictionary<Guid, Session> sessions = new ConcurrentDictionary<Guid, Session>();
-		private readonly Dictionary<Session, Tuple<Task, CancellationTokenSource>> threads = new Dictionary<Session, Tuple<Task, CancellationTokenSource>>();
+		private readonly object threadLock = new object();
+		private readonly ConcurrentDictionary<Session, Tuple<Task, CancellationTokenSource>> threads = new ConcurrentDictionary<Session, Tuple<Task, CancellationTokenSource>>();
 
 		private Player CurrentHost { get; set; }
 
@@ -201,12 +202,12 @@ namespace NFive.Server.Controllers
 			}
 
 			if (user == null || session == null) throw new Exception($"Failed to create session for {player.Name}");
-
+			
 			this.sessions[session.Id] = session;
 			var threadCancellationToken = new CancellationTokenSource();
 			lock (this.threads)
 			{
-				this.threads.Add(
+				this.threads.TryAdd(
 					session,
 					new Tuple<Task, CancellationTokenSource>(Task.Factory.StartNew(() => MonitorSession(session, client), threadCancellationToken.Token), threadCancellationToken)
 				);
@@ -227,17 +228,18 @@ namespace NFive.Server.Controllers
 			if (oldSession == null) return;
 			await this.Events.RaiseAsync(SessionEvents.ClientReconnecting, client, session, oldSession);
 
-			var oldThread = this.threads.OrderBy(t => t.Key.Created).FirstOrDefault(t => t.Key.UserId == session.UserId).Key;
-			if (oldThread != null)
+			lock (this.threadLock)
 			{
-				lock (this.threads)
+				var oldThread = this.threads.OrderBy(t => t.Key.Created).FirstOrDefault(t => t.Key.UserId == session.UserId).Key;
+				if (oldThread != null)
 				{
+
 					this.Logger.Debug($"Disposing of old thread: {oldThread.User.Name}");
 					this.threads[oldThread].Item2.Cancel();
 					this.threads[oldThread].Item1.Wait();
 					this.threads[oldThread].Item2.Dispose();
 					this.threads[oldThread].Item1.Dispose();
-					this.threads.Remove(oldThread);
+					this.threads.TryRemove(oldThread, out _);
 				}
 			}
 
@@ -253,7 +255,7 @@ namespace NFive.Server.Controllers
 			Disconnecting(client, disconnectMessage);
 		}
 
-		private static void Disconnect(IRpcEvent e, string reason)
+		private void Disconnect(IRpcEvent e, string reason)
 		{
 			API.DropPlayer(e.Client.Handle.ToString(), reason);
 		}
@@ -266,41 +268,34 @@ namespace NFive.Server.Controllers
 			{
 				context.Configuration.LazyLoadingEnabled = false;
 
-				var user = context.Users.SingleOrDefault(u => u.License == client.License);
-				if (user == null) throw new Exception($"No user to end for disconnected client \"{client.License}\""); // TODO: SessionException
-
-				var session = context.Sessions.OrderBy(s => s.Created).FirstOrDefault(s => s.User.Id == user.Id && s.Disconnected == null && s.DisconnectReason == null);
-				if (session == null) throw new Exception($"No session to end for disconnected user \"{user.Id}\""); // TODO: SessionException
+				var session = this.sessions.Select(s => s.Value).OrderBy(s => s.Created).FirstOrDefault(s => s.User.License == client.License && s.Disconnected == null && s.DisconnectReason == null);
+				if (session == null) throw new Exception($"No session to end for disconnected user \"{client.Name}\""); // TODO: SessionException
 
 				session.Disconnected = DateTime.UtcNow;
 				session.DisconnectReason = disconnectMessage;
-
+				context.Sessions.AddOrUpdate(session);
 				await context.SaveChangesAsync();
 
-				var oldThread = this.threads.SingleOrDefault(t => t.Key.UserId == session.UserId).Key;
-				if (oldThread != null)
+				lock (this.threadLock)
 				{
-					lock (this.threads)
+					var oldThread = this.threads.SingleOrDefault(t => t.Key.UserId == session.UserId).Key;
+					if (oldThread != null)
 					{
 						this.threads[oldThread].Item2.Cancel();
 						this.threads[oldThread].Item1.Wait();
 						this.threads[oldThread].Item2.Dispose();
 						this.threads[oldThread].Item1.Dispose();
-						this.threads.Remove(oldThread);
+						this.threads.TryRemove(oldThread, out _);
 					}
-				}
-				var threadCancellationToken = new CancellationTokenSource();
-				lock (this.threads)
-				{
-					this.threads.Add(
+					var threadCancellationToken = new CancellationTokenSource();
+					this.threads.TryAdd(
 						session,
 						new Tuple<Task, CancellationTokenSource>(Task.Factory.StartNew(() => MonitorSession(session, client), threadCancellationToken.Token), threadCancellationToken)
 					);
 				}
-
 				await this.Events.RaiseAsync(SessionEvents.ClientDisconnected, client, session);
 
-				this.Logger.Info($"[{session.Id}] Player \"{user.Name}\" disconnected: {session.DisconnectReason}");
+				this.Logger.Info($"[{session.Id}] Player \"{client.Name}\" disconnected: {session.DisconnectReason}");
 			}
 		}
 
@@ -332,7 +327,7 @@ namespace NFive.Server.Controllers
 
 		private async Task MonitorSession(Session session, Client client)
 		{
-			while (session.IsConnected && !this.threads[session].Item2.Token.IsCancellationRequested)
+			while (session.IsConnected && this.threads.ContainsKey(session) && !this.threads[session].Item2.Token.IsCancellationRequested)
 			{
 				await BaseScript.Delay(100);
 				if (API.GetPlayerLastMsg(client.Handle.ToString()) <= this.Configuration.ConnectionTimeout.TotalMilliseconds) continue;
@@ -343,7 +338,7 @@ namespace NFive.Server.Controllers
 
 			this.Logger.Debug("Starting reconnect grace checks");
 
-			while (DateTime.UtcNow.Subtract(session.Disconnected ?? DateTime.UtcNow) < this.Configuration.ReconnectGrace && !this.threads[session].Item2.Token.IsCancellationRequested)
+			while (DateTime.UtcNow.Subtract(session.Disconnected ?? DateTime.UtcNow) < this.Configuration.ReconnectGrace && this.threads.ContainsKey(session) && !this.threads[session].Item2.Token.IsCancellationRequested)
 			{
 				await BaseScript.Delay(100);
 			}
