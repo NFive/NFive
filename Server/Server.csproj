@@ -98,6 +98,7 @@
     <Compile Include="Diagnostics\Logger.cs" />
     <Compile Include="Events\EventManager.cs" />
     <Compile Include="Migrations\201903231848283_Init.cs" />
+    <Compile Include="Migrations\201903231933413_RemoveSteamIdIndex.cs" />
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\BootHistory.cs" />
     <Compile Include="Program.cs" />

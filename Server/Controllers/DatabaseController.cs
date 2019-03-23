@@ -42,7 +42,7 @@ namespace NFive.Server.Controllers
 					var migrator = new DbMigrator(new Migrations.Configuration());
 					foreach (var migration in migrator.GetPendingMigrations())
 					{
-						this.Logger.Debug($"\tRunning migration: {migration}");
+						this.Logger.Debug($"Running migration: {migration}");
 
 						migrator.Update(migration);
 					}

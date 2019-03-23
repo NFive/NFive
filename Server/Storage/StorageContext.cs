@@ -18,7 +18,6 @@ namespace NFive.Server.Storage
 			base.OnModelCreating(modelBuilder);
 
 			modelBuilder.Entity<User>().HasIndex(u => u.License).IsUnique();
-			modelBuilder.Entity<User>().HasIndex(u => u.SteamId).IsUnique();
 		}
 	}
 }
