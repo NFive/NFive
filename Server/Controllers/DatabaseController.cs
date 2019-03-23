@@ -40,7 +40,12 @@ namespace NFive.Server.Controllers
 					this.Logger.Info($"No existing database found, creating new database \"{this.Configuration.Connection.Database}\"");
 
 					var migrator = new DbMigrator(new Migrations.Configuration());
-					if (migrator.GetPendingMigrations().Any()) migrator.Update();
+					foreach (var migration in migrator.GetPendingMigrations())
+					{
+						this.Logger.Debug($"\tRunning migration: {migration}");
+
+						migrator.Update(migration);
+					}
 				}
 
 				lastBoot = context.BootHistory.OrderByDescending(b => b.Created).FirstOrDefault() ?? new BootHistory();
