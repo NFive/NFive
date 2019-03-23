@@ -20,7 +20,7 @@ namespace NFive.Server.Rpc
 			// Marshall back to the main thread in order to use a native call.
 			await BaseScript.Delay(0);
 
-			this.logger.Debug($"Fire: \"{message.Event}\" with {message.Payloads.Count} payload(s): {string.Join(", ", message.Payloads)}");
+			this.logger.Trace($"Fire: \"{message.Event}\" with {message.Payloads.Count} payload(s): {string.Join(", ", message.Payloads)}");
 
 			if (message.Target != null)
 			{
