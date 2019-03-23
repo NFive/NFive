@@ -38,14 +38,14 @@ namespace NFive.Server.Controllers
 				if (!context.Database.Exists())
 				{
 					this.Logger.Info($"No existing database found, creating new database \"{this.Configuration.Connection.Database}\"");
+				}
 
-					var migrator = new DbMigrator(new Migrations.Configuration());
-					foreach (var migration in migrator.GetPendingMigrations())
-					{
-						this.Logger.Debug($"Running migration: {migration}");
+				var migrator = new DbMigrator(new Migrations.Configuration());
+				foreach (var migration in migrator.GetPendingMigrations())
+				{
+					this.Logger.Debug($"Running migration: {migration}");
 
-						migrator.Update(migration);
-					}
+					migrator.Update(migration);
 				}
 
 				lastBoot = context.BootHistory.OrderByDescending(b => b.Created).FirstOrDefault() ?? new BootHistory();
