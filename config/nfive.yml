@@ -8,8 +8,8 @@ display:
 # Levels: Trace|Debug|Info|Warn|Error
 log:
   core: Trace
-  rpc: Trace
-  events: Trace
+  rpc: Debug
+  events: Debug
 
   plugins:
     # Default log level for plugins unless overriden
