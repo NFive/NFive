@@ -3,6 +3,7 @@ using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Server.Configuration;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Events;
+using NFive.SDK.Server.Rcon;
 using NFive.SDK.Server.Rpc;
 using NFive.Server.Configuration;
 using NFive.Server.Models;
@@ -12,8 +13,6 @@ using System.Data.Entity.Migrations;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using CitizenFX.Core;
-using NFive.SDK.Server.Rcon;
 
 namespace NFive.Server.Controllers
 {
@@ -40,7 +39,8 @@ namespace NFive.Server.Controllers
 				{
 					this.Logger.Info($"No existing database found, creating new database \"{this.Configuration.Connection.Database}\"");
 
-					context.Database.CreateIfNotExists();
+					var migrator = new DbMigrator(new Migrations.Configuration());
+					if (migrator.GetPendingMigrations().Any()) migrator.Update();
 				}
 
 				lastBoot = context.BootHistory.OrderByDescending(b => b.Created).FirstOrDefault() ?? new BootHistory();
