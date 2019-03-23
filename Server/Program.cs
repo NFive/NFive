@@ -96,9 +96,12 @@ namespace NFive.Server
 
 						if (!ServerConfiguration.AutomaticMigrations) throw new MigrationsPendingException($"Plugin {plugin.FullName} has pending migrations but automatic migrations are disabled");
 
-						logger.Debug($"{mainName}: Running migrations {string.Join(", ", migrator.GetPendingMigrations())}");
+						foreach (var migration in migrator.GetPendingMigrations())
+						{
+							new Logger(config.Log.Core, "Database").Debug($"[{mainName}] Running migration: {migration}");
 
-						migrator.Update();
+							migrator.Update(migration);
+						}
 					}
 
 					// Find controllers
