@@ -9,6 +9,7 @@
 * I18N.West.dll
 * System.Numerics.dll
 * System.ComponentModel.DataAnnotations.dll
+* System.Runtime.Caching.dll
 
 ## Empty stub file
 * Empty.dll
