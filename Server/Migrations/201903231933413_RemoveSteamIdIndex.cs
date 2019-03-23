@@ -19,12 +19,12 @@ namespace NFive.Server.Migrations
         
         public override void Up()
         {
-            CreateIndex("dbo.Users", "License", unique: true);
-        }
+			DropIndex("dbo.Users", new[] { "SteamId" });
+		}
         
         public override void Down()
         {
-            DropIndex("dbo.Users", new[] { "License" });
-        }
+			CreateIndex("dbo.Users", "SteamId", unique: true);
+		}
     }
 }
