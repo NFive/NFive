@@ -44,10 +44,12 @@
 
 				show() {
 					this.frame.style.visibility = 'visible';
+					this.frame.contentWindow.focus();
 				}
 
 				hide() {
 					this.frame.style.visibility = 'hidden';
+					this.frame.contentWindow.blur();
 				}
 
 				async send(event, data = {}) {
