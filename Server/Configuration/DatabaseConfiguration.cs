@@ -29,7 +29,7 @@ namespace NFive.Server.Configuration
 
 			public bool Logging { get; set; } = false;
 
-			public override string ToString() => $"Host={this.Host};Port={this.Port};Database={this.Database};User Id={this.User};Password={this.Password};CharSet={this.Charset};SSL Mode=None;Logging={this.Logging}";
+			public override string ToString() => $"Host={this.Host};Port={this.Port};Database={this.Database};User Id={this.User};Password={this.Password};CharSet={this.Charset};SSL Mode=None;AllowPublicKeyRetrieval=true;Logging={this.Logging}";
 		}
 
 		public class DatabaseMigrationsConfiguration
