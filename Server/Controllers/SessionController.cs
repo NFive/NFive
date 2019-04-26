@@ -172,7 +172,8 @@ namespace NFive.Server.Controllers
 						Id = GuidGenerator.GenerateTimeBasedGuid(),
 						User = user,
 						IpAddress = client.EndPoint,
-						Created = DateTime.UtcNow
+						Created = DateTime.UtcNow,
+						Handle = client.Handle,
 					};
 
 					context.Sessions.Add(session);
