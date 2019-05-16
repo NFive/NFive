@@ -1,8 +1,7 @@
-using System.Globalization;
-using System.Linq;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using NFive.SDK.Server.Rpc;
+using System.Globalization;
 
 namespace NFive.Server.Rpc
 {
@@ -35,7 +34,7 @@ namespace NFive.Server.Rpc
 
 			this.Name = player.Name;
 			this.License = player.Identifiers["license"];
-			this.SteamId = player.Identifiers.Contains("steam") ? long.Parse(player.Identifiers["steam"], NumberStyles.HexNumber) : default(long?);
+			this.SteamId = string.IsNullOrEmpty(player.Identifiers["steam"]) ? default(long?) : long.Parse(player.Identifiers["steam"], NumberStyles.HexNumber);
 			this.EndPoint = player.EndPoint;
 		}
 
