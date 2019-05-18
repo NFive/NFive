@@ -42,7 +42,10 @@ namespace NFive.Server.Rpc
 					context.Configuration.ProxyCreationEnabled = false;
 					context.Configuration.LazyLoadingEnabled = false;
 
-					return context.Sessions.Single(s => s.UserId == this.User.Id && s.Disconnected == null);
+					var clientSession = context.Sessions.Single(s => s.UserId == this.User.Id && s.Disconnected == null);
+					clientSession.Handle = client.Handle;
+
+					return clientSession;
 				}
 			});
 		}
