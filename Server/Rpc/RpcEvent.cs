@@ -49,7 +49,7 @@ namespace NFive.Server.Rpc
 
 		public void Reply(params object[] payloads)
 		{
-			this.Client.Event(this.Event).Trigger(this.Client, payloads);
+			RpcManager.Event(this.Event).Trigger(this.Client, payloads);
 		}
 	}
 }

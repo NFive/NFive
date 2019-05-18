@@ -10,7 +10,6 @@ using NFive.SDK.Server.Events;
 using NFive.SDK.Server.Rcon;
 using NFive.SDK.Server.Rpc;
 using NFive.Server.Configuration;
-using NFive.Server.Rpc;
 using NFive.Server.Storage;
 using System;
 using System.Collections.Concurrent;
@@ -222,7 +221,7 @@ namespace NFive.Server.Controllers
 			this.Logger.Debug($"[{session.Id}] Player \"{user.Name}\" connected from {session.IpAddress}");
 		}
 
-		private async void Reconnecting(Client client, Session session)
+		private async void Reconnecting(IClient client, Session session)
 		{
 			this.Logger.Trace($"Client reconnecting: {session.UserId}");
 			var oldSession = this.sessions.Select(s => s.Value).OrderBy(s => s.Created).FirstOrDefault(s => s.User.Id == session.UserId);
@@ -262,7 +261,7 @@ namespace NFive.Server.Controllers
 			API.DropPlayer(e.Client.Handle.ToString(), reason);
 		}
 
-		private async void Disconnecting(Client client, string disconnectMessage)
+		private async void Disconnecting(IClient client, string disconnectMessage)
 		{
 			await this.Events.RaiseAsync(SessionEvents.ClientDisconnecting, client);
 
@@ -330,7 +329,7 @@ namespace NFive.Server.Controllers
 			this.Events.Raise(SessionEvents.ClientInitialized, client, session);
 		}
 
-		private async Task MonitorSession(Session session, Client client)
+		private async Task MonitorSession(Session session, IClient client)
 		{
 			while (session.IsConnected && this.threads.ContainsKey(session) && !this.threads[session].Item2.Token.IsCancellationRequested)
 			{

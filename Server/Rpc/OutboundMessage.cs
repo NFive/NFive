@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using NFive.SDK.Server.Rpc;
 
 namespace NFive.Server.Rpc
 {
 	[PublicAPI]
 	public class OutboundMessage
 	{
-		public Client Target { get; set; }
+		public IClient Target { get; set; }
 
 		public string Event { get; set; }
 
