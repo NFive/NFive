@@ -30,6 +30,8 @@ namespace NFive.Client
 
 		private async void Startup()
 		{
+			this.logger.Debug($"Creating Client for handle: {Game.Player.Handle} ServerId: {Game.Player.ServerId}");
+
 			// Setup RPC handlers
 			RpcManager.Configure(this.EventHandlers);
 

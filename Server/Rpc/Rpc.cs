@@ -14,6 +14,7 @@ namespace NFive.Server.Rpc
 		private readonly ClientHandler handler;
 		private readonly RpcTrigger trigger;
 		private readonly Serializer serializer;
+		private IClient target;
 
 		public Rpc(string @event, Logger logger, ClientHandler handler, RpcTrigger trigger, Serializer serializer)
 		{
@@ -24,20 +25,33 @@ namespace NFive.Server.Rpc
 			this.serializer = serializer;
 		}
 
+		public IRpc Target(int handle)
+		{
+			throw new NotImplementedException();
+		}
+
+		public IRpc Target(IClient client)
+		{
+			this.target = client;
+			return this;
+		}
+
 		public void Trigger(params object[] payloads)
 		{
 			this.trigger.Fire(new OutboundMessage
 			{
+				Target = this.target,
 				Event = this.@event,
 				Payloads = payloads.Select(p => this.serializer.Serialize(p)).ToList()
 			});
 		}
 
+		[Obsolete]
 		public void Trigger(IClient client, params object[] payloads)
 		{
 			this.trigger.Fire(new OutboundMessage
 			{
-				Target = (Client)client,
+				Target = client,
 				Event = this.@event,
 				Payloads = payloads.Select(p => this.serializer.Serialize(p)).ToList()
 			});

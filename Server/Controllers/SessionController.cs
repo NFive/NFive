@@ -20,6 +20,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NFive.Server.Rpc;
 
 namespace NFive.Server.Controllers
 {
@@ -313,7 +314,7 @@ namespace NFive.Server.Controllers
 		{
 			this.Logger.Trace($"Client Initialized: {e.Client.Name}");
 
-			var client = new Client(e.Client.Handle);
+			var client = e.Client;
 			var session = this.sessions.Select(s => s.Value).Single(s => s.User.Id == e.User.Id);
 
 			using (var context = new StorageContext())
