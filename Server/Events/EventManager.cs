@@ -1,10 +1,10 @@
+using NFive.SDK.Core.Diagnostics;
+using NFive.SDK.Server.Events;
+using NFive.Server.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NFive.SDK.Core.Diagnostics;
-using NFive.SDK.Server.Events;
-using NFive.Server.Diagnostics;
 
 namespace NFive.Server.Events
 {
@@ -135,7 +135,9 @@ namespace NFive.Server.Events
 
 		private void LogCall(string @event, params object[] args)
 		{
-			this.logger.Trace($"Fire: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a.ToString()))}");
+			this.logger.Trace(args.Length > 0
+				? $"Fire: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a?.ToString() ?? "NULL"))}"
+				: $"Fire: \"{@event}\" without payload");
 		}
 
 		private class Subscription
