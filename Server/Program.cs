@@ -7,11 +7,15 @@ using NFive.SDK.Plugins;
 using NFive.SDK.Plugins.Configuration;
 using NFive.SDK.Server.Configuration;
 using NFive.SDK.Server.Controllers;
+using NFive.SDK.Server.Events;
 using NFive.SDK.Server.Migrations;
+using NFive.SDK.Server.Rcon;
+using NFive.SDK.Server.Rpc;
 using NFive.Server.Configuration;
 using NFive.Server.Controllers;
 using NFive.Server.Diagnostics;
 using NFive.Server.Events;
+using NFive.Server.IoC;
 using NFive.Server.Rcon;
 using NFive.Server.Rpc;
 using System;
@@ -61,6 +65,21 @@ namespace NFive.Server
 			var graph = DefinitionGraph.Load();
 
 			var pluginDefaultLogLevel = config.Log.Plugins.ContainsKey("default") ? config.Log.Plugins["default"] : LogLevel.Info;
+
+			// IoC
+			var assemblies = new List<Assembly>();
+			assemblies.AddRange(graph.Plugins.Where(p => p.Server?.Include != null).SelectMany(p => p.Server.Include.Select(i => Assembly.LoadFrom(Path.Combine("plugins", p.Name.Vendor, p.Name.Project, $"{i}.net.dll")))));
+			assemblies.AddRange(graph.Plugins.Where(p => p.Server?.Main != null).SelectMany(p => p.Server.Main.Select(m => Assembly.LoadFrom(Path.Combine("plugins", p.Name.Vendor, p.Name.Project, $"{m}.net.dll")))));
+
+			var registrar = new ContainerRegistrar();
+			registrar.RegisterService<ILogger>(s => new Logger());
+			registrar.RegisterType<IRpcHandler, RpcHandler>();
+			registrar.RegisterInstance<IEventManager>(events);
+			registrar.RegisterInstance<IRconManager>(rcon);
+			registrar.RegisterSdkComponents(assemblies.Distinct());
+
+			// DI
+			var container = registrar.Build();
 
 			// Load plugins into the AppDomain
 			foreach (var plugin in graph.Plugins)
@@ -124,6 +143,9 @@ namespace NFive.Server
 							constructorArgs.Add(ConfigurationManager.InitializeConfig(plugin.Name, controllerType.BaseType.GetGenericArguments()[0]));
 						}
 
+						// Resolve IoC arguments
+						constructorArgs.AddRange(controllerType.GetConstructors()[0].GetParameters().Skip(constructorArgs.Count).Select(p => container.Resolve(p.ParameterType)));
+
 						// Construct controller instance
 						var controller = (Controller)Activator.CreateInstance(controllerType, constructorArgs.ToArray());
 						await controller.Loaded();
@@ -142,7 +164,7 @@ namespace NFive.Server
 
 			new RpcHandler().Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).On(e => e.Reply(graph.Plugins));
 
-			events.Raise(SDK.Server.Events.ServerEvents.ServerInitialized);
+			events.Raise(ServerEvents.ServerInitialized);
 
 			logger.Debug($"{graph.Plugins.Count} plugin(s) loaded, {this.controllers.Count} controller(s) created");
 		}
