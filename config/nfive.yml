@@ -12,8 +12,8 @@ log:
   events: Debug
 
   plugins:
-    # Default log level for plugins unless overriden
+    # Default log level for plugins unless overridden
     default: Trace
 
-    # Override indervidual plugin log level
+    # Override individual plugin log level
     NFive/plugin-example: Error
