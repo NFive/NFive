@@ -56,9 +56,11 @@ namespace NFive.Server
 
 			// Load core controllers
 			var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), events, new RpcHandler(), rcon, ConfigurationManager.Load<DatabaseConfiguration>("database.yml"));
+			await dbController.Loaded();
 			this.controllers.Add(new Name("NFive/Database"), new List<Controller> { dbController });
 
 			var sessionController = new SessionController(new Logger(config.Log.Core, "Session"), events, new RpcHandler(), rcon, ConfigurationManager.Load<SessionConfiguration>("session.yml"));
+			await sessionController.Loaded();
 			this.controllers.Add(new Name("NFive/Session"), new List<Controller> { sessionController });
 
 			// Resolve dependencies
