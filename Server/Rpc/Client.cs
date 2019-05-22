@@ -1,6 +1,7 @@
-using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using NFive.SDK.Server.Rpc;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace NFive.Server.Rpc
@@ -11,11 +12,13 @@ namespace NFive.Server.Rpc
 
 		public string Name { get; }
 
+		public string EndPoint { get; }
+
 		public string License { get; }
 
 		public long? SteamId { get; }
 
-		public string EndPoint { get; }
+		public ulong? DiscordId { get; }
 
 		public int Ping
 		{
@@ -26,16 +29,35 @@ namespace NFive.Server.Rpc
 			}
 		}
 
+		public Client(string handle) : this(int.Parse(handle)) { }
+
 		public Client(int handle)
 		{
 			this.Handle = handle;
+			this.Name = API.GetPlayerName(this.Handle.ToString());
 
-			var player = new PlayerList()[this.Handle];
+			var ids = GetIdentifiers();
 
-			this.Name = player.Name;
-			this.License = player.Identifiers["license"];
-			this.SteamId = string.IsNullOrEmpty(player.Identifiers["steam"]) ? default(long?) : long.Parse(player.Identifiers["steam"], NumberStyles.HexNumber);
-			this.EndPoint = player.EndPoint;
+			this.EndPoint = ids["ip"];
+			this.License = ids["license"];
+			this.SteamId = ids.ContainsKey("steam") && string.IsNullOrEmpty(ids["steam"]) ? default(long?) : long.Parse(ids["steam"], NumberStyles.HexNumber);
+			this.DiscordId = ids.ContainsKey("discord") && string.IsNullOrEmpty(ids["discord"]) ? default(ulong?) : ulong.Parse(ids["discord"]);
+		}
+
+		protected Dictionary<string, string> GetIdentifiers()
+		{
+			var results = new Dictionary<string, string>();
+			var count = API.GetNumPlayerIdentifiers(this.Handle.ToString());
+
+			for (var i = 0; i < count; ++i)
+			{
+				var id = API.GetPlayerIdentifier(this.Handle.ToString(), i);
+				var parts = id.Split(new[] { ':' }, 2, StringSplitOptions.RemoveEmptyEntries);
+
+				results.Add(parts[0], parts[1]);
+			}
+
+			return results;
 		}
 
 		public IRpcTrigger Event(string @event) => RpcManager.Event(@event);

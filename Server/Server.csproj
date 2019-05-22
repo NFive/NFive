@@ -75,11 +75,11 @@
     <Reference Include="NFive.SDK.Core.net, Version=0.1.0.41, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NFive.SDK.Core.0.1.0.41\lib\net452\NFive.SDK.Core.net.dll</HintPath>
     </Reference>
-    <Reference Include="NFive.SDK.Plugins, Version=0.1.0.28, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NFive.SDK.Plugins.0.1.0.28\lib\net452\NFive.SDK.Plugins.dll</HintPath>
+    <Reference Include="NFive.SDK.Plugins, Version=0.1.0.29, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NFive.SDK.Plugins.0.1.0.29\lib\net452\NFive.SDK.Plugins.dll</HintPath>
     </Reference>
-    <Reference Include="NFive.SDK.Server.net, Version=0.1.0.45, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NFive.SDK.Server.0.1.0.45\lib\net452\NFive.SDK.Server.net.dll</HintPath>
+    <Reference Include="NFive.SDK.Server.net, Version=0.1.0.46, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NFive.SDK.Server.0.1.0.46\lib\net452\NFive.SDK.Server.net.dll</HintPath>
     </Reference>
     <Reference Include="SemVer, Version=1.2.0.0, Culture=neutral, PublicKeyToken=a89bb7dc6f7a145c, processorArchitecture=MSIL">
       <HintPath>..\packages\SemanticVersioning.1.2.0\lib\net45\SemVer.dll</HintPath>
