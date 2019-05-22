@@ -10,6 +10,7 @@ using NFive.SDK.Server.Events;
 using NFive.SDK.Server.Rcon;
 using NFive.SDK.Server.Rpc;
 using NFive.Server.Configuration;
+using NFive.Server.Rpc;
 using NFive.Server.Storage;
 using System;
 using System.Collections.Concurrent;
@@ -302,9 +303,7 @@ namespace NFive.Server.Controllers
 
 		private async void Initialize(IRpcEvent e, string clientVersion)
 		{
-			var client = new Client(e.Client.Handle);
-
-			await this.Events.RaiseAsync(SessionEvents.ClientInitializing, client);
+			await this.Events.RaiseAsync(SessionEvents.ClientInitializing, e.Client);
 
 			e.Reply(e.User);
 		}
