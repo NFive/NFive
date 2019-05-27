@@ -38,7 +38,7 @@ namespace NFive.Server
 		private async void Startup()
 		{
 			// Set the AppDomain working directory to the current resource root
-			Environment.CurrentDirectory = FileManager.ResolveResourcePath();
+			Environment.CurrentDirectory = Path.GetFullPath(API.GetResourcePath(API.GetCurrentResourceName()));
 
 			var config = ConfigurationManager.Load<CoreConfiguration>("nfive.yml");
 

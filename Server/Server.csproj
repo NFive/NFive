@@ -97,7 +97,6 @@
   <ItemGroup>
     <Compile Include="Configuration\CoreConfiguration.cs" />
     <Compile Include="Configuration\DatabaseConfiguration.cs" />
-    <Compile Include="Configuration\FileManager.cs" />
     <Compile Include="Configuration\SessionConfiguration.cs" />
     <Compile Include="Controllers\DatabaseController.cs" />
     <Compile Include="Controllers\SessionController.cs" />
