@@ -40,8 +40,8 @@ namespace NFive.Server.Rpc
 
 			this.EndPoint = ids["ip"];
 			this.License = ids["license"];
-			this.SteamId = ids.ContainsKey("steam") && string.IsNullOrEmpty(ids["steam"]) ? default(long?) : long.Parse(ids["steam"], NumberStyles.HexNumber);
-			this.DiscordId = ids.ContainsKey("discord") && string.IsNullOrEmpty(ids["discord"]) ? default(ulong?) : ulong.Parse(ids["discord"]);
+			this.SteamId = ids.ContainsKey("steam") && !string.IsNullOrEmpty(ids["steam"]) ? long.Parse(ids["steam"], NumberStyles.HexNumber) : default(long?);
+			this.DiscordId = ids.ContainsKey("discord") && !string.IsNullOrEmpty(ids["discord"]) ? ulong.Parse(ids["discord"]) : default(ulong?);
 		}
 
 		protected Dictionary<string, string> GetIdentifiers()
