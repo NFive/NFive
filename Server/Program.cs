@@ -7,11 +7,15 @@ using NFive.SDK.Plugins;
 using NFive.SDK.Plugins.Configuration;
 using NFive.SDK.Server.Configuration;
 using NFive.SDK.Server.Controllers;
+using NFive.SDK.Server.Events;
 using NFive.SDK.Server.Migrations;
+using NFive.SDK.Server.Rcon;
+using NFive.SDK.Server.Rpc;
 using NFive.Server.Configuration;
 using NFive.Server.Controllers;
 using NFive.Server.Diagnostics;
 using NFive.Server.Events;
+using NFive.Server.IoC;
 using NFive.Server.Rcon;
 using NFive.Server.Rpc;
 using System;
@@ -22,10 +26,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using NFive.SDK.Server;
-using NFive.SDK.Server.Events;
-using NFive.SDK.Server.Rcon;
-using NFive.SDK.Server.Rpc;
-using NFive.Server.IoC;
 
 namespace NFive.Server
 {
@@ -39,7 +39,7 @@ namespace NFive.Server
 		private async void Startup()
 		{
 			// Set the AppDomain working directory to the current resource root
-			Environment.CurrentDirectory = FileManager.ResolveResourcePath();
+			Environment.CurrentDirectory = Path.GetFullPath(API.GetResourcePath(API.GetCurrentResourceName()));
 
 			var config = ConfigurationManager.Load<CoreConfiguration>("nfive.yml");
 
@@ -57,9 +57,11 @@ namespace NFive.Server
 
 			// Load core controllers
 			var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), events, new RpcHandler(), rcon, ConfigurationManager.Load<DatabaseConfiguration>("database.yml"));
+			await dbController.Loaded();
 			this.controllers.Add(new Name("NFive/Database"), new List<Controller> { dbController });
 
 			var sessionController = new SessionController(new Logger(config.Log.Core, "Session"), events, new RpcHandler(), rcon, ConfigurationManager.Load<SessionConfiguration>("session.yml"));
+			await sessionController.Loaded();
 			this.controllers.Add(new Name("NFive/Session"), new List<Controller> { sessionController });
 
 			// Resolve dependencies
@@ -67,6 +69,7 @@ namespace NFive.Server
 
 			var pluginDefaultLogLevel = config.Log.Plugins.ContainsKey("default") ? config.Log.Plugins["default"] : LogLevel.Info;
 
+			// IoC
 			var assemblies = new List<Assembly>();
 			assemblies.AddRange(graph.Plugins.Where(p => p.Server?.Include != null).SelectMany(p => p.Server.Include.Select(i => Assembly.LoadFrom(Path.Combine("plugins", p.Name.Vendor, p.Name.Project, $"{i}.net.dll")))));
 			assemblies.AddRange(graph.Plugins.Where(p => p.Server?.Main != null).SelectMany(p => p.Server.Main.Select(m => Assembly.LoadFrom(Path.Combine("plugins", p.Name.Vendor, p.Name.Project, $"{m}.net.dll")))));
@@ -78,7 +81,9 @@ namespace NFive.Server
 			registrar.RegisterInstance<IRconManager>(rcon);
 			registrar.RegisterInstance<IClientList>(new ClientList(new RpcHandler()));
 			registrar.RegisterSdkComponents(assemblies.Distinct());
+			registrar.RegisterSdkComponents(assemblies.Distinct());
 
+			// DI
 			var container = registrar.Build();
 
 			// Load plugins into the AppDomain

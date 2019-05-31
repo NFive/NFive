@@ -3,3 +3,4 @@ obj/
 packages/
 *.user
 /*.dll
+.idea/

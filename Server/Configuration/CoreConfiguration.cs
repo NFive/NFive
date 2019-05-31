@@ -27,8 +27,11 @@ namespace NFive.Server.Configuration
 		public class LogConfiguration
 		{
 			public LogLevel Core { get; set; } = LogLevel.Info;
+
 			public LogLevel Rpc { get; set; } = LogLevel.Info;
+
 			public LogLevel Events { get; set; } = LogLevel.Info;
+
 			public Dictionary<string, LogLevel> Plugins { get; set; } = new Dictionary<string, LogLevel>
 			{
 				{ "default", LogLevel.Info }
