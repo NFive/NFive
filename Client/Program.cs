@@ -1,5 +1,6 @@
 using CitizenFX.Core;
 using JetBrains.Annotations;
+using NFive.Client.Commands;
 using NFive.Client.Diagnostics;
 using NFive.Client.Events;
 using NFive.Client.Rpc;
@@ -12,7 +13,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using NFive.Client.Commands;
 
 namespace NFive.Client
 {
@@ -30,8 +30,6 @@ namespace NFive.Client
 
 		private async void Startup()
 		{
-			this.logger.Debug($"Creating Client for handle: {Game.Player.Handle} ServerId: {Game.Player.ServerId}");
-
 			// Setup RPC handlers
 			RpcManager.Configure(this.EventHandlers);
 

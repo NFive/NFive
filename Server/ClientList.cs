@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using CitizenFX.Core;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
@@ -7,6 +5,8 @@ using NFive.SDK.Core.IoC;
 using NFive.SDK.Server;
 using NFive.SDK.Server.Rpc;
 using NFive.Server.Diagnostics;
+using System;
+using System.Collections.Generic;
 
 namespace NFive.Server
 {

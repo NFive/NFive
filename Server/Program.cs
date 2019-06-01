@@ -5,6 +5,7 @@ using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Plugins;
 using NFive.SDK.Plugins;
 using NFive.SDK.Plugins.Configuration;
+using NFive.SDK.Server;
 using NFive.SDK.Server.Configuration;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Events;
@@ -25,7 +26,6 @@ using System.Data.Entity.Migrations.Infrastructure;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using NFive.SDK.Server;
 
 namespace NFive.Server
 {
@@ -80,7 +80,6 @@ namespace NFive.Server
 			registrar.RegisterInstance<IEventManager>(events);
 			registrar.RegisterInstance<IRconManager>(rcon);
 			registrar.RegisterInstance<IClientList>(new ClientList(new RpcHandler()));
-			registrar.RegisterSdkComponents(assemblies.Distinct());
 			registrar.RegisterSdkComponents(assemblies.Distinct());
 
 			// DI
