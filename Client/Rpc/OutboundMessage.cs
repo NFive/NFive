@@ -8,7 +8,7 @@ namespace NFive.Client.Rpc
 	[PublicAPI]
 	public class OutboundMessage
 	{
-		public int Source { get; set; } = Game.Player.Handle;
+		public int Source { get; set; } = Game.Player.ServerId;
 
 		public string Event { get; set; }
 

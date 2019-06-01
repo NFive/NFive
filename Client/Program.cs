@@ -78,10 +78,10 @@ namespace NFive.Client
 
 			this.logger.Info("Plugins started");
 
+			rpc.Event(SDK.Core.Rpc.RpcEvents.ClientInitialized).Trigger();
+
 			foreach (var service in this.services)
 				await service.HoldFocus();
-
-			rpc.Event(SDK.Core.Rpc.RpcEvents.ClientInitialized).Trigger();
 		}
 	}
 }
