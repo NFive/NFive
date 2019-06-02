@@ -6,9 +6,14 @@ namespace NFive.Client.Rpc
 	{
 		public string Event { get; set; }
 
+		public RpcEvent(string @event)
+		{
+			this.Event = @event;
+		}
+
 		public void Reply(params object[] payloads)
 		{
-			// TODO
+			RpcManager.Event(this.Event).Trigger(payloads);
 		}
 	}
 }
