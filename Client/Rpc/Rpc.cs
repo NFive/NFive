@@ -1,11 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using NFive.Client.Diagnostics;
 using NFive.SDK.Client.Rpc;
 using NFive.SDK.Core.Rpc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NFive.Client.Rpc
 {
@@ -178,7 +178,7 @@ namespace NFive.Client.Rpc
 			{
 				var message = this.serializer.Deserialize<InboundMessage>(json);
 
-				this.logger.Trace($"Received {message.Event} with {message.Payloads.Count} payload(s)");
+				this.logger.Trace($"Received: \"{message.Event}\" with {message.Payloads.Count} payload(s): {string.Join(", ", message.Payloads)}");
 
 				tcs.SetResult(message);
 			});
@@ -204,16 +204,11 @@ namespace NFive.Client.Rpc
 				var message = this.serializer.Deserialize<InboundMessage>(json);
 				message.Received = DateTime.UtcNow;
 
-				this.logger.Trace($"Received {message.Event} with {message.Payloads.Count} payload(s)");
-
-				var rpcEvent = new RpcEvent
-				{
-					Event = message.Event
-				};
+				this.logger.Trace($"Received: \"{message.Event}\" with {message.Payloads.Count} payload(s): {string.Join(", ", message.Payloads)}");
 
 				var args = new List<object>
 				{
-					rpcEvent
+					new RpcEvent(message.Event)
 				};
 
 				args.AddRange(func(message));

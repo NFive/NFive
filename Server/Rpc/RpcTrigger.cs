@@ -20,17 +20,17 @@ namespace NFive.Server.Rpc
 			// Marshall back to the main thread in order to use a native call.
 			await BaseScript.Delay(0);
 
-			this.logger.Trace($"Fire: \"{message.Event}\" with {message.Payloads.Count} payload(s): {string.Join(", ", message.Payloads)}");
+			this.logger.Trace($"Fire: \"{message.Event}\" {(message.Target != null ? $"to {message.Target.Handle} " : string.Empty)}with {message.Payloads.Count} payload(s): {string.Join(", ", message.Payloads)}");
+
+			var json = this.serializer.Serialize(message);
 
 			if (message.Target != null)
 			{
-				var player = new PlayerList()[message.Target.Handle];
-				this.logger.Debug($"Rpc message target player: {player.Name}");
-				player.TriggerEvent(message.Event, this.serializer.Serialize(message));
+				BaseScript.TriggerClientEvent(new PlayerList()[message.Target.Handle], message.Event, json);
 			}
 			else
 			{
-				BaseScript.TriggerClientEvent(message.Event, this.serializer.Serialize(message));
+				BaseScript.TriggerClientEvent(message.Event, json);
 			}
 		}
 	}

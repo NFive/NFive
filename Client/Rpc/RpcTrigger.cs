@@ -19,20 +19,9 @@ namespace NFive.Client.Rpc
 
 		public void Fire(OutboundMessage message)
 		{
-			var serializedMessage = this.serializer.Serialize(message);
-			var serializedMessageSize = serializedMessage.Length * 16;
+			this.logger.Trace($"Fire: \"{message.Event}\" with {message.Payloads.Count} payload(s): {string.Join(", ", message.Payloads)}");
 
-			bandwidth += serializedMessageSize;
-
-			this.logger.Trace($"Fire: \"{message.Event}\" with {message.Payloads.Count} payload(s) of total size {serializedMessageSize} bits");
-
-			BaseScript.TriggerServerEvent(message.Event, serializedMessage);
-
-			if (Game.GameTime <= bandwidthTime + 1000) return;
-
-			bandwidthTime = Game.GameTime;
-			this.logger.Trace($"RPC bits per second: {bandwidth}");
-			bandwidth = 0;
+			BaseScript.TriggerServerEvent(message.Event, this.serializer.Serialize(message));
 		}
 	}
 }
