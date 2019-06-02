@@ -24,7 +24,9 @@ namespace NFive.Server.Rpc
 
 			if (message.Target != null)
 			{
-				new PlayerList()[message.Target.Handle].TriggerEvent(message.Event, this.serializer.Serialize(message));
+				var player = new PlayerList()[message.Target.Handle];
+				this.logger.Debug($"Rpc message target player: {player.Name}");
+				player.TriggerEvent(message.Event, this.serializer.Serialize(message));
 			}
 			else
 			{

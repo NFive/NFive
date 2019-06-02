@@ -5,6 +5,7 @@ using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Plugins;
 using NFive.SDK.Plugins;
 using NFive.SDK.Plugins.Configuration;
+using NFive.SDK.Server;
 using NFive.SDK.Server.Configuration;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Events;
@@ -78,6 +79,7 @@ namespace NFive.Server
 			registrar.RegisterType<IRpcHandler, RpcHandler>();
 			registrar.RegisterInstance<IEventManager>(events);
 			registrar.RegisterInstance<IRconManager>(rcon);
+			registrar.RegisterInstance<IClientList>(new ClientList(new RpcHandler()));
 			registrar.RegisterSdkComponents(assemblies.Distinct());
 
 			// DI

@@ -1,5 +1,6 @@
 using CitizenFX.Core;
 using JetBrains.Annotations;
+using NFive.Client.Commands;
 using NFive.Client.Diagnostics;
 using NFive.Client.Events;
 using NFive.Client.Rpc;
@@ -12,7 +13,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using NFive.Client.Commands;
 
 namespace NFive.Client
 {
@@ -76,10 +76,10 @@ namespace NFive.Client
 
 			this.logger.Info("Plugins started");
 
+			rpc.Event(SDK.Core.Rpc.RpcEvents.ClientInitialized).Trigger();
+
 			foreach (var service in this.services)
 				await service.HoldFocus();
-
-			rpc.Event(SDK.Core.Rpc.RpcEvents.ClientInitialized).Trigger();
 		}
 	}
 }
