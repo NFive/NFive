@@ -29,7 +29,8 @@ namespace NFive.Server.Rpc
 
 		public IRpc Target(int handle)
 		{
-			throw new NotImplementedException();
+			this.target = new Client(handle);
+			return this;
 		}
 
 		public IRpc Target(IClient client)
