@@ -1,12 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using JetBrains.Annotations;
 using NFive.SDK.Core.Rpc;
 using NFive.SDK.Server.Rpc;
 using NFive.Server.Diagnostics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NFive.Server.Rpc
 {
+	[PublicAPI]
 	public class Rpc : IRpc
 	{
 		private readonly string @event;
@@ -138,7 +140,7 @@ namespace NFive.Server.Rpc
 				var message = this.serializer.Deserialize<InboundMessage>(json);
 				message.Received = DateTime.UtcNow;
 
-				this.logger.Trace($"Received {message.Event} from {message.Source} with {message.Payloads.Count} payloads(s)");
+				this.logger.Trace($"Received: \"{message.Event}\" from {message.Source} with {message.Payloads.Count} payloads(s): {string.Join(", ", message.Payloads)}");
 
 				var args = new List<object>
 				{
