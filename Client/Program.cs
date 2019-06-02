@@ -5,8 +5,10 @@ using NFive.Client.Diagnostics;
 using NFive.Client.Events;
 using NFive.Client.Rpc;
 using NFive.SDK.Client;
+using NFive.SDK.Client.Configuration;
 using NFive.SDK.Client.Interface;
 using NFive.SDK.Client.Services;
+using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Core.Plugins;
 using System;
@@ -32,6 +34,8 @@ namespace NFive.Client
 		{
 			// Setup RPC handlers
 			RpcManager.Configure(this.EventHandlers);
+
+			ClientConfiguration.LogLevel = LogLevel.Debug; // TODO: Configurable
 
 			var ticks = new TickManager(c => this.Tick += c, c => this.Tick -= c);
 			var events = new EventManager();
