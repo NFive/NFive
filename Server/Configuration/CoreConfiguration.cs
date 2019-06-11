@@ -26,6 +26,8 @@ namespace NFive.Server.Configuration
 
 		public class LogConfiguration
 		{
+			public LogOutputConfiguration Output { get; set; } = new LogOutputConfiguration();
+
 			public LogLevel Core { get; set; } = LogLevel.Info;
 
 			public LogLevel Rpc { get; set; } = LogLevel.Info;
@@ -36,6 +38,15 @@ namespace NFive.Server.Configuration
 			{
 				{ "default", LogLevel.Info }
 			};
+		}
+
+		public class LogOutputConfiguration
+		{
+			public LogLevel ClientConsole { get; set; } = LogLevel.Warn;
+
+			public bool ClientMirror { get; set; } = true;
+
+			public LogLevel ServerConsole { get; set; } = LogLevel.Warn;
 		}
 	}
 }

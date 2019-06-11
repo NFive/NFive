@@ -1,6 +1,6 @@
+using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 
 namespace NFive.Server.Rpc
 {
@@ -18,5 +18,7 @@ namespace NFive.Server.Rpc
 		public DateTime Sent { get; set; }
 
 		public DateTime Received { get; set; } = DateTime.UtcNow;
+
+		public static InboundMessage From(byte[] data) => RpcPacker.Unpack(data);
 	}
 }

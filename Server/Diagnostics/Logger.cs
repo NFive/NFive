@@ -1,5 +1,8 @@
-using System;
 using NFive.SDK.Core.Diagnostics;
+using System;
+using System.IO;
+using System.Linq;
+using NFive.Server.Configuration;
 
 namespace NFive.Server.Diagnostics
 {
@@ -53,7 +56,12 @@ namespace NFive.Server.Diagnostics
 
 			if (!string.IsNullOrEmpty(this.Prefix)) output += $" [{this.Prefix}]";
 
-			CitizenFX.Core.Debug.Write($"{output} {message}{Environment.NewLine}");
+			var lines = message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+			message = string.Join(Environment.NewLine, lines.Select(l => $"{output} {l}"));
+
+			File.AppendAllText("nfive.log", $"{message}{Environment.NewLine}");
+
+			if (ServerLogConfiguration.Output == null || ServerLogConfiguration.Output.ServerConsole <= level) CitizenFX.Core.Debug.Write($"{message}{Environment.NewLine}");
 		}
 	}
 }

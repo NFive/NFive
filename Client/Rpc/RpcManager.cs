@@ -16,7 +16,7 @@ namespace NFive.Client.Rpc
 		{
 			Logger = new Logger("RPC");
 			Serializer = new Serializer();
-			Trigger = new RpcTrigger(Logger, Serializer);
+			Trigger = new RpcTrigger(Logger);
 		}
 
 		public static void Configure(EventHandlerDictionary events)

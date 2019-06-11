@@ -1,27 +1,34 @@
 using CitizenFX.Core;
 using NFive.Client.Diagnostics;
 using NFive.SDK.Core.Rpc;
+using System;
 
 namespace NFive.Client.Rpc
 {
 	public class RpcTrigger
 	{
 		private readonly Logger logger;
-		private readonly Serializer serializer;
-		private static int bandwidth;
-		private static int bandwidthTime;
 
-		public RpcTrigger(Logger logger, Serializer serializer)
+		public RpcTrigger(Logger logger)
 		{
 			this.logger = logger;
-			this.serializer = serializer;
 		}
 
 		public void Fire(OutboundMessage message)
 		{
-			this.logger.Trace($"Fire: \"{message.Event}\" with {message.Payloads.Count} payload(s): {string.Join(", ", message.Payloads)}");
+			if (!message.Event.StartsWith("nfive:log:"))
+			{
+				if (message.Payloads.Count > 0)
+				{
+					this.logger.Trace($"Fire: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}");
+				}
+				else
+				{
+					this.logger.Trace($"Fire: \"{message.Event}\" with no payloads");
+				}
+			}
 
-			BaseScript.TriggerServerEvent(message.Event, this.serializer.Serialize(message));
+			BaseScript.TriggerServerEvent(message.Event, message.Pack());
 		}
 	}
 }

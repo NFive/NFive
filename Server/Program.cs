@@ -38,19 +38,29 @@ namespace NFive.Server
 
 		private async void Startup()
 		{
+			new Logger().Info($"NFive {typeof(Program).Assembly.GetCustomAttributes<AssemblyInformationalVersionAttribute>().First().InformationalVersion}");
+
 			// Set the AppDomain working directory to the current resource root
 			Environment.CurrentDirectory = Path.GetFullPath(API.GetResourcePath(API.GetCurrentResourceName()));
 
 			var config = ConfigurationManager.Load<CoreConfiguration>("nfive.yml");
 
+			ServerLogConfiguration.Output = config.Log.Output;
+			//ServerConfiguration.LogLevel = config.Log.Level;
+
 			var logger = new Logger(config.Log.Core);
 
-			//ServerConfiguration.LogLevel = config.Log.Level;
 			API.SetGameType(config.Display.Game);
 			API.SetMapName(config.Display.Map);
 
 			// Setup RPC handlers
 			RpcManager.Configure(config.Log.Rpc, this.EventHandlers);
+
+			// Client log mirroring
+			new RpcHandler().Event("nfive:log:mirror").On(new Action<IRpcEvent, DateTime, LogLevel, string, string>((e, dt, level, prefix, message) =>
+			{
+				new Logger(LogLevel.Trace, $"Client#{e.Client.Handle}|{prefix}".TrimEnd('|')).Log(message, level);
+			}));
 
 			var events = new EventManager(config.Log.Events);
 			var rcon = new RconManager(new RpcHandler());
@@ -79,7 +89,7 @@ namespace NFive.Server
 			registrar.RegisterType<IRpcHandler, RpcHandler>();
 			registrar.RegisterInstance<IEventManager>(events);
 			registrar.RegisterInstance<IRconManager>(rcon);
-			registrar.RegisterInstance<IClientList>(new ClientList(new RpcHandler()));
+			registrar.RegisterInstance<IClientList>(new ClientList(new Logger(config.Log.Core, "ClientList"), new RpcHandler()));
 			registrar.RegisterSdkComponents(assemblies.Distinct());
 
 			// DI

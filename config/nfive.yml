@@ -17,3 +17,14 @@ log:
 
     # Override individual plugin log level
     NFive/plugin-example: Error
+
+  # Where the logs will output
+  output:
+    # Minimum log level to be written to the client's console
+    client_console: Warn
+
+    # Forward all client's logs to the server log
+    client_mirror: true
+
+    # Minimum log level to be written to the server's console
+    server_console: Warn
