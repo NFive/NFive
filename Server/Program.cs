@@ -38,10 +38,11 @@ namespace NFive.Server
 
 		private async void Startup()
 		{
-			new Logger().Info($"NFive {typeof(Program).Assembly.GetCustomAttributes<AssemblyInformationalVersionAttribute>().First().InformationalVersion}");
-
 			// Set the AppDomain working directory to the current resource root
 			Environment.CurrentDirectory = Path.GetFullPath(API.GetResourcePath(API.GetCurrentResourceName()));
+
+			Logger.Initialize();
+			new Logger().Info($"NFive {typeof(Program).Assembly.GetCustomAttributes<AssemblyInformationalVersionAttribute>().First().InformationalVersion}");
 
 			var config = ConfigurationManager.Load<CoreConfiguration>("nfive.yml");
 
@@ -59,7 +60,7 @@ namespace NFive.Server
 			// Client log mirroring
 			new RpcHandler().Event("nfive:log:mirror").On(new Action<IRpcEvent, DateTime, LogLevel, string, string>((e, dt, level, prefix, message) =>
 			{
-				new Logger(LogLevel.Trace, $"Client#{e.Client.Handle}|{prefix}".TrimEnd('|')).Log(message, level);
+				new Logger(LogLevel.Trace, $"Client#{e.Client.Handle}|{prefix}").Log(message, level);
 			}));
 
 			var events = new EventManager(config.Log.Events);

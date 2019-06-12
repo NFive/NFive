@@ -37,20 +37,19 @@ namespace NFive.Client
 			// Setup RPC handlers
 			RpcManager.Configure(this.EventHandlers);
 			var rpc = new RpcHandler();
-			ClientConfiguration.LogLevel = LogLevel.Trace; // TODO: Configurable
 
 			var ticks = new TickManager(c => this.Tick += c, c => this.Tick -= c);
 			var events = new EventManager();
 			var commands = new CommandManager(rpc);
 			var nui = new NuiManager(this.EventHandlers);
 
-			// Forward raw FiveM events
-			this.EventHandlers.Add("gameEventTriggered", new Action<string, List<object>>((s, a) => events.Raise("gameEventTriggered", s, a)));
-			this.EventHandlers.Add("populationPedCreating", new Action<float, float, float, uint, object>((x, y, z, model, setters) => events.Raise("populationPedCreating", new PedSpawnOptions(x, y, z, model, setters))));
-
 			// Initial connection
 			//var configuration = await rpc.Event(SDK.Core.Rpc.RpcEvents.ClientInitialize).Request<ClientConfiguration>(typeof(Program).Assembly.GetName().Version);
-			var user = await rpc.Event(SDK.Core.Rpc.RpcEvents.ClientInitialize).Request<User>(typeof(Program).Assembly.GetName().Version.ToString());
+			var config = await rpc.Event(SDK.Core.Rpc.RpcEvents.ClientInitialize).Request<User, LogLevel, LogLevel>(typeof(Program).Assembly.GetName().Version.ToString());
+
+			ClientConfiguration.ConsoleLogLevel = config.Item2;
+			ClientConfiguration.MirrorLogLevel = config.Item3;
+
 			var plugins = await rpc.Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).Request<List<Plugin>>();
 
 			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -72,12 +71,16 @@ namespace NFive.Client
 				{
 					this.logger.Info($"\t\t{type.FullName}");
 
-					var service = (Service)Activator.CreateInstance(type, new Logger($"Plugin|{type.Name}"), ticks, events, rpc, commands, new OverlayManager(plugin.Name, nui), user);
+					var service = (Service)Activator.CreateInstance(type, new Logger($"Plugin|{type.Name}"), ticks, events, rpc, commands, new OverlayManager(plugin.Name, nui), config.Item1);
 					await service.Loaded();
 
 					this.services.Add(service);
 				}
 			}
+
+			// Forward raw FiveM events
+			this.EventHandlers.Add("gameEventTriggered", new Action<string, List<object>>((s, a) => events.Raise("gameEventTriggered", s, a)));
+			this.EventHandlers.Add("populationPedCreating", new Action<float, float, float, uint, object>((x, y, z, model, setters) => events.Raise("populationPedCreating", new PedSpawnOptions(x, y, z, model, setters))));
 
 			this.logger.Info("Plugins loaded");
 

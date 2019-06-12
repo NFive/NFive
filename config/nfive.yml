@@ -23,8 +23,8 @@ log:
     # Minimum log level to be written to the client's console
     client_console: Warn
 
-    # Forward all client's logs to the server log
-    client_mirror: true
+    # Minimum log level forward a client's logs to the server log
+    client_mirror: Warn
 
     # Minimum log level to be written to the server's console
     server_console: Warn

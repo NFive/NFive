@@ -44,7 +44,7 @@ namespace NFive.Server.Configuration
 		{
 			public LogLevel ClientConsole { get; set; } = LogLevel.Warn;
 
-			public bool ClientMirror { get; set; } = true;
+			public LogLevel ClientMirror { get; set; } = LogLevel.Warn;
 
 			public LogLevel ServerConsole { get; set; } = LogLevel.Warn;
 		}

@@ -349,7 +349,7 @@ namespace NFive.Server.Controllers
 
 			await this.Events.RaiseAsync(SessionEvents.ClientInitializing, e.Client);
 
-			e.Reply(e.User);
+			e.Reply(e.User, ServerLogConfiguration.Output.ClientConsole, ServerLogConfiguration.Output.ClientMirror);
 		}
 
 		private async void Initialized(IRpcEvent e)
