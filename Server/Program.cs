@@ -118,8 +118,6 @@ namespace NFive.Server
 
 					var types = Assembly.LoadFrom(mainFile).GetTypes().Where(t => !t.IsAbstract && t.IsClass).ToList();
 
-					//logger.Debug($"{mainName}: {types.Count} {string.Join(Environment.NewLine, types)}");
-
 					// Find migrations
 					foreach (var migrationType in types.Where(t => t.BaseType != null && t.BaseType.IsGenericType && t.BaseType.GetGenericTypeDefinition() == typeof(MigrationConfiguration<>)))
 					{
@@ -161,12 +159,35 @@ namespace NFive.Server
 						// Resolve IoC arguments
 						constructorArgs.AddRange(controllerType.GetConstructors()[0].GetParameters().Skip(constructorArgs.Count).Select(p => container.Resolve(p.ParameterType)));
 
-						// Construct controller instance
-						var controller = (Controller)Activator.CreateInstance(controllerType, constructorArgs.ToArray());
-						await controller.Loaded();
+						Controller controller = null;
 
-						if (!this.controllers.ContainsKey(plugin.Name)) this.controllers.Add(plugin.Name, new List<Controller>());
-						this.controllers[plugin.Name].Add(controller);
+						try
+						{
+							// Construct controller instance
+							controller = (Controller)Activator.CreateInstance(controllerType, constructorArgs.ToArray());
+						}
+						catch (Exception ex)
+						{
+							// TODO: Dispose of controller
+
+							logger.Error(ex, $"Unhandled exception in plugin {plugin.FullName}");
+						}
+
+						if (controller == null) continue;
+
+						try
+						{
+							await controller.Loaded();
+
+							if (!this.controllers.ContainsKey(plugin.Name)) this.controllers.Add(plugin.Name, new List<Controller>());
+							this.controllers[plugin.Name].Add(controller);
+						}
+						catch (Exception ex)
+						{
+							// TODO: Dispose of controller
+
+							logger.Error(ex, $"Unhandled exception loading plugin {plugin.FullName}");
+						}
 					}
 				}
 			}

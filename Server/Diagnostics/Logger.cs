@@ -1,7 +1,6 @@
 using NFive.SDK.Core.Diagnostics;
 using NFive.Server.Configuration;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -42,12 +41,21 @@ namespace NFive.Server.Diagnostics
 
 		public void Error(Exception exception)
 		{
-			Log($"ERROR: {exception.Message}", LogLevel.Error);
+			Error(exception, "ERROR");
 		}
 
 		public void Error(Exception exception, string message)
 		{
-			Log($"{message}: {exception.Message}", LogLevel.Error);
+			var output = $"{message}:{Environment.NewLine}{exception.Message}{Environment.NewLine}";
+			var ex = exception;
+
+			while (ex.InnerException != null)
+			{
+				output += $"{ex.InnerException.Message}{Environment.NewLine}";
+				ex = ex.InnerException;
+			}
+
+			Log($"{output}  {exception.TargetSite} in {exception.Source}{Environment.NewLine}{exception.StackTrace}", LogLevel.Error);
 		}
 
 		public void Log(string message, LogLevel level)
@@ -76,7 +84,7 @@ namespace NFive.Server.Diagnostics
 			var fileRegex = new Regex($"^nfive\\.log(\\.[0-9])?$", RegexOptions.Compiled);
 			var logFiles = Directory.EnumerateFiles(Environment.CurrentDirectory, $"{filePath}.?", SearchOption.TopDirectoryOnly).Where(f => fileRegex.Match(Path.GetFileName(f)).Success).OrderBy(f => f).ToList();
 
-			if (logFiles.Count > maxLogs)
+			if (logFiles.Count >= maxLogs)
 			{
 				foreach (var file in logFiles.Skip(maxLogs - 1).ToList())
 				{
