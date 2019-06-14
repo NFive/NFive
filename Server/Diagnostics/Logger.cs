@@ -66,7 +66,7 @@ namespace NFive.Server.Diagnostics
 
 			if (!string.IsNullOrEmpty(this.Prefix)) output += $" [{this.Prefix}]";
 
-			var lines = message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+			var lines = message?.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries) ?? new[] { "" };
 			message = string.Join(Environment.NewLine, lines.Select(l => $"{output} {l}"));
 
 			File.AppendAllText("nfive.log", $"{message}{Environment.NewLine}");
