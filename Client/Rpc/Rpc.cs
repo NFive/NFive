@@ -119,8 +119,6 @@ namespace NFive.Client.Rpc
 		{
 			var results = await MakeRequest(payloads);
 
-			this.logger.Trace($"Request: \"{results.Payloads[0]}\"");
-
 			return this.serializer.Deserialize<T>(results.Payloads[0]);
 		}
 
@@ -174,11 +172,11 @@ namespace NFive.Client.Rpc
 		{
 			var tcs = new TaskCompletionSource<InboundMessage>();
 
-			var callback = new Action<string>(json =>
+			var callback = new Action<byte[]>(data =>
 			{
-				var message = this.serializer.Deserialize<InboundMessage>(json);
+				var message = InboundMessage.From(data);
 
-				this.logger.Trace($"Received: \"{message.Event}\" with {message.Payloads.Count} payload(s): {string.Join(", ", message.Payloads)}");
+				LogReceived(message);
 
 				tcs.SetResult(message);
 			});
@@ -199,12 +197,11 @@ namespace NFive.Client.Rpc
 
 		private void Attach(Delegate callback, Func<InboundMessage, IEnumerable<object>> func)
 		{
-			this.handler.Attach(this.@event, new Action<string>(json =>
+			this.handler.Attach(this.@event, new Action<byte[]>(data =>
 			{
-				var message = this.serializer.Deserialize<InboundMessage>(json);
-				message.Received = DateTime.UtcNow;
+				var message = InboundMessage.From(data);
 
-				this.logger.Trace($"Received: \"{message.Event}\" with {message.Payloads.Count} payload(s): {string.Join(", ", message.Payloads)}");
+				if (!message.Event.StartsWith("nfive:log:")) LogReceived(message);
 
 				var args = new List<object>
 				{
@@ -215,6 +212,18 @@ namespace NFive.Client.Rpc
 
 				callback.DynamicInvoke(args.ToArray());
 			}));
+		}
+
+		private void LogReceived(InboundMessage message)
+		{
+			if (message.Payloads.Count > 0)
+			{
+				this.logger.Trace($"Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}");
+			}
+			else
+			{
+				this.logger.Trace($"Received: \"{message.Event}\" with no payloads");
+			}
 		}
 
 		private void LogCallback(Delegate callback)

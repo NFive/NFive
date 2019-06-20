@@ -1,11 +1,15 @@
-using System;
+using NFive.Client.Rpc;
 using NFive.SDK.Client.Configuration;
 using NFive.SDK.Core.Diagnostics;
+using System;
+using System.Linq;
 
 namespace NFive.Client.Diagnostics
 {
 	public class Logger : ILogger
 	{
+		private RpcHandler rpc = new RpcHandler();
+
 		public string Prefix { get; }
 
 		public Logger(string prefix = "")
@@ -45,13 +49,24 @@ namespace NFive.Client.Diagnostics
 
 		public void Log(string message, LogLevel level)
 		{
-			if (ClientConfiguration.LogLevel > level) return;
+			if (ClientConfiguration.ConsoleLogLevel > level && ClientConfiguration.MirrorLogLevel > level) return;
 
 			var output = $"{DateTime.Now:s} [{level}]";
 
 			if (!string.IsNullOrEmpty(this.Prefix)) output += $" [{this.Prefix}]";
 
-			CitizenFX.Core.Debug.Write($"{output} {message}{Environment.NewLine}");
+			var lines = message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+			var formattedMessage = string.Join(Environment.NewLine, lines.Select(l => $"{output} {l}"));
+
+			if (ClientConfiguration.ConsoleLogLevel <= level)
+			{
+				CitizenFX.Core.Debug.Write($"{formattedMessage}{Environment.NewLine}");
+			}
+
+			if (ClientConfiguration.MirrorLogLevel <= level)
+			{
+				this.rpc.Event("nfive:log:mirror").Trigger(DateTime.UtcNow, level, this.Prefix, message);
+			}
 		}
 	}
 }

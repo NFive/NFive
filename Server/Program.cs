@@ -41,16 +41,27 @@ namespace NFive.Server
 			// Set the AppDomain working directory to the current resource root
 			Environment.CurrentDirectory = Path.GetFullPath(API.GetResourcePath(API.GetCurrentResourceName()));
 
+			Logger.Initialize();
+			new Logger().Info($"NFive {typeof(Program).Assembly.GetCustomAttributes<AssemblyInformationalVersionAttribute>().First().InformationalVersion}");
+
 			var config = ConfigurationManager.Load<CoreConfiguration>("nfive.yml");
+
+			ServerLogConfiguration.Output = config.Log.Output;
+			//ServerConfiguration.LogLevel = config.Log.Level;
 
 			var logger = new Logger(config.Log.Core);
 
-			//ServerConfiguration.LogLevel = config.Log.Level;
 			API.SetGameType(config.Display.Game);
 			API.SetMapName(config.Display.Map);
 
 			// Setup RPC handlers
 			RpcManager.Configure(config.Log.Rpc, this.EventHandlers);
+
+			// Client log mirroring
+			new RpcHandler().Event("nfive:log:mirror").On(new Action<IRpcEvent, DateTime, LogLevel, string, string>((e, dt, level, prefix, message) =>
+			{
+				new Logger(LogLevel.Trace, $"Client#{e.Client.Handle}|{prefix}").Log(message, level);
+			}));
 
 			var events = new EventManager(config.Log.Events);
 			var rcon = new RconManager(new RpcHandler());
@@ -79,7 +90,7 @@ namespace NFive.Server
 			registrar.RegisterType<IRpcHandler, RpcHandler>();
 			registrar.RegisterInstance<IEventManager>(events);
 			registrar.RegisterInstance<IRconManager>(rcon);
-			registrar.RegisterInstance<IClientList>(new ClientList(new RpcHandler()));
+			registrar.RegisterInstance<IClientList>(new ClientList(new Logger(config.Log.Core, "ClientList"), new RpcHandler()));
 			registrar.RegisterSdkComponents(assemblies.Distinct());
 
 			// DI
@@ -106,8 +117,6 @@ namespace NFive.Server
 					if (!File.Exists(mainFile)) throw new FileNotFoundException(mainFile);
 
 					var types = Assembly.LoadFrom(mainFile).GetTypes().Where(t => !t.IsAbstract && t.IsClass).ToList();
-
-					//logger.Debug($"{mainName}: {types.Count} {string.Join(Environment.NewLine, types)}");
 
 					// Find migrations
 					foreach (var migrationType in types.Where(t => t.BaseType != null && t.BaseType.IsGenericType && t.BaseType.GetGenericTypeDefinition() == typeof(MigrationConfiguration<>)))
@@ -150,12 +159,35 @@ namespace NFive.Server
 						// Resolve IoC arguments
 						constructorArgs.AddRange(controllerType.GetConstructors()[0].GetParameters().Skip(constructorArgs.Count).Select(p => container.Resolve(p.ParameterType)));
 
-						// Construct controller instance
-						var controller = (Controller)Activator.CreateInstance(controllerType, constructorArgs.ToArray());
-						await controller.Loaded();
+						Controller controller = null;
 
-						if (!this.controllers.ContainsKey(plugin.Name)) this.controllers.Add(plugin.Name, new List<Controller>());
-						this.controllers[plugin.Name].Add(controller);
+						try
+						{
+							// Construct controller instance
+							controller = (Controller)Activator.CreateInstance(controllerType, constructorArgs.ToArray());
+						}
+						catch (Exception ex)
+						{
+							// TODO: Dispose of controller
+
+							logger.Error(ex, $"Unhandled exception in plugin {plugin.FullName}");
+						}
+
+						if (controller == null) continue;
+
+						try
+						{
+							await controller.Loaded();
+
+							if (!this.controllers.ContainsKey(plugin.Name)) this.controllers.Add(plugin.Name, new List<Controller>());
+							this.controllers[plugin.Name].Add(controller);
+						}
+						catch (Exception ex)
+						{
+							// TODO: Dispose of controller
+
+							logger.Error(ex, $"Unhandled exception loading plugin {plugin.FullName}");
+						}
 					}
 				}
 			}

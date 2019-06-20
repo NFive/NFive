@@ -17,7 +17,7 @@ namespace NFive.Server.Rpc
 		{
 			logger = new Logger(level, "RPC");
 			serializer = new Serializer();
-			trigger = new RpcTrigger(logger, serializer);
+			trigger = new RpcTrigger(logger);
 			handler = new ClientHandler(events);
 		}
 

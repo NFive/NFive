@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Generic;
 using CitizenFX.Core;
 using JetBrains.Annotations;
+using System;
+using System.Collections.Generic;
 
 namespace NFive.Client.Rpc
 {
@@ -14,6 +14,10 @@ namespace NFive.Client.Rpc
 
 		public List<string> Payloads { get; set; } = new List<string>();
 
-		public DateTime Sent { get; set; } = DateTime.UtcNow;
+		public DateTime Created { get; set; } = DateTime.UtcNow;
+
+		public DateTime? Sent { get; set; }
+
+		public byte[] Pack() => RpcPacker.Pack(this);
 	}
 }

@@ -1,6 +1,7 @@
 .vs/
+.idea/
 obj/
 packages/
 *.user
 /*.dll
-.idea/
+/*.pdb

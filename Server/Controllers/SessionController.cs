@@ -181,6 +181,7 @@ namespace NFive.Server.Controllers
 					if (user == default(User))
 					{
 						await this.Events.RaiseAsync(SessionEvents.UserCreating, client);
+
 						// Create user
 						user = new User
 						{
@@ -337,9 +338,18 @@ namespace NFive.Server.Controllers
 
 		private async void Initialize(IRpcEvent e, string clientVersion)
 		{
+			if (clientVersion != typeof(Program).Assembly.GetName().Version.ToString())
+			{
+				this.Logger.Warn($"Client version does not match server version, got {clientVersion}, expecting {typeof(Program).Assembly.GetName().Version}, dropping client: {e.Client.Handle}");
+
+				API.DropPlayer(e.Client.Handle.ToString(), $"Please reconnect to get the latest NFive client version");
+
+				return;
+			}
+
 			await this.Events.RaiseAsync(SessionEvents.ClientInitializing, e.Client);
 
-			e.Reply(e.User);
+			e.Reply(e.User, ServerLogConfiguration.Output.ClientConsole, ServerLogConfiguration.Output.ClientMirror);
 		}
 
 		private async void Initialized(IRpcEvent e)
