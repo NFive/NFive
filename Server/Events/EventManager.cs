@@ -75,13 +75,17 @@ namespace NFive.Server.Events
 
 		public void Raise<T>(string @event, T p1) => InternalRaise(@event, p1);
 
-		public void Raise<T1, T2>(string @event, T1 p1, T2 p2) => InternalRaise(@event, p1, p2);
+        public void Raise(string @event, params object[] args) => InternalRaise(@event, args);
+
+        public void Raise<T1, T2>(string @event, T1 p1, T2 p2) => InternalRaise(@event, p1, p2);
 
 		public void Raise<T1, T2, T3>(string @event, T1 p1, T2 p2, T3 p3) => InternalRaise(@event, p1, p2, p3);
 
 		public void Raise<T1, T2, T3, T4>(string @event, T1 p1, T2 p2, T3 p3, T4 p4) => InternalRaise(@event, p1, p2, p3, p4);
 
 		public void Raise<T1, T2, T3, T4, T5>(string @event, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5) => InternalRaise(@event, p1, p2, p3, p4, p5);
+
+		public void Fire(string @event, params object[] payload) => InternalRaise(@event, payload);
 
 
 		private async Task InternalRaiseAsync(string @event, params object[] args)
@@ -114,18 +118,28 @@ namespace NFive.Server.Events
 				return this.subscriptions.Single(s => s.Key == @event).Value.Single().Handle<TReturn>(args);
 			}
 		}
-
+		[Obsolete]
 		public TReturn Request<TReturn>(string @event) => InternalRequest<TReturn>(@event);
-
+		[Obsolete]
 		public TReturn Request<T1, TReturn>(string @event, T1 arg) => InternalRequest<TReturn>(@event, arg);
-
+		[Obsolete]
 		public TReturn Request<T1, T2, TReturn>(string @event, T1 arg) => InternalRequest<TReturn>(@event, arg);
-
+		[Obsolete]
 		public TReturn Request<T1, T2, T3, TReturn>(string @event, T1 arg) => InternalRequest<TReturn>(@event, arg);
-
+		[Obsolete]
 		public TReturn Request<T1, T2, T3, T4, TReturn>(string @event, T1 arg) => InternalRequest<TReturn>(@event, arg);
-
+		[Obsolete]
 		public TReturn Request<T1, T2, T3, T4, T5, TReturn>(string @event, T1 arg) => InternalRequest<TReturn>(@event, arg);
+
+		public T1 Request<T1>(string @event, params object[] args) => InternalRequest<T1>(@event, args);
+
+		public Tuple<T1, T2> Request<T1, T2>(string @event, params object[] args) => InternalRequest<Tuple<T1, T2>>(@event, args);
+
+		public Tuple<T1, T2, T3> Request<T1, T2, T3>(string @event, params object[] args) => InternalRequest<Tuple<T1, T2, T3>>(@event, args);
+
+		public Tuple<T1, T2, T3, T4> Request<T1, T2, T3, T4>(string @event, params object[] args) => InternalRequest<Tuple<T1, T2, T3, T4>>(@event, args);
+
+		public Tuple<T1, T2, T3, T4, T5> Request<T1, T2, T3, T4, T5>(string @event, params object[] args) => InternalRequest<Tuple<T1, T2, T3, T4, T5>>(@event, args);
 
 
 		private void LogAttach(string @event, Delegate callback)

@@ -26,6 +26,8 @@ using System.Data.Entity.Migrations.Infrastructure;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using NFive.SDK.Server.Communications;
+using NFive.Server.Communications;
 
 namespace NFive.Server
 {
@@ -65,6 +67,7 @@ namespace NFive.Server
 
 			var events = new EventManager(config.Log.Events);
 			var rcon = new RconManager(new RpcHandler());
+			var comms = new CommunicationManager(events);
 
 			// Load core controllers
 			var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), events, new RpcHandler(), rcon, ConfigurationManager.Load<DatabaseConfiguration>("database.yml"));
@@ -90,6 +93,7 @@ namespace NFive.Server
 			registrar.RegisterType<IRpcHandler, RpcHandler>();
 			registrar.RegisterInstance<IEventManager>(events);
 			registrar.RegisterInstance<IRconManager>(rcon);
+			registrar.RegisterInstance<ICommunicationManager>(comms);
 			registrar.RegisterInstance<IClientList>(new ClientList(new Logger(config.Log.Core, "ClientList"), new RpcHandler()));
 			registrar.RegisterSdkComponents(assemblies.Distinct());
 
@@ -200,7 +204,7 @@ namespace NFive.Server
 
 			new RpcHandler().Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).On(e => e.Reply(graph.Plugins));
 
-			events.Raise(ServerEvents.ServerInitialized);
+			comms.Event(ServerEvents.ServerInitialized).ToServer().Emit();
 
 			logger.Debug($"{graph.Plugins.Count} plugin(s) loaded, {this.controllers.Count} controller(s) created");
 		}
