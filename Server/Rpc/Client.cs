@@ -20,9 +20,9 @@ namespace NFive.Server.Rpc
 
 		public ulong? DiscordId { get; }
 
-		private ulong? LiveId { get; }
+		public ulong? LiveId { get; }
 
-		private ulong? XboxLiveId { get; }
+		public ulong? XboxLiveId { get; }
 
 		public int Ping
 		{
