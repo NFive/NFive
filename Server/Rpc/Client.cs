@@ -20,6 +20,10 @@ namespace NFive.Server.Rpc
 
 		public ulong? DiscordId { get; }
 
+		public ulong? LiveId { get; }
+
+		public ulong? XboxLiveId { get; }
+
 		public int Ping
 		{
 			get
@@ -42,6 +46,8 @@ namespace NFive.Server.Rpc
 			this.License = ids["license"];
 			this.SteamId = ids.ContainsKey("steam") && !string.IsNullOrEmpty(ids["steam"]) ? long.Parse(ids["steam"], NumberStyles.HexNumber) : default(long?);
 			this.DiscordId = ids.ContainsKey("discord") && !string.IsNullOrEmpty(ids["discord"]) ? ulong.Parse(ids["discord"]) : default(ulong?);
+			this.LiveId = ids.ContainsKey("live") && !string.IsNullOrEmpty(ids["live"]) ? ulong.Parse(ids["live"]) : default(ulong?);
+			this.XboxLiveId = ids.ContainsKey("xbl") && !string.IsNullOrEmpty(ids["xbl"]) ? ulong.Parse(ids["xbl"]) : default(ulong?);
 		}
 
 		protected Dictionary<string, string> GetIdentifiers()
