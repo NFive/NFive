@@ -19,12 +19,13 @@ namespace NFive.Server.Controllers
 {
 	public class DatabaseController : ConfigurableController<DatabaseConfiguration>
 	{
-		private readonly ICommunicationManager comms;
+		private readonly ICommunicationManager Comms;
 		private readonly BootHistory currentBoot;
 
 		public DatabaseController(ILogger logger, IEventManager events, IRpcHandler rpc, IRconManager rcon, DatabaseConfiguration configuration, ICommunicationManager comms) : base(logger, events, rpc, rcon, configuration)
 		{
-			this.comms = comms;
+			this.Comms = comms;
+
 			// Set global database options
 			ServerConfiguration.DatabaseConnection = this.Configuration.Connection.ToString();
 			ServerConfiguration.AutomaticMigrations = this.Configuration.Migrations.Automatic;
@@ -60,9 +61,12 @@ namespace NFive.Server.Controllers
 
 			Task.Factory.StartNew(UpdateBootHistory);
 
-			this.Events.OnRequest(BootEvents.GetTime, () => this.currentBoot.Created);
-			this.Events.OnRequest(BootEvents.GetLastTime, () => lastBoot.Created);
-			this.comms.Event(BootEvents.GetLastActiveTime).FromServer().On(e => e.Reply(lastBoot.LastActive));
+			//this.Events.OnRequest(BootEvents.GetTime, () => this.currentBoot.Created);
+			//this.Events.OnRequest(BootEvents.GetLastTime, () => lastBoot.Created);
+
+			this.Comms.Event(BootEvents.GetTime).FromServer().On(e => e.Reply(this.currentBoot.Created));
+			this.Comms.Event(BootEvents.GetLastTime).FromServer().On(e => e.Reply(lastBoot.Created));
+			this.Comms.Event(BootEvents.GetLastActiveTime).FromServer().On(e => e.Reply(lastBoot.LastActive));
 		}
 
 		private async Task UpdateBootHistory()
