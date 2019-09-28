@@ -6,6 +6,7 @@ using NFive.SDK.Server;
 using NFive.SDK.Server.Rpc;
 using System;
 using System.Collections.Generic;
+using NFive.SDK.Server.Communications;
 
 namespace NFive.Server
 {
@@ -25,7 +26,7 @@ namespace NFive.Server
 			rpc.Event("playerDropped").OnRaw(new Action<Player, string, CallbackDelegate>(OnDropped));
 		}
 
-		private void OnInitialize(IRpcEvent e)
+		private void OnInitialize(ICommunicationMessage e)
 		{
 			this.logger.Trace($"Client added: {e.Client.Name} [{e.Client.Handle}]");
 			this.Clients.Add(e.Client);

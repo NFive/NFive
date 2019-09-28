@@ -22,32 +22,32 @@ namespace NFive.Server.Communications
 			this.targetClient = client;
 		}
 
-		public void On(Action<IRpcEvent> callback)
+		public void On(Action<ICommunicationMessage> callback)
 		{
 			this.rpc.On(callback);
 		}
 
-		public void On<T>(Action<IRpcEvent, T> callback)
+		public void On<T>(Action<ICommunicationMessage, T> callback)
 		{
 			this.rpc.On(callback);
 		}
 
-		public void On<T1, T2>(Action<IRpcEvent, T1, T2> callback)
+		public void On<T1, T2>(Action<ICommunicationMessage, T1, T2> callback)
 		{
 			this.rpc.On(callback);
 		}
 
-		public void On<T1, T2, T3>(Action<IRpcEvent, T1, T2, T3> callback)
+		public void On<T1, T2, T3>(Action<ICommunicationMessage, T1, T2, T3> callback)
 		{
 			this.rpc.On(callback);
 		}
 
-		public void On<T1, T2, T3, T4>(Action<IRpcEvent, T1, T2, T3, T4> callback)
+		public void On<T1, T2, T3, T4>(Action<ICommunicationMessage, T1, T2, T3, T4> callback)
 		{
 			this.rpc.On(callback);
 		}
 
-		public void On<T1, T2, T3, T4, T5>(Action<IRpcEvent, T1, T2, T3, T4, T5> callback)
+		public void On<T1, T2, T3, T4, T5>(Action<ICommunicationMessage, T1, T2, T3, T4, T5> callback)
 		{
 			this.rpc.On(callback);
 		}

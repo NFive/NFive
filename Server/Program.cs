@@ -60,7 +60,7 @@ namespace NFive.Server
 			RpcManager.Configure(config.Log.Rpc, this.EventHandlers);
 
 			// Client log mirroring
-			new RpcHandler().Event("nfive:log:mirror").On(new Action<IRpcEvent, DateTime, LogLevel, string, string>((e, dt, level, prefix, message) =>
+			new RpcHandler().Event("nfive:log:mirror").On(new Action<ICommunicationMessage, DateTime, LogLevel, string, string>((e, dt, level, prefix, message) =>
 			{
 				new Logger(LogLevel.Trace, $"Client#{e.Client.Handle}|{prefix}").Log(message, level);
 			}));
@@ -70,11 +70,11 @@ namespace NFive.Server
 			var comms = new CommunicationManager(events);
 
 			// Load core controllers
-			var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), events, new RpcHandler(), rcon, ConfigurationManager.Load<DatabaseConfiguration>("database.yml"));
+			var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), events, new RpcHandler(), rcon, ConfigurationManager.Load<DatabaseConfiguration>("database.yml"), comms);
 			await dbController.Loaded();
 			this.controllers.Add(new Name("NFive/Database"), new List<Controller> { dbController });
 
-			var sessionController = new SessionController(new Logger(config.Log.Core, "Session"), events, new RpcHandler(), rcon, ConfigurationManager.Load<SessionConfiguration>("session.yml"));
+			var sessionController = new SessionController(new Logger(config.Log.Core, "Session"), events, new RpcHandler(), rcon, ConfigurationManager.Load<SessionConfiguration>("session.yml"), comms);
 			await sessionController.Loaded();
 			this.controllers.Add(new Name("NFive/Session"), new List<Controller> { sessionController });
 

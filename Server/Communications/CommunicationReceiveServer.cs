@@ -12,32 +12,32 @@ namespace NFive.Server.Communications
 			this.target = target;
 		}
 
-		public void On(Action callback)
+		public void On(Action<ICommunicationMessage> callback)
 		{
 			this.target.EventManager.On(this.target.Event, callback);
 		}
 
-		public void On<T>(Action<T> callback)
+		public void On<T>(Action<ICommunicationMessage, T> callback)
 		{
 			this.target.EventManager.On(this.target.Event, callback);
 		}
 
-		public void On<T1, T2>(Action<T1, T2> callback)
+		public void On<T1, T2>(Action<ICommunicationMessage, T1, T2> callback)
 		{
 			this.target.EventManager.On(this.target.Event, callback);
 		}
 
-		public void On<T1, T2, T3>(Action<T1, T2, T3> callback)
+		public void On<T1, T2, T3>(Action<ICommunicationMessage, T1, T2, T3> callback)
 		{
 			this.target.EventManager.On(this.target.Event, callback);
 		}
 
-		public void On<T1, T2, T3, T4>(Action<T1, T2, T3, T4> callback)
+		public void On<T1, T2, T3, T4>(Action<ICommunicationMessage, T1, T2, T3, T4> callback)
 		{
 			this.target.EventManager.On(this.target.Event, callback);
 		}
 
-		public void On<T1, T2, T3, T4, T5>(Action<T1, T2, T3, T4, T5> callback)
+		public void On<T1, T2, T3, T4, T5>(Action<ICommunicationMessage, T1, T2, T3, T4, T5> callback)
 		{
 			this.target.EventManager.On(this.target.Event, callback);
 		}

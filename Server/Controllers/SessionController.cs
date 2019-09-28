@@ -21,11 +21,13 @@ using System.Dynamic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NFive.SDK.Server.Communications;
 
 namespace NFive.Server.Controllers
 {
 	public class SessionController : ConfigurableController<SessionConfiguration>
 	{
+		private readonly ICommunicationManager comms;
 		private readonly List<Action> sessionCallbacks = new List<Action>();
 		private readonly ConcurrentDictionary<Guid, Session> sessions = new ConcurrentDictionary<Guid, Session>();
 		private readonly object threadLock = new object();
@@ -33,7 +35,10 @@ namespace NFive.Server.Controllers
 
 		private int? CurrentHost { get; set; }
 
-		public SessionController(ILogger logger, IEventManager events, IRpcHandler rpc, IRconManager rcon, SessionConfiguration configuration) : base(logger, events, rpc, rcon, configuration) { }
+		public SessionController(ILogger logger, IEventManager events, IRpcHandler rpc, IRconManager rcon, SessionConfiguration configuration, ICommunicationManager comms) : base(logger, events, rpc, rcon, configuration)
+		{
+			this.comms = comms;
+		}
 
 		public override Task Loaded()
 		{
@@ -132,9 +137,9 @@ namespace NFive.Server.Controllers
 			this.Events.Raise("nfive:server:playerDropped", new Client(player.Handle), disconnectMessage, drop);
 		}
 
-		private void OnSeverInitialized()
+		private async void OnSeverInitialized(ICommunicationMessage e)
 		{
-			var lastActive = this.Events.Request<DateTime>(BootEvents.GetLastActiveTime);
+			var lastActive = await this.comms.Event(BootEvents.GetLastActiveTime).ToServer().Request<DateTime>();
 			using (var context = new StorageContext())
 			using (var transaction = context.Database.BeginTransaction())
 			{
@@ -152,7 +157,7 @@ namespace NFive.Server.Controllers
 			}
 		}
 
-		private void OnHostedSession(IClient client)
+		private void OnHostedSession(ICommunicationMessage e, IClient client)
 		{
 			if (this.CurrentHost != null && this.CurrentHost != client.Handle) return;
 
@@ -160,7 +165,7 @@ namespace NFive.Server.Controllers
 			this.CurrentHost = null;
 		}
 
-		private async void OnConnecting(IClient client, string playerName, CallbackDelegate drop, ExpandoObject callbacks)
+		private async void OnConnecting(ICommunicationMessage e, IClient client, string playerName, CallbackDelegate drop, ExpandoObject callbacks)
 		{
 			var deferrals = new Deferrals(callbacks, drop);
 			Session session = null;
@@ -285,14 +290,14 @@ namespace NFive.Server.Controllers
 			await this.Events.RaiseAsync(SessionEvents.ClientReconnected, client, session, oldSession);
 		}
 
-		private void OnDropped(IClient client, string disconnectMessage, CallbackDelegate drop)
+		private void OnDropped(ICommunicationMessage e, IClient client, string disconnectMessage, CallbackDelegate drop)
 		{
 			this.Logger.Debug($"Player Dropped: {client.Name} | Reason: {disconnectMessage}");
 
 			Disconnecting(client, disconnectMessage);
 		}
 
-		private void Disconnect(IRpcEvent e, string reason)
+		private void Disconnect(ICommunicationMessage e, string reason)
 		{
 			API.DropPlayer(e.Client.Handle.ToString(), reason);
 		}
@@ -336,7 +341,7 @@ namespace NFive.Server.Controllers
 			}
 		}
 
-		private async void Initialize(IRpcEvent e, string clientVersion)
+		private async void Initialize(ICommunicationMessage e, string clientVersion)
 		{
 			if (clientVersion != typeof(Program).Assembly.GetName().Version.ToString())
 			{
@@ -352,7 +357,7 @@ namespace NFive.Server.Controllers
 			e.Reply(e.User, ServerLogConfiguration.Output.ClientConsole, ServerLogConfiguration.Output.ClientMirror);
 		}
 
-		private async void Initialized(IRpcEvent e)
+		private async void Initialized(ICommunicationMessage e)
 		{
 			this.Logger.Trace($"Client Initialized: {e.Client.Name}");
 

@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NFive.SDK.Server.Communications;
+using NFive.Server.Communications;
 
 namespace NFive.Server.Events
 {
@@ -32,17 +34,28 @@ namespace NFive.Server.Events
 			}
 		}
 
-		public void On(string @event, Action action) => InternalOn(@event, action);
+		private void InternalOff(string @event, Subscription action)
+		{
+			lock (this.subscriptions)
+			{
+				if (this.subscriptions.ContainsKey(@event) && this.subscriptions[@event].Contains(action))
+				{
+					this.subscriptions[@event].Remove(action);
+				}
+			}
+		}
 
-		public void On<T>(string @event, Action<T> action) => InternalOn(@event, action);
+		public void On(string @event, Action<ICommunicationMessage> action) => InternalOn(@event, action);
 
-		public void On<T1, T2>(string @event, Action<T1, T2> action) => InternalOn(@event, action);
+		public void On<T>(string @event, Action<ICommunicationMessage, T> action) => InternalOn(@event, action);
 
-		public void On<T1, T2, T3>(string @event, Action<T1, T2, T3> action) => InternalOn(@event, action);
+		public void On<T1, T2>(string @event, Action<ICommunicationMessage, T1, T2> action) => InternalOn(@event, action);
 
-		public void On<T1, T2, T3, T4>(string @event, Action<T1, T2, T3, T4> action) => InternalOn(@event, action);
+		public void On<T1, T2, T3>(string @event, Action<ICommunicationMessage, T1, T2, T3> action) => InternalOn(@event, action);
 
-		public void On<T1, T2, T3, T4, T5>(string @event, Action<T1, T2, T3, T4, T5> action) => InternalOn(@event, action);
+		public void On<T1, T2, T3, T4>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4> action) => InternalOn(@event, action);
+
+		public void On<T1, T2, T3, T4, T5>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4, T5> action) => InternalOn(@event, action);
 
 		public void OnRequest<TReturn>(string @event, Func<TReturn> action) => InternalOn("request:" + @event, action);
 
@@ -64,9 +77,11 @@ namespace NFive.Server.Events
 			{
 				if (!this.subscriptions.ContainsKey(@event)) return;
 
+				var message = new CommunicationMessage(new CommunicationTarget(this, @event));
+
 				foreach (var subscription in this.subscriptions[@event])
 				{
-					subscription.Handle(args);
+					subscription.Handle(message, args);
 				}
 			}
 		}
@@ -109,37 +124,46 @@ namespace NFive.Server.Events
 		public Task RaiseAsync<T1, T2, T3, T4, T5>(string @event, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5) => InternalRaiseAsync(@event, p1, p2, p3, p4, p5);
 
 
-		private TReturn InternalRequest<TReturn>(string @event, params object[] args)
+		private async Task<TReturn> InternalRequest<TReturn>(string @event, params object[] args)
 		{
-			@event = "request:" + @event;
 			LogCall(@event, args);
-			lock (this.subscriptions)
+			var message = new CommunicationMessage(new CommunicationTarget(this, @event));
+			var tcs = new TaskCompletionSource<TReturn>();
+
+			var callback = new Action<ICommunicationMessage, TReturn>((e, data) =>
 			{
-				return this.subscriptions.Single(s => s.Key == @event).Value.Single().Handle<TReturn>(args);
+				tcs.SetResult(data);
+			});
+
+			try
+			{
+				InternalOn(message.Id + ":" + @event, callback);
+
+				lock (this.subscriptions)
+				{
+					this.subscriptions.Single(s => s.Key == @event).Value.Single().Handle(message, args);
+				}
+
+				return await tcs.Task;
+			}
+			finally
+			{
+				lock (this.subscriptions)
+				{
+					this.subscriptions.Remove(@event);
+				}
 			}
 		}
-		[Obsolete]
-		public TReturn Request<TReturn>(string @event) => InternalRequest<TReturn>(@event);
-		[Obsolete]
-		public TReturn Request<T1, TReturn>(string @event, T1 arg) => InternalRequest<TReturn>(@event, arg);
-		[Obsolete]
-		public TReturn Request<T1, T2, TReturn>(string @event, T1 arg) => InternalRequest<TReturn>(@event, arg);
-		[Obsolete]
-		public TReturn Request<T1, T2, T3, TReturn>(string @event, T1 arg) => InternalRequest<TReturn>(@event, arg);
-		[Obsolete]
-		public TReturn Request<T1, T2, T3, T4, TReturn>(string @event, T1 arg) => InternalRequest<TReturn>(@event, arg);
-		[Obsolete]
-		public TReturn Request<T1, T2, T3, T4, T5, TReturn>(string @event, T1 arg) => InternalRequest<TReturn>(@event, arg);
 
-		public T1 Request<T1>(string @event, params object[] args) => InternalRequest<T1>(@event, args);
+		public async Task<T1> Request<T1>(string @event, params object[] args) => await InternalRequest<T1>(@event, args);
 
-		public Tuple<T1, T2> Request<T1, T2>(string @event, params object[] args) => InternalRequest<Tuple<T1, T2>>(@event, args);
+		public async Task<Tuple<T1, T2>> Request<T1, T2>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2>>(@event, args);
 
-		public Tuple<T1, T2, T3> Request<T1, T2, T3>(string @event, params object[] args) => InternalRequest<Tuple<T1, T2, T3>>(@event, args);
+		public async Task<Tuple<T1, T2, T3>> Request<T1, T2, T3>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2, T3>>(@event, args);
 
-		public Tuple<T1, T2, T3, T4> Request<T1, T2, T3, T4>(string @event, params object[] args) => InternalRequest<Tuple<T1, T2, T3, T4>>(@event, args);
+		public async Task<Tuple<T1, T2, T3, T4>> Request<T1, T2, T3, T4>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2, T3, T4>>(@event, args);
 
-		public Tuple<T1, T2, T3, T4, T5> Request<T1, T2, T3, T4, T5>(string @event, params object[] args) => InternalRequest<Tuple<T1, T2, T3, T4, T5>>(@event, args);
+		public async Task<Tuple<T1, T2, T3, T4, T5>> Request<T1, T2, T3, T4, T5>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2, T3, T4, T5>>(@event, args);
 
 
 		private void LogAttach(string @event, Delegate callback)
@@ -163,18 +187,18 @@ namespace NFive.Server.Events
 				this.handler = handler;
 			}
 
-			public bool Handle(params object[] args)
+			public bool Handle(CommunicationMessage message, params object[] args)
 			{
 				// TODO: Implement this
 
 				var cancel = false;
 
-				this.handler.DynamicInvoke(args);
+				var payload = new List<object> { message };
+				payload.AddRange(args);
+				this.handler.DynamicInvoke(payload.ToArray());
 
 				return cancel;
 			}
-
-			public TReturn Handle<TReturn>(params object[] args) => (TReturn)this.handler.DynamicInvoke(args);
 		}
 	}
 }

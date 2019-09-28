@@ -13,15 +13,18 @@ using System.Data.Entity.Migrations;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using NFive.SDK.Server.Communications;
 
 namespace NFive.Server.Controllers
 {
 	public class DatabaseController : ConfigurableController<DatabaseConfiguration>
 	{
+		private readonly ICommunicationManager comms;
 		private readonly BootHistory currentBoot;
 
-		public DatabaseController(ILogger logger, IEventManager events, IRpcHandler rpc, IRconManager rcon, DatabaseConfiguration configuration) : base(logger, events, rpc, rcon, configuration)
+		public DatabaseController(ILogger logger, IEventManager events, IRpcHandler rpc, IRconManager rcon, DatabaseConfiguration configuration, ICommunicationManager comms) : base(logger, events, rpc, rcon, configuration)
 		{
+			this.comms = comms;
 			// Set global database options
 			ServerConfiguration.DatabaseConnection = this.Configuration.Connection.ToString();
 			ServerConfiguration.AutomaticMigrations = this.Configuration.Migrations.Automatic;
@@ -59,7 +62,7 @@ namespace NFive.Server.Controllers
 
 			this.Events.OnRequest(BootEvents.GetTime, () => this.currentBoot.Created);
 			this.Events.OnRequest(BootEvents.GetLastTime, () => lastBoot.Created);
-			this.Events.OnRequest(BootEvents.GetLastActiveTime, () => lastBoot.LastActive);
+			this.comms.Event(BootEvents.GetLastActiveTime).FromServer().On(e => e.Reply(lastBoot.LastActive));
 		}
 
 		private async Task UpdateBootHistory()
