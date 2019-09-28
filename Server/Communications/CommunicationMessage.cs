@@ -1,25 +1,23 @@
-using System;
-using System.Linq;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Rpc;
 using NFive.Server.Rpc;
 using NFive.Server.Storage;
+using System;
+using System.Linq;
 
 namespace NFive.Server.Communications
 {
 	public class CommunicationMessage : ICommunicationMessage
 	{
-		private readonly Lazy<User> user;
-
-		private readonly Lazy<Session> session;
-
 		private readonly CommunicationTarget target;
+		private readonly Lazy<User> user;
+		private readonly Lazy<Session> session;
 
 		public Guid Id { get; }
 
 		public IClient Client { get; }
-		
+
 		public User User => this.user.Value;
 
 		public Session Session => this.session.Value;
