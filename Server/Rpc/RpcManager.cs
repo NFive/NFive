@@ -89,6 +89,61 @@ namespace NFive.Server.Rpc
 			});
 		}
 
+		public static void OnRequest(string @event, [CanBeNull]IClient target, Action<ICommunicationMessage> callback)
+		{
+			InternalOnRequest(@event, target, callback, m => new object[0]);
+		}
+
+		public static void OnRequest<T>(string @event, [CanBeNull]IClient target, Action<ICommunicationMessage, T> callback)
+		{
+			InternalOnRequest(@event, target, callback, m => new object[]
+			{
+				Serializer.Deserialize<T>(m.Payloads[0])
+			});
+		}
+
+		public static void OnRequest<T1, T2>(string @event, [CanBeNull]IClient target, Action<ICommunicationMessage, T1, T2> callback)
+		{
+			InternalOnRequest(@event, target, callback, m => new object[]
+			{
+				Serializer.Deserialize<T1>(m.Payloads[0]),
+				Serializer.Deserialize<T2>(m.Payloads[1])
+			});
+		}
+
+		public static void OnRequest<T1, T2, T3>(string @event, [CanBeNull] IClient target, Action<ICommunicationMessage, T1, T2, T3> callback)
+		{
+			InternalOnRequest(@event, target, callback, m => new object[]
+			{
+				Serializer.Deserialize<T1>(m.Payloads[0]),
+				Serializer.Deserialize<T2>(m.Payloads[1]),
+				Serializer.Deserialize<T3>(m.Payloads[2])
+			});
+		}
+
+		public static void OnRequest<T1, T2, T3, T4>(string @event, [CanBeNull]IClient target, Action<ICommunicationMessage, T1, T2, T3, T4> callback)
+		{
+			InternalOnRequest(@event, target, callback, m => new object[]
+			{
+				Serializer.Deserialize<T1>(m.Payloads[0]),
+				Serializer.Deserialize<T2>(m.Payloads[1]),
+				Serializer.Deserialize<T3>(m.Payloads[2]),
+				Serializer.Deserialize<T4>(m.Payloads[3])
+			});
+		}
+
+		public static void OnRequest<T1, T2, T3, T4, T5>(string @event, [CanBeNull]IClient target, Action<ICommunicationMessage, T1, T2, T3, T4, T5> callback)
+		{
+			InternalOnRequest(@event, target, callback, m => new object[]
+			{
+				Serializer.Deserialize<T1>(m.Payloads[0]),
+				Serializer.Deserialize<T2>(m.Payloads[1]),
+				Serializer.Deserialize<T3>(m.Payloads[2]),
+				Serializer.Deserialize<T4>(m.Payloads[3]),
+				Serializer.Deserialize<T5>(m.Payloads[4])
+			});
+		}
+
 		public static void Off(string @event, Delegate callback)
 		{
 			logger.Trace($"Off: \"{@event}\" detached from \"{callback?.Method?.DeclaringType?.Name}.{callback?.Method?.Name}({string.Join(", ", callback?.Method?.GetParameters()?.Select(p => p.ParameterType + " " + p.Name))})\"");
@@ -178,7 +233,7 @@ namespace NFive.Server.Rpc
 			}
 		}
 		
-		public static async void Emit(string @event, [CanBeNull] IClient target, params object[] payloads)
+		public static void Emit(string @event, [CanBeNull] IClient target, params object[] payloads)
 		{
 			Emit(@event, target, new OutboundMessage
 			{
@@ -254,6 +309,37 @@ namespace NFive.Server.Rpc
 				var args = new List<object>
 				{
 					new CommunicationMessage(@event, new Client(message.Source))
+				};
+
+				args.AddRange(func(message));
+
+				callback.DynamicInvoke(args.ToArray());
+			});
+		}
+
+		private static void InternalOnRequest(string @event, IClient target, Delegate callback, Func<InboundMessage, IEnumerable<object>> func)
+		{
+			logger.Trace($"OnRequest: \"{@event}\" attached to \"{callback.Method?.DeclaringType?.Name}.{callback?.Method?.Name}({string.Join(", ", callback?.Method?.GetParameters()?.Select(p => p.ParameterType + " " + p.Name))})\"");
+
+			events[@event] += new Action<byte[]>(data =>
+			{
+				var message = InboundMessage.From(data);
+
+				if (!message.Event.StartsWith("nfive:log:"))
+				{
+					if (message.Payloads.Count > 0)
+					{
+						logger.Trace($"OnRequest Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}");
+					}
+					else
+					{
+						logger.Trace($"OnRequest Received: \"{message.Event}\" with no payloads");
+					}
+				}
+
+				var args = new List<object>
+				{
+					new CommunicationMessage(@event, message.Id, new Client(message.Source))
 				};
 
 				args.AddRange(func(message));

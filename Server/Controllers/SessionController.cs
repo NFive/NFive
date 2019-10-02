@@ -49,7 +49,7 @@ namespace NFive.Server.Controllers
 			this.comms.Event(NFiveServerEvents.PlayerConnecting).FromServer().On<IClient, string, CallbackDelegate, ExpandoObject>(OnConnecting);
 			this.comms.Event(NFiveServerEvents.PlayerDropped).FromServer().On<IClient, string>(OnDropped);
 
-			this.comms.Event(RpcEvents.ClientInitialize).FromClients().On<string>(OnInitialize);
+			this.comms.Event(RpcEvents.ClientInitialize).FromClients().OnRequest<string>(OnInitialize);
 			this.comms.Event(RpcEvents.ClientInitialized).FromClients().On(OnInitialized);
 			this.comms.Event(SessionEvents.DisconnectPlayer).FromClients().On<string>(OnDisconnect);
 			this.comms.Event(ServerEvents.ServerInitialized).FromServer().On(OnSeverInitialized);

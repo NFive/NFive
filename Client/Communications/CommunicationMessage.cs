@@ -15,9 +15,14 @@ namespace NFive.Client.Communications
 			this.Event = @event;
 		}
 
+		public CommunicationMessage(string @event, Guid id) : this(@event)
+		{
+			this.Id = id;
+		}
+
 		public void Reply(params object[] payloads)
 		{
-			RpcManager.Emit(this.Id + ":" + this.Event, payloads);
+			RpcManager.Emit($"{this.Id}:{this.Event}", payloads);
 		}
 	}
 }

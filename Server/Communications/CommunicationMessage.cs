@@ -68,6 +68,11 @@ namespace NFive.Server.Communications
 			});
 		}
 
+		public CommunicationMessage(string @event, Guid id, IClient client) : this(@event, client)
+		{
+			this.Id = id;
+		}
+
 		public CommunicationMessage(string @event, IClient client) : this(@event)
 		{
 			this.Client = client;
