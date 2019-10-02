@@ -67,6 +67,7 @@ namespace NFive.Server.Communications
 				}
 			});
 		}
+
 		public CommunicationMessage(string @event, IClient client) : this(@event)
 		{
 			this.Client = client;

@@ -62,7 +62,7 @@ namespace NFive.Server
 			API.SetMapName(config.Display.Map);
 
 			// Setup RPC handlers
-			RpcManager.Configure(config.Log.Rpc, this.EventHandlers);
+			RpcManager.Configure(config.Log.Rpc, this.EventHandlers, this.Players);
 
 			var events = new EventManager(config.Log.Events);
 			var comms = new CommunicationManager(events);

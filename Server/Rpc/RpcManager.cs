@@ -18,11 +18,13 @@ namespace NFive.Server.Rpc
 		private static Logger logger;
 		private static readonly Serializer Serializer = new Serializer();
 		private static EventHandlerDictionary events;
+		private static PlayerList players;
 
-		internal static void Configure(LogLevel level, EventHandlerDictionary eventHandler)
+		internal static void Configure(LogLevel level, EventHandlerDictionary eventHandler, PlayerList playerList)
 		{
 			logger = new Logger(level, "RPC");
 			events = eventHandler;
+			players = playerList;
 		}
 
 		public static void OnRaw(string @event, Delegate callback)
@@ -152,15 +154,8 @@ namespace NFive.Server.Rpc
 			);
 		}
 
-		public static async void Emit(string @event, [CanBeNull] IClient target, params object[] payloads)
+		public static async void Emit(string @event, [CanBeNull] IClient target, OutboundMessage message)
 		{
-			var message = new OutboundMessage
-			{
-				Target = target,
-				Event = @event,
-				Payloads = payloads.Select(p => Serializer.Serialize(p)).ToList()
-			};
-
 			if (message.Payloads.Count > 0)
 			{
 				logger.Trace($"Fire: \"{message.Event}\" {(message.Target != null ? $"to {message.Target.Handle} " : string.Empty)}with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}");
@@ -181,6 +176,17 @@ namespace NFive.Server.Rpc
 			{
 				BaseScript.TriggerClientEvent(message.Event, message.Pack());
 			}
+		}
+		
+		public static async void Emit(string @event, [CanBeNull] IClient target, params object[] payloads)
+		{
+			Emit(@event, target, new OutboundMessage
+			{
+				Id = Guid.NewGuid(),
+				Target = target,
+				Event = @event,
+				Payloads = payloads.Select(p => Serializer.Serialize(p)).ToList()
+			});
 		}
 
 		private static async Task<InboundMessage> InternalRequest(string @event, [CanBeNull]IClient target, params object[] payloads)
@@ -203,17 +209,25 @@ namespace NFive.Server.Rpc
 				tcs.SetResult(message);
 			});
 
+			var msg = new OutboundMessage
+			{
+				Id = Guid.NewGuid(),
+				Target = target,
+				Event = @event,
+				Payloads = payloads.Select(p => Serializer.Serialize(p)).ToList()
+			};
+
 			try
 			{
-				events[@event] += callback;
+				events[$"{msg.Id}:{@event}"] += callback;
 
-				Emit(@event, target, payloads);
+				Emit(@event, target, msg);
 
 				return await tcs.Task;
 			}
 			finally
 			{
-				events[@event] -= callback;
+				events[$"{msg.Id}:{@event}"] -= callback;
 			}
 		}
 

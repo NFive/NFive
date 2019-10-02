@@ -1,6 +1,7 @@
 using CitizenFX.Core;
 using JetBrains.Annotations;
 using NFive.Client.Commands;
+using NFive.Client.Communications;
 using NFive.Client.Diagnostics;
 using NFive.Client.Events;
 using NFive.Client.Rpc;
@@ -39,13 +40,14 @@ namespace NFive.Client
 
 			var ticks = new TickManager(c => this.Tick += c, c => this.Tick -= c);
 			var events = new EventManager();
+			var comms = new CommunicationManager(events);
 			var commands = new CommandManager();
 			var nui = new NuiManager(this.EventHandlers);
 
 			this.logger.Warn("Request config...");
 
 			// Initial connection
-			var config = await RpcManager.Request<User, LogLevel, LogLevel>(SDK.Core.Rpc.RpcEvents.ClientInitialize, typeof(Program).Assembly.GetName().Version.ToString());
+			var config = await comms.Event(SDK.Core.Rpc.RpcEvents.ClientInitialize).ToServer().Request<User, LogLevel, LogLevel>(typeof(Program).Assembly.GetName().Version.ToString());
 
 			this.logger.Warn($"Got config: {config.Item1.Name}");
 
@@ -53,7 +55,7 @@ namespace NFive.Client
 			ClientConfiguration.MirrorLogLevel = config.Item3;
 
 			this.logger.Warn("Request plugins...");
-			var plugins = await RpcManager.Request<List<Plugin>>(SDK.Core.Rpc.RpcEvents.ClientPlugins);
+			var plugins = await comms.Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).ToServer().Request<List<Plugin>>();
 			this.logger.Warn($"Got plugins: {plugins.Count}");
 
 			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -94,7 +96,7 @@ namespace NFive.Client
 
 			this.logger.Info("Plugins started");
 
-			RpcManager.Emit(SDK.Core.Rpc.RpcEvents.ClientInitialized);
+			comms.Event(SDK.Core.Rpc.RpcEvents.ClientInitialized).ToServer().Emit();
 
 			foreach (var service in this.services)
 				await service.HoldFocus();

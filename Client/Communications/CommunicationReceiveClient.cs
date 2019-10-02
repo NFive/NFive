@@ -11,19 +11,12 @@ namespace NFive.Client.Communications
 	{
 		public string Event { get; }
 
-		public IClient Target { get; }
-
 		public IEventManager EventManager { get; }
 
 		public CommunicationReceiveClient(ICommunicationTarget target)
 		{
 			this.Event = target.Event;
 			this.EventManager = target.EventManager;
-		}
-
-		public CommunicationReceiveClient(ICommunicationTarget target, IClient client) : this(target)
-		{
-			this.Target = client;
 		}
 
 		public void On(Action<ICommunicationMessage> callback) => this.EventManager.On(this.Event, callback);

@@ -15,7 +15,7 @@ namespace NFive.Server.Rpc
 			NullValueHandling = NullValueHandling.Ignore
 		};
 		
-		public static byte[] Serialize(object obj)
+		public static byte[] Serialize(object obj, JsonSerializer serializer = null)
 		{
 			using (var jsonStream = new MemoryStream())
 			using (var streamWriter = new StreamWriter(jsonStream, new UnicodeEncoding(false, false)))

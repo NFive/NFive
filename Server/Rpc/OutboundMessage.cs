@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using NFive.SDK.Server.Rpc;
@@ -8,6 +9,8 @@ namespace NFive.Server.Rpc
 	[PublicAPI]
 	public class OutboundMessage
 	{
+		public Guid Id { get; set; }
+
 		[JsonIgnore]
 		public IClient Target { get; set; }
 
