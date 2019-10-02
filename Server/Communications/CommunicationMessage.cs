@@ -5,16 +5,21 @@ using NFive.Server.Rpc;
 using NFive.Server.Storage;
 using System;
 using System.Linq;
+using NFive.SDK.Core.Diagnostics;
+using NFive.SDK.Server.Events;
+using NFive.Server.Diagnostics;
 
 namespace NFive.Server.Communications
 {
 	public class CommunicationMessage : ICommunicationMessage
 	{
-		private readonly CommunicationTarget target;
+		private readonly IEventManager eventManager;
 		private readonly Lazy<User> user;
 		private readonly Lazy<Session> session;
 
-		public Guid Id { get; }
+		public Guid Id { get; } = Guid.NewGuid();
+
+		public string Event { get; }
 
 		public IClient Client { get; }
 
@@ -22,13 +27,47 @@ namespace NFive.Server.Communications
 
 		public Session Session => this.session.Value;
 
-		public CommunicationMessage(CommunicationTarget target)
+		public CommunicationMessage(string @event)
 		{
-			this.target = target;
-			this.Id = Guid.NewGuid();
+			this.Event = @event;
 		}
 
-		public CommunicationMessage(CommunicationTarget target, IClient client) : this(target)
+		public CommunicationMessage(ICommunicationTarget target)
+		{
+			this.eventManager = target.EventManager;
+			this.Event = target.Event;
+		}
+
+		public CommunicationMessage(ICommunicationTarget target, IClient client) : this(target)
+		{
+			this.Client = client;
+
+			this.user = new Lazy<User>(() =>
+			{
+				using (var context = new StorageContext())
+				{
+					context.Configuration.ProxyCreationEnabled = false;
+					context.Configuration.LazyLoadingEnabled = false;
+
+					return context.Users.Single(u => u.License == this.Client.License);
+				}
+			});
+
+			this.session = new Lazy<Session>(() =>
+			{
+				using (var context = new StorageContext())
+				{
+					context.Configuration.ProxyCreationEnabled = false;
+					context.Configuration.LazyLoadingEnabled = false;
+
+					var clientSession = context.Sessions.Single(s => s.UserId == this.User.Id && s.Disconnected == null);
+					clientSession.Handle = client.Handle;
+
+					return clientSession;
+				}
+			});
+		}
+		public CommunicationMessage(string @event, IClient client) : this(@event)
 		{
 			this.Client = client;
 
@@ -60,18 +99,15 @@ namespace NFive.Server.Communications
 
 		public void Reply(params object[] payloads)
 		{
-			if (this.Client == null) ReplyToServer(payloads);
-			else ReplyToClient(payloads);
-		}
-
-		private void ReplyToClient(params object[] payloads)
-		{
-			RpcManager.Event(this.Id + ":" + this.target.Event).Target(this.Client).Trigger(payloads);
-		}
-
-		private void ReplyToServer(params object[] payloads)
-		{
-			this.target.EventManager.Fire(this.Id + ":" + this.target.Event, payloads);
+			if (this.Client == null)
+			{
+				this.eventManager.Emit(this.Id + ":" + this.Event, payloads);
+			}
+			else
+			{
+				new Logger(LogLevel.Trace, "Comms").Warn(this.Id + ":" + this.Event);
+				RpcManager.Emit(this.Id + ":" + this.Event, this.Client, payloads);
+			}
 		}
 	}
 }

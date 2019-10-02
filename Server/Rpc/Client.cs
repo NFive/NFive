@@ -65,7 +65,5 @@ namespace NFive.Server.Rpc
 
 			return results;
 		}
-
-		public IRpcTrigger Event(string @event) => RpcManager.Event(@event);
 	}
 }

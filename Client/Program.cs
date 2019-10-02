@@ -36,21 +36,25 @@ namespace NFive.Client
 
 			// Setup RPC handlers
 			RpcManager.Configure(this.EventHandlers);
-			var rpc = new RpcHandler();
 
 			var ticks = new TickManager(c => this.Tick += c, c => this.Tick -= c);
 			var events = new EventManager();
-			var commands = new CommandManager(rpc);
+			var commands = new CommandManager();
 			var nui = new NuiManager(this.EventHandlers);
 
+			this.logger.Warn("Request config...");
+
 			// Initial connection
-			//var configuration = await rpc.Event(SDK.Core.Rpc.RpcEvents.ClientInitialize).Request<ClientConfiguration>(typeof(Program).Assembly.GetName().Version);
-			var config = await rpc.Event(SDK.Core.Rpc.RpcEvents.ClientInitialize).Request<User, LogLevel, LogLevel>(typeof(Program).Assembly.GetName().Version.ToString());
+			var config = await RpcManager.Request<User, LogLevel, LogLevel>(SDK.Core.Rpc.RpcEvents.ClientInitialize, typeof(Program).Assembly.GetName().Version.ToString());
+
+			this.logger.Warn($"Got config: {config.Item1.Name}");
 
 			ClientConfiguration.ConsoleLogLevel = config.Item2;
 			ClientConfiguration.MirrorLogLevel = config.Item3;
 
-			var plugins = await rpc.Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).Request<List<Plugin>>();
+			this.logger.Warn("Request plugins...");
+			var plugins = await RpcManager.Request<List<Plugin>>(SDK.Core.Rpc.RpcEvents.ClientPlugins);
+			this.logger.Warn($"Got plugins: {plugins.Count}");
 
 			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
 			{
@@ -71,7 +75,7 @@ namespace NFive.Client
 				{
 					this.logger.Info($"\t\t{type.FullName}");
 
-					var service = (Service)Activator.CreateInstance(type, new Logger($"Plugin|{type.Name}"), ticks, events, rpc, commands, new OverlayManager(plugin.Name, nui), config.Item1);
+					var service = (Service)Activator.CreateInstance(type, new Logger($"Plugin|{type.Name}"), ticks, events, commands, new OverlayManager(plugin.Name, nui), config.Item1);
 					await service.Loaded();
 
 					this.services.Add(service);
@@ -79,8 +83,8 @@ namespace NFive.Client
 			}
 
 			// Forward raw FiveM events
-			this.EventHandlers.Add("gameEventTriggered", new Action<string, List<object>>((s, a) => events.Raise("gameEventTriggered", s, a)));
-			this.EventHandlers.Add("populationPedCreating", new Action<float, float, float, uint, object>((x, y, z, model, setters) => events.Raise("populationPedCreating", new PedSpawnOptions(x, y, z, model, setters))));
+			//this.EventHandlers.Add("gameEventTriggered", new Action<string, List<object>>((s, a) => events.Emit("gameEventTriggered", s, a)));
+			//this.EventHandlers.Add("populationPedCreating", new Action<float, float, float, uint, object>((x, y, z, model, setters) => events.Emit("populationPedCreating", new PedSpawnOptions(x, y, z, model, setters))));
 
 			this.logger.Info("Plugins loaded");
 
@@ -90,7 +94,7 @@ namespace NFive.Client
 
 			this.logger.Info("Plugins started");
 
-			rpc.Event(SDK.Core.Rpc.RpcEvents.ClientInitialized).Trigger();
+			RpcManager.Emit(SDK.Core.Rpc.RpcEvents.ClientInitialized);
 
 			foreach (var service in this.services)
 				await service.HoldFocus();

@@ -16,8 +16,6 @@ namespace NFive.Client.Rpc
 			NullValueHandling = NullValueHandling.Ignore
 		};
 
-		public static int Level { get; set; } = 6;
-
 		public static byte[] Serialize(object obj)
 		{
 			using (var jsonStream = new MemoryStream())
@@ -40,11 +38,9 @@ namespace NFive.Client.Rpc
 
 		public static byte[] Pack(OutboundMessage message)
 		{
-			message.Sent = DateTime.UtcNow;
-
 			var json = Serialize(message);
 
-			using (var compressedStream = new ZlibStream(new MemoryStream(json, false), CompressionMode.Compress, (CompressionLevel)Level, false))
+			using (var compressedStream = new ZlibStream(new MemoryStream(json, false), CompressionMode.Compress, CompressionLevel.Default, false))
 			using (var outputStream = new MemoryStream())
 			{
 				compressedStream.CopyTo(outputStream);
@@ -59,7 +55,6 @@ namespace NFive.Client.Rpc
 			using (var streamReader = new StreamReader(compressionStream, new UnicodeEncoding(false, false)))
 			{
 				var message = Deserialize<InboundMessage>(streamReader.ReadToEnd());
-				message.Received = DateTime.UtcNow;
 
 				return message;
 			}

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using NFive.Client.Communications;
 using NFive.SDK.Client.Events;
 
 namespace NFive.Client.Events
@@ -8,6 +10,30 @@ namespace NFive.Client.Events
 	public class EventManager : IEventManager
 	{
 		private readonly Dictionary<string, List<Subscription>> subscriptions = new Dictionary<string, List<Subscription>>();
+		
+		public void On(string @event, Action<ICommunicationMessage> action) => InternalOn(@event, action);
+
+		public void On<T>(string @event, Action<ICommunicationMessage, T> action) => InternalOn(@event, action);
+
+		public void On<T1, T2>(string @event, Action<ICommunicationMessage, T1, T2> action) => InternalOn(@event, action);
+
+		public void On<T1, T2, T3>(string @event, Action<ICommunicationMessage, T1, T2, T3> action) => InternalOn(@event, action);
+
+		public void On<T1, T2, T3, T4>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4> action) => InternalOn(@event, action);
+
+		public void On<T1, T2, T3, T4, T5>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4, T5> action) => InternalOn(@event, action);
+
+		public void Emit(string @event, params object[] payload) => InternalRaise(@event, payload);
+
+		public async Task<T1> Request<T1>(string @event, params object[] args) => await InternalRequest<T1>(@event, args);
+
+		public async Task<Tuple<T1, T2>> Request<T1, T2>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2>>(@event, args);
+
+		public async Task<Tuple<T1, T2, T3>> Request<T1, T2, T3>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2, T3>>(@event, args);
+
+		public async Task<Tuple<T1, T2, T3, T4>> Request<T1, T2, T3, T4>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2, T3, T4>>(@event, args);
+
+		public async Task<Tuple<T1, T2, T3, T4, T5>> Request<T1, T2, T3, T4, T5>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2, T3, T4, T5>>(@event, args);
 
 		private void InternalOn(string @event, Delegate action)
 		{
@@ -22,19 +48,6 @@ namespace NFive.Client.Events
 			}
 		}
 
-		public void On(string @event, Action action) => InternalOn(@event, action);
-
-		public void On<T>(string @event, Action<T> action) => InternalOn(@event, action);
-
-		public void On<T1, T2>(string @event, Action<T1, T2> action) => InternalOn(@event, action);
-
-		public void On<T1, T2, T3>(string @event, Action<T1, T2, T3> action) => InternalOn(@event, action);
-
-		public void On<T1, T2, T3, T4>(string @event, Action<T1, T2, T3, T4> action) => InternalOn(@event, action);
-
-		public void On<T1, T2, T3, T4, T5>(string @event, Action<T1, T2, T3, T4, T5> action) => InternalOn(@event, action);
-
-
 		private void InternalRaise(string @event, params object[] args)
 		{
 			lock (this.subscriptions)
@@ -48,38 +61,33 @@ namespace NFive.Client.Events
 			}
 		}
 
-		public void Raise(string @event) => InternalRaise(@event);
-
-		public void Raise<T>(string @event, T p1) => InternalRaise(@event, p1);
-
-		public void Raise<T1, T2>(string @event, T1 p1, T2 p2) => InternalRaise(@event, p1, p2);
-
-		public void Raise<T1, T2, T3>(string @event, T1 p1, T2 p2, T3 p3) => InternalRaise(@event, p1, p2, p3);
-
-		public void Raise<T1, T2, T3, T4>(string @event, T1 p1, T2 p2, T3 p3, T4 p4) => InternalRaise(@event, p1, p2, p3, p4);
-
-		public void Raise<T1, T2, T3, T4, T5>(string @event, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5) => InternalRaise(@event, p1, p2, p3, p4, p5);
-
-
-		private async Task InternalRaiseAsync(string @event, params object[] args)
+		private async Task<TReturn> InternalRequest<TReturn>(string @event, params object[] args)
 		{
-			await Task.Factory.StartNew(() =>
+			var message = new CommunicationMessage(@event);
+			var tcs = new TaskCompletionSource<TReturn>();
+
+			try
 			{
-				InternalRaise(@event, args);
-			});
+				InternalOn($"{message.Id}:{@event}", new Action<ICommunicationMessage, TReturn>((e, data) =>
+				{
+					tcs.SetResult(data);
+				}));
+
+				lock (this.subscriptions)
+				{
+					this.subscriptions.Single(s => s.Key == @event).Value.Single().Handle(message, args);
+				}
+
+				return await tcs.Task;
+			}
+			finally
+			{
+				lock (this.subscriptions)
+				{
+					this.subscriptions.Remove($"{message.Id}:{@event}");
+				}
+			}
 		}
-
-		public Task RaiseAsync(string @event) => InternalRaiseAsync(@event);
-
-		public Task RaiseAsync<T>(string @event, T p1) => InternalRaiseAsync(@event, p1);
-
-		public Task RaiseAsync<T1, T2>(string @event, T1 p1, T2 p2) => InternalRaiseAsync(@event, p1, p2);
-
-		public Task RaiseAsync<T1, T2, T3>(string @event, T1 p1, T2 p2, T3 p3) => InternalRaiseAsync(@event, p1, p2, p3);
-
-		public Task RaiseAsync<T1, T2, T3, T4>(string @event, T1 p1, T2 p2, T3 p3, T4 p4) => InternalRaiseAsync(@event, p1, p2, p3, p4);
-
-		public Task RaiseAsync<T1, T2, T3, T4, T5>(string @event, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5) => InternalRaiseAsync(@event, p1, p2, p3, p4, p5);
 
 		public class Subscription
 		{

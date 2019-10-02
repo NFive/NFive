@@ -13,7 +13,7 @@ namespace NFive.Server.Communications
 			this.target = target;
 		}
 
-		public void Emit(params object[] payloads) => this.target.EventManager.Fire(this.target.Event, payloads);
+		public void Emit(params object[] payloads) => this.target.EventManager.Emit(this.target.Event, payloads);
 
 		public async Task<T> Request<T>(params object[] payloads) => await this.target.EventManager.Request<T>(this.target.Event, payloads);
 

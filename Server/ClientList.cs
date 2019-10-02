@@ -3,10 +3,11 @@ using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.IoC;
 using NFive.SDK.Server;
+using NFive.SDK.Server.Communications;
+using NFive.SDK.Server.Events;
 using NFive.SDK.Server.Rpc;
 using System;
 using System.Collections.Generic;
-using NFive.SDK.Server.Communications;
 
 namespace NFive.Server
 {
@@ -16,26 +17,36 @@ namespace NFive.Server
 	{
 		private readonly ILogger logger;
 
-		public List<IClient> Clients { get; private set; } = new List<IClient>();
+		public event EventHandler<ClientEventArgs> ClientAdded;
 
-		public ClientList(ILogger logger, IRpcHandler rpc)
+		public event EventHandler<ClientEventArgs> ClientRemoved;
+
+		public List<IClient> Clients { get; } = new List<IClient>();
+
+		public ClientList(ILogger logger, ICommunicationManager comms)
 		{
 			this.logger = logger;
 
-			rpc.Event(SDK.Core.Rpc.RpcEvents.ClientInitialize).On(OnInitialize);
-			rpc.Event("playerDropped").OnRaw(new Action<Player, string, CallbackDelegate>(OnDropped));
+			comms.Event(SDK.Core.Rpc.RpcEvents.ClientInitialize).FromClients().On(OnInitialize);
+			comms.Event("nfive:server:playerDropped").FromServer().On<IClient, string, CallbackDelegate>(OnDropped);
 		}
 
 		private void OnInitialize(ICommunicationMessage e)
 		{
 			this.logger.Trace($"Client added: {e.Client.Name} [{e.Client.Handle}]");
+
 			this.Clients.Add(e.Client);
+
+			this.ClientAdded?.Invoke(this, new ClientEventArgs(e.Client));
 		}
 
-		private void OnDropped([FromSource] Player player, string disconnectMessage, CallbackDelegate drop)
+		private void OnDropped(ICommunicationMessage e, IClient client, string disconnectMessage, CallbackDelegate drop)
 		{
-			this.logger.Trace($"Client disconnected: {player.Name}");
-			this.Clients.RemoveAll(c => c.Handle == int.Parse(player.Handle));
+			this.logger.Trace($"Client disconnected: {client.Name}");
+
+			this.Clients.RemoveAll(c => c.Handle == client.Handle);
+
+			this.ClientRemoved?.Invoke(this, new ClientEventArgs(e.Client));
 		}
 	}
 }
