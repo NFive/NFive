@@ -202,7 +202,7 @@ namespace NFive.Server
 
 			rcon.Controllers = this.controllers;
 
-			comms.Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).FromClients().On(e => e.Reply(graph.Plugins));
+			comms.Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).FromClients().OnRequest(e => e.Reply(graph.Plugins));
 
 			comms.Event(ServerEvents.ServerInitialized).ToServer().Emit();
 
