@@ -1,6 +1,5 @@
 using JetBrains.Annotations;
 using NFive.SDK.Server.Communications;
-using NFive.SDK.Server.Rpc;
 using NFive.Server.Rpc;
 using System;
 using System.Threading.Tasks;
@@ -10,30 +9,29 @@ namespace NFive.Server.Communications
 	[PublicAPI]
 	public class CommunicationTransmitClient : ICommunicationTransmitClient
 	{
-		public string Event { get; }
+		private readonly string @event;
+		private readonly IClient target;
 
-		public IClient Target { get; }
-
-		public CommunicationTransmitClient(ICommunicationTarget target)
+		public CommunicationTransmitClient(string @event)
 		{
-			this.Event = target.Event;
+			this.@event = @event;
 		}
 
-		public CommunicationTransmitClient(ICommunicationTarget target, IClient client) : this(target)
+		public CommunicationTransmitClient(string @event, IClient client) : this(@event)
 		{
-			this.Target = client;
+			this.target = client;
 		}
 
-		public void Emit(params object[] payloads) => RpcManager.Emit(this.Event, this.Target, payloads);
+		public void Emit(params object[] payloads) => RpcManager.Emit(this.@event, this.target, payloads);
 
-		public async Task<T> Request<T>(params object[] payloads) => await RpcManager.Request<T>(this.Event, this.Target, payloads);
+		public async Task<T> Request<T>(params object[] payloads) => await RpcManager.Request<T>(this.@event, this.target, payloads);
 
-		public async Task<Tuple<T1, T2>> Request<T1, T2>(params object[] payloads) => await RpcManager.Request<T1, T2>(this.Event, this.Target, payloads);
+		public async Task<Tuple<T1, T2>> Request<T1, T2>(params object[] payloads) => await RpcManager.Request<T1, T2>(this.@event, this.target, payloads);
 
-		public async Task<Tuple<T1, T2, T3>> Request<T1, T2, T3>(params object[] payloads) => await RpcManager.Request<T1, T2, T3>(this.Event, this.Target, payloads);
+		public async Task<Tuple<T1, T2, T3>> Request<T1, T2, T3>(params object[] payloads) => await RpcManager.Request<T1, T2, T3>(this.@event, this.target, payloads);
 
-		public async Task<Tuple<T1, T2, T3, T4>> Request<T1, T2, T3, T4>(params object[] payloads) => await RpcManager.Request<T1, T2, T3, T4>(this.Event, this.Target, payloads);
+		public async Task<Tuple<T1, T2, T3, T4>> Request<T1, T2, T3, T4>(params object[] payloads) => await RpcManager.Request<T1, T2, T3, T4>(this.@event, this.target, payloads);
 
-		public async Task<Tuple<T1, T2, T3, T4, T5>> Request<T1, T2, T3, T4, T5>(params object[] payloads) => await RpcManager.Request<T1, T2, T3, T4, T5>(this.Event, this.Target, payloads);
+		public async Task<Tuple<T1, T2, T3, T4, T5>> Request<T1, T2, T3, T4, T5>(params object[] payloads) => await RpcManager.Request<T1, T2, T3, T4, T5>(this.@event, this.target, payloads);
 	}
 }

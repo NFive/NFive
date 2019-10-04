@@ -1,13 +1,14 @@
 using Ionic.Zlib;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
-using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
 
 namespace NFive.Client.Rpc
 {
-	public class RpcPacker
+	[PublicAPI]
+	public static class RpcPacker
 	{
 		private static readonly JsonSerializer Serializer = new JsonSerializer
 		{
@@ -54,9 +55,7 @@ namespace NFive.Client.Rpc
 			using (var compressionStream = new ZlibStream(new MemoryStream(data, false), CompressionMode.Decompress, false))
 			using (var streamReader = new StreamReader(compressionStream, new UnicodeEncoding(false, false)))
 			{
-				var message = Deserialize<InboundMessage>(streamReader.ReadToEnd());
-
-				return message;
+				return Deserialize<InboundMessage>(streamReader.ReadToEnd());
 			}
 		}
 	}

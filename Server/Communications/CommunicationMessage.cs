@@ -1,13 +1,10 @@
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Server.Communications;
-using NFive.SDK.Server.Rpc;
+using NFive.SDK.Server.Events;
 using NFive.Server.Rpc;
 using NFive.Server.Storage;
 using System;
 using System.Linq;
-using NFive.SDK.Core.Diagnostics;
-using NFive.SDK.Server.Events;
-using NFive.Server.Diagnostics;
 
 namespace NFive.Server.Communications
 {
@@ -32,13 +29,12 @@ namespace NFive.Server.Communications
 			this.Event = @event;
 		}
 
-		public CommunicationMessage(ICommunicationTarget target)
+		public CommunicationMessage(string @event, IEventManager eventManager) : this(@event)
 		{
-			this.eventManager = target.EventManager;
-			this.Event = target.Event;
+			this.eventManager = eventManager;
 		}
 
-		public CommunicationMessage(ICommunicationTarget target, IClient client) : this(target)
+		public CommunicationMessage(string @event, IClient client) : this(@event)
 		{
 			this.Client = client;
 
@@ -73,46 +69,52 @@ namespace NFive.Server.Communications
 			this.Id = id;
 		}
 
-		public CommunicationMessage(string @event, IClient client) : this(@event)
-		{
-			this.Client = client;
+		//public CommunicationMessage(ICommunicationTarget target)
+		//{
+		//	this.eventManager = target.EventManager;
+		//	this.Event = target.Event;
+		//}
 
-			this.user = new Lazy<User>(() =>
-			{
-				using (var context = new StorageContext())
-				{
-					context.Configuration.ProxyCreationEnabled = false;
-					context.Configuration.LazyLoadingEnabled = false;
+		//public CommunicationMessage(ICommunicationTarget target, IClient client) : this(target)
+		//{
+		//	this.Client = client;
 
-					return context.Users.Single(u => u.License == this.Client.License);
-				}
-			});
+		//	this.user = new Lazy<User>(() =>
+		//	{
+		//		using (var context = new StorageContext())
+		//		{
+		//			context.Configuration.ProxyCreationEnabled = false;
+		//			context.Configuration.LazyLoadingEnabled = false;
 
-			this.session = new Lazy<Session>(() =>
-			{
-				using (var context = new StorageContext())
-				{
-					context.Configuration.ProxyCreationEnabled = false;
-					context.Configuration.LazyLoadingEnabled = false;
+		//			return context.Users.Single(u => u.License == this.Client.License);
+		//		}
+		//	});
 
-					var clientSession = context.Sessions.Single(s => s.UserId == this.User.Id && s.Disconnected == null);
-					clientSession.Handle = client.Handle;
+		//	this.session = new Lazy<Session>(() =>
+		//	{
+		//		using (var context = new StorageContext())
+		//		{
+		//			context.Configuration.ProxyCreationEnabled = false;
+		//			context.Configuration.LazyLoadingEnabled = false;
 
-					return clientSession;
-				}
-			});
-		}
+		//			var clientSession = context.Sessions.Single(s => s.UserId == this.User.Id && s.Disconnected == null);
+		//			clientSession.Handle = client.Handle;
+
+		//			return clientSession;
+		//		}
+		//	});
+		//}
+
 
 		public void Reply(params object[] payloads)
 		{
 			if (this.Client == null)
 			{
-				this.eventManager.Emit(this.Id + ":" + this.Event, payloads);
+				this.eventManager.Emit($"{this.Id}:{this.Event}", payloads);
 			}
 			else
 			{
-				new Logger(LogLevel.Trace, "Comms").Warn(this.Id + ":" + this.Event);
-				RpcManager.Emit(this.Id + ":" + this.Event, this.Client, payloads);
+				RpcManager.Emit($"{this.Id}:{this.Event}", this.Client, payloads);
 			}
 		}
 	}

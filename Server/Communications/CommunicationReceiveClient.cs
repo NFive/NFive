@@ -1,5 +1,4 @@
 using NFive.SDK.Server.Communications;
-using NFive.SDK.Server.Rpc;
 using NFive.Server.Rpc;
 using System;
 
@@ -7,42 +6,41 @@ namespace NFive.Server.Communications
 {
 	public class CommunicationReceiveClient : ICommunicationReceiveClient
 	{
-		public string Event { get; }
+		private readonly IClient target;
+		private readonly string @event;
 
-		public IClient Target { get; }
-
-		public CommunicationReceiveClient(ICommunicationTarget target)
+		public CommunicationReceiveClient(string @event)
 		{
-			this.Event = target.Event;
+			this.@event = @event;
 		}
 
-		public CommunicationReceiveClient(ICommunicationTarget target, IClient client) : this(target)
+		public CommunicationReceiveClient(string @event, IClient client) : this(@event)
 		{
-			this.Target = client;
+			this.target = client;
 		}
 
-		public void On(Action<ICommunicationMessage> callback) => RpcManager.On(this.Event, this.Target, callback);
+		public void On(Action<ICommunicationMessage> callback) => RpcManager.On(this.@event, this.target, callback);
 
-		public void On<T>(Action<ICommunicationMessage, T> callback) => RpcManager.On(this.Event, this.Target, callback);
+		public void On<T>(Action<ICommunicationMessage, T> callback) => RpcManager.On(this.@event, this.target, callback);
 
-		public void On<T1, T2>(Action<ICommunicationMessage, T1, T2> callback) => RpcManager.On(this.Event, this.Target, callback);
+		public void On<T1, T2>(Action<ICommunicationMessage, T1, T2> callback) => RpcManager.On(this.@event, this.target, callback);
 
-		public void On<T1, T2, T3>(Action<ICommunicationMessage, T1, T2, T3> callback) => RpcManager.On(this.Event, this.Target, callback);
+		public void On<T1, T2, T3>(Action<ICommunicationMessage, T1, T2, T3> callback) => RpcManager.On(this.@event, this.target, callback);
 
-		public void On<T1, T2, T3, T4>(Action<ICommunicationMessage, T1, T2, T3, T4> callback) => RpcManager.On(this.Event, this.Target, callback);
+		public void On<T1, T2, T3, T4>(Action<ICommunicationMessage, T1, T2, T3, T4> callback) => RpcManager.On(this.@event, this.target, callback);
 
-		public void On<T1, T2, T3, T4, T5>(Action<ICommunicationMessage, T1, T2, T3, T4, T5> callback) => RpcManager.On(this.Event, this.Target, callback);
+		public void On<T1, T2, T3, T4, T5>(Action<ICommunicationMessage, T1, T2, T3, T4, T5> callback) => RpcManager.On(this.@event, this.target, callback);
 
-		public void OnRequest(Action<ICommunicationMessage> callback) => RpcManager.OnRequest(this.Event, this.Target, callback);
+		public void OnRequest(Action<ICommunicationMessage> callback) => RpcManager.OnRequest(this.@event, this.target, callback);
 
-		public void OnRequest<T>(Action<ICommunicationMessage, T> callback) => RpcManager.OnRequest(this.Event, this.Target, callback);
+		public void OnRequest<T>(Action<ICommunicationMessage, T> callback) => RpcManager.OnRequest(this.@event, this.target, callback);
 
-		public void OnRequest<T1, T2>(Action<ICommunicationMessage, T1, T2> callback) => RpcManager.OnRequest(this.Event, this.Target, callback);
+		public void OnRequest<T1, T2>(Action<ICommunicationMessage, T1, T2> callback) => RpcManager.OnRequest(this.@event, this.target, callback);
 
-		public void OnRequest<T1, T2, T3>(Action<ICommunicationMessage, T1, T2, T3> callback) => RpcManager.OnRequest(this.Event, this.Target, callback);
+		public void OnRequest<T1, T2, T3>(Action<ICommunicationMessage, T1, T2, T3> callback) => RpcManager.OnRequest(this.@event, this.target, callback);
 
-		public void OnRequest<T1, T2, T3, T4>(Action<ICommunicationMessage, T1, T2, T3, T4> callback) => RpcManager.OnRequest(this.Event, this.Target, callback);
+		public void OnRequest<T1, T2, T3, T4>(Action<ICommunicationMessage, T1, T2, T3, T4> callback) => RpcManager.OnRequest(this.@event, this.target, callback);
 
-		public void OnRequest<T1, T2, T3, T4, T5>(Action<ICommunicationMessage, T1, T2, T3, T4, T5> callback) => RpcManager.OnRequest(this.Event, this.Target, callback);
+		public void OnRequest<T1, T2, T3, T4, T5>(Action<ICommunicationMessage, T1, T2, T3, T4, T5> callback) => RpcManager.OnRequest(this.@event, this.target, callback);
 	}
 }

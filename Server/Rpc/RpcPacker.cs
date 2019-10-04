@@ -1,4 +1,5 @@
 using Ionic.Zlib;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using System.Globalization;
 using System.IO;
@@ -6,6 +7,7 @@ using System.Text;
 
 namespace NFive.Server.Rpc
 {
+	[PublicAPI]
 	public static class RpcPacker
 	{
 		private static readonly JsonSerializer Serializer = new JsonSerializer
@@ -14,8 +16,8 @@ namespace NFive.Server.Rpc
 			DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate,
 			NullValueHandling = NullValueHandling.Ignore
 		};
-		
-		public static byte[] Serialize(object obj, JsonSerializer serializer = null)
+
+		public static byte[] Serialize(object obj)
 		{
 			using (var jsonStream = new MemoryStream())
 			using (var streamWriter = new StreamWriter(jsonStream, new UnicodeEncoding(false, false)))
@@ -39,8 +41,7 @@ namespace NFive.Server.Rpc
 		{
 			var json = Serialize(message);
 
-			using (var inputStream = new MemoryStream(json, false))
-			using (var compressedStream = new ZlibStream(inputStream, CompressionMode.Compress, CompressionLevel.Default, true))
+			using (var compressedStream = new ZlibStream(new MemoryStream(json, false), CompressionMode.Compress, CompressionLevel.Default, false))
 			using (var outputStream = new MemoryStream())
 			{
 				compressedStream.CopyTo(outputStream);
@@ -54,9 +55,7 @@ namespace NFive.Server.Rpc
 			using (var compressionStream = new ZlibStream(new MemoryStream(data, false), CompressionMode.Decompress, false))
 			using (var streamReader = new StreamReader(compressionStream, new UnicodeEncoding(false, false)))
 			{
-				var json = streamReader.ReadToEnd();
-
-				return Deserialize<InboundMessage>(json);
+				return Deserialize<InboundMessage>(streamReader.ReadToEnd());
 			}
 		}
 	}

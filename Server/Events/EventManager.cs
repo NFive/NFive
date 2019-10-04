@@ -42,6 +42,18 @@ namespace NFive.Server.Events
 
 		public async Task<Tuple<T1, T2, T3, T4, T5>> Request<T1, T2, T3, T4, T5>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2, T3, T4, T5>>(@event, args);
 
+		public void OnRequest(string @event, Action<ICommunicationMessage> action) { } // TODO
+
+		public void OnRequest<T>(string @event, Action<ICommunicationMessage, T> action) { }
+
+		public void OnRequest<T1, T2>(string @event, Action<ICommunicationMessage, T1, T2> action) { }
+
+		public void OnRequest<T1, T2, T3>(string @event, Action<ICommunicationMessage, T1, T2, T3> action) { }
+
+		public void OnRequest<T1, T2, T3, T4>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4> action) { }
+
+		public void OnRequest<T1, T2, T3, T4, T5>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4, T5> action) { }
+
 		public void Off(string @event, Delegate action)
 		{
 			lock (this.subscriptions)
@@ -59,7 +71,7 @@ namespace NFive.Server.Events
 			{
 				if (!this.subscriptions.ContainsKey(@event)) return;
 
-				var message = new CommunicationMessage(new CommunicationTarget(this, @event));
+				var message = new CommunicationMessage(@event, this);
 
 				this.logger.Trace(args.Length > 0 ? $"Emit: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a?.ToString() ?? "NULL"))}" : $"Emit: \"{@event}\" without payload");
 
@@ -90,7 +102,7 @@ namespace NFive.Server.Events
 
 		private async Task<TReturn> InternalRequest<TReturn>(string @event, params object[] args)
 		{
-			var message = new CommunicationMessage(new CommunicationTarget(this, @event));
+			var message = new CommunicationMessage(@event, this);
 			var tcs = new TaskCompletionSource<TReturn>();
 
 			try

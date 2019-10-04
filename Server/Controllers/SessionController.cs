@@ -4,11 +4,9 @@ using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Helpers;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Core.Rpc;
-using NFive.SDK.Server;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Events;
-using NFive.SDK.Server.Rpc;
 using NFive.Server.Configuration;
 using NFive.Server.Rpc;
 using NFive.Server.Storage;
@@ -150,7 +148,7 @@ namespace NFive.Server.Controllers
 
 		private async void OnConnecting(ICommunicationMessage e, IClient client, string playerName, CallbackDelegate drop, ExpandoObject callbacks)
 		{
-			var deferrals = new Deferrals(callbacks, drop);
+			var deferrals = new ConnectionDeferrals(callbacks, drop);
 			Session session = null;
 			User user = null;
 

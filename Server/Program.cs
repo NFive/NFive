@@ -123,6 +123,20 @@ namespace NFive.Server
 					var mainFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{mainName}.net.dll");
 					if (!File.Exists(mainFile)) throw new FileNotFoundException(mainFile);
 
+					var asm = Assembly.LoadFrom(mainFile);
+
+					var sdkVersion = asm.GetCustomAttribute<ServerPluginAttribute>();
+
+					if (sdkVersion == null)
+					{
+						throw new Exception("Unable to load outdated SDK plugin");
+					}
+
+					if (sdkVersion.Target != SDK.Server.SDK.Version)
+					{
+						throw new Exception("Unable to load outdated SDK plugin");
+					}
+
 					var types = Assembly.LoadFrom(mainFile).GetTypes().Where(t => !t.IsAbstract && t.IsClass).ToList();
 
 					// Find migrations

@@ -3,7 +3,6 @@ using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Rpc;
 using NFive.SDK.Server.Communications;
-using NFive.SDK.Server.Rpc;
 using NFive.Server.Communications;
 using NFive.Server.Diagnostics;
 using System;
@@ -225,14 +224,16 @@ namespace NFive.Server.Rpc
 
 			if (message.Target != null)
 			{
-				BaseScript.TriggerClientEvent(new PlayerList()[message.Target.Handle], message.Event, message.Pack());
+				logger.Trace($"TriggerClientEvent: Using PlayerList with {players.Count()} player(s)");
+				BaseScript.TriggerClientEvent(players[message.Target.Handle], message.Event, message.Pack());
 			}
 			else
 			{
+				logger.Trace($"TriggerClientEvent: All clients");
 				BaseScript.TriggerClientEvent(message.Event, message.Pack());
 			}
 		}
-		
+
 		public static void Emit(string @event, [CanBeNull] IClient target, params object[] payloads)
 		{
 			Emit(@event, target, new OutboundMessage

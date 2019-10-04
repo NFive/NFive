@@ -1,5 +1,5 @@
 using CitizenFX.Core.Native;
-using NFive.SDK.Server.Rpc;
+using NFive.SDK.Server.Communications;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
