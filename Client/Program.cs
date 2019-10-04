@@ -77,7 +77,7 @@ namespace NFive.Client
 				{
 					this.logger.Info($"\t\t{type.FullName}");
 
-					var service = (Service)Activator.CreateInstance(type, new Logger($"Plugin|{type.Name}"), ticks, events, commands, new OverlayManager(plugin.Name, nui), config.Item1);
+					var service = (Service)Activator.CreateInstance(type, new Logger($"Plugin|{type.Name}"), ticks, comms, commands, new OverlayManager(plugin.Name, nui), config.Item1);
 					await service.Loaded();
 
 					this.services.Add(service);

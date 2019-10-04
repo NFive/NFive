@@ -1,22 +1,8 @@
+using NFive.SDK.Client.Communications;
 using NFive.SDK.Client.Events;
 
 namespace NFive.Client.Communications
 {
-	public interface ICommunicationTarget
-	{
-		IEventManager EventManager { get; }
-
-		string Event { get; }
-
-		ICommunicationTransmitClient ToClient();
-
-		ICommunicationReceiveClient FromClient();
-		
-		ICommunicationTransmitServer ToServer();
-
-		ICommunicationReceiveServer FromServer();
-	}
-
 	public class CommunicationTarget : ICommunicationTarget
 	{
 		public IEventManager EventManager { get; }

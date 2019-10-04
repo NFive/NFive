@@ -1,12 +1,9 @@
 using NFive.SDK.Client.Events;
 using System;
+using NFive.SDK.Client.Communications;
 
 namespace NFive.Client.Communications
 {
-	public interface ICommunicationReceiveClient : ICommunicationReceive
-	{
-	}
-
 	public class CommunicationReceiveClient : ICommunicationReceiveClient
 	{
 		public string Event { get; }

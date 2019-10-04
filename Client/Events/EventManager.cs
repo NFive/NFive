@@ -3,14 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NFive.Client.Communications;
+using NFive.Client.Diagnostics;
 using NFive.SDK.Client.Events;
 
 namespace NFive.Client.Events
 {
 	public class EventManager : IEventManager
 	{
-		private readonly Dictionary<string, List<Subscription>> subscriptions = new Dictionary<string, List<Subscription>>();
-		
+		private readonly Logger logger;
+		private readonly Dictionary<string, List<Delegate>> subscriptions = new Dictionary<string, List<Delegate>>();
+
+		public EventManager()
+		{
+			this.logger = new Logger("Events");
+		}
+
 		public void On(string @event, Action<ICommunicationMessage> action) => InternalOn(@event, action);
 
 		public void On<T>(string @event, Action<ICommunicationMessage, T> action) => InternalOn(@event, action);
@@ -23,8 +30,6 @@ namespace NFive.Client.Events
 
 		public void On<T1, T2, T3, T4, T5>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4, T5> action) => InternalOn(@event, action);
 
-		public void Emit(string @event, params object[] payload) => InternalRaise(@event, payload);
-
 		public async Task<T1> Request<T1>(string @event, params object[] args) => await InternalRequest<T1>(@event, args);
 
 		public async Task<Tuple<T1, T2>> Request<T1, T2>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2>>(@event, args);
@@ -35,35 +40,83 @@ namespace NFive.Client.Events
 
 		public async Task<Tuple<T1, T2, T3, T4, T5>> Request<T1, T2, T3, T4, T5>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2, T3, T4, T5>>(@event, args);
 
+		public void OnRequest(string @event, Action<ICommunicationMessage> action) => InternalOnRequest(@event, action);
+
+		public void OnRequest<T>(string @event, Action<ICommunicationMessage, T> action) => InternalOnRequest(@event, action);
+
+		public void OnRequest<T1, T2>(string @event, Action<ICommunicationMessage, T1, T2> action) => InternalOnRequest(@event, action);
+
+		public void OnRequest<T1, T2, T3>(string @event, Action<ICommunicationMessage, T1, T2, T3> action) => InternalOnRequest(@event, action);
+
+		public void OnRequest<T1, T2, T3, T4>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4> action) => InternalOnRequest(@event, action);
+
+		public void OnRequest<T1, T2, T3, T4, T5>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4, T5> action) => InternalOnRequest(@event, action);
+
+		public void Off(string @event, Delegate action)
+		{
+			lock (this.subscriptions)
+			{
+				if (this.subscriptions.ContainsKey(@event) && this.subscriptions[@event].Contains(action))
+				{
+					this.subscriptions[@event].Remove(action);
+				}
+			}
+		}
+
+		public void Emit(string @event, params object[] args)
+		{
+			lock (this.subscriptions)
+			{
+				if (!this.subscriptions.ContainsKey(@event)) return;
+
+				var message = new CommunicationMessage(@event, this);
+
+				this.logger.Trace(args.Length > 0 ? $"Emit: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a?.ToString() ?? "NULL"))}" : $"Emit: \"{@event}\" without payload");
+
+				foreach (var subscription in this.subscriptions[@event])
+				{
+					var payload = new List<object> { message };
+					payload.AddRange(args);
+
+					subscription.DynamicInvoke(payload.ToArray());
+				}
+			}
+		}
+
 		private void InternalOn(string @event, Delegate action)
 		{
 			lock (this.subscriptions)
 			{
 				if (!this.subscriptions.ContainsKey(@event))
 				{
-					this.subscriptions.Add(@event, new List<Subscription>());
+					this.subscriptions.Add(@event, new List<Delegate>());
 				}
 
-				this.subscriptions[@event].Add(new Subscription(action));
+				this.subscriptions[@event].Add(action);
+
+				this.logger.Trace($"On: \"{@event}\" attached to \"{action.Method.DeclaringType?.Name}.{action.Method.Name}({string.Join(", ", action.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 			}
 		}
 
-		private void InternalRaise(string @event, params object[] args)
+		private void InternalOnRequest(string @event, Delegate action)
 		{
 			lock (this.subscriptions)
 			{
-				if (!this.subscriptions.ContainsKey(@event)) return;
-
-				foreach (var subscription in this.subscriptions[@event])
+				if (!this.subscriptions.ContainsKey(@event))
 				{
-					subscription.Handle(args);
+					this.subscriptions.Add(@event, new List<Delegate>());
 				}
+
+				this.subscriptions[@event].Add(action);
+
+				this.logger.Trace($"On: \"{@event}\" attached to \"{action.Method.DeclaringType?.Name}.{action.Method.Name}({string.Join(", ", action.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 			}
 		}
 
+
 		private async Task<TReturn> InternalRequest<TReturn>(string @event, params object[] args)
 		{
-			var message = new CommunicationMessage(@event);
+			var message = new CommunicationMessage(@event, this);
 			var tcs = new TaskCompletionSource<TReturn>();
 
 			try
@@ -73,9 +126,14 @@ namespace NFive.Client.Events
 					tcs.SetResult(data);
 				}));
 
+				this.logger.Trace(args.Length > 0 ? $"Request Emit: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a?.ToString() ?? "NULL"))}" : $"Fire: \"{@event}\" without payload");
+
 				lock (this.subscriptions)
 				{
-					this.subscriptions.Single(s => s.Key == @event).Value.Single().Handle(message, args);
+					var payload = new List<object> { message };
+					payload.AddRange(args);
+
+					this.subscriptions.Single(s => s.Key == @event).Value.Single().DynamicInvoke(payload.ToArray());
 				}
 
 				return await tcs.Task;
@@ -86,25 +144,6 @@ namespace NFive.Client.Events
 				{
 					this.subscriptions.Remove($"{message.Id}:{@event}");
 				}
-			}
-		}
-
-		public class Subscription
-		{
-			private readonly Delegate handler;
-
-			public Subscription(Delegate handler)
-			{
-				this.handler = handler;
-			}
-
-			public bool Handle(params object[] args)
-			{
-				var cancel = false;
-
-				this.handler.DynamicInvoke(args);
-
-				return cancel;
 			}
 		}
 	}

@@ -205,14 +205,9 @@ namespace NFive.Client.Rpc
 
 		public static async void Emit(string @event, OutboundMessage message)
 		{
-			if (message.Payloads.Count > 0)
-			{
-				Logger.Warn($"Emit: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}");
-			}
-			else
-			{
-				Logger.Warn($"Emit: \"{message.Event}\" with no payloads");
-			}
+			Logger.Warn(message.Payloads.Count > 0
+				? $"Emit: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}"
+				: $"Emit: \"{message.Event}\" with no payloads");
 
 			// Marshall back to the main thread in order to use a native call.
 			await BaseScript.Delay(0);
@@ -241,14 +236,9 @@ namespace NFive.Client.Rpc
 
 				var message = InboundMessage.From(data);
 
-				if (message.Payloads.Count > 0)
-				{
-					Logger.Warn($"Request Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}");
-				}
-				else
-				{
-					Logger.Warn($"Request Received: \"{message.Event}\" with no payloads");
-				}
+				Logger.Warn(message.Payloads.Count > 0
+					? $"Request Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}"
+					: $"Request Received: \"{message.Event}\" with no payloads");
 
 				Logger.Warn($"Request callback SetResult");
 
@@ -286,14 +276,9 @@ namespace NFive.Client.Rpc
 			{
 				var message = InboundMessage.From(data);
 
-				if (message.Payloads.Count > 0)
-				{
-					Logger.Warn($"On Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}");
-				}
-				else
-				{
-					Logger.Warn($"On Received: \"{message.Event}\" with no payloads");
-				}
+				Logger.Warn(message.Payloads.Count > 0
+					? $"On Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}"
+					: $"On Received: \"{message.Event}\" with no payloads");
 
 				var args = new List<object>
 				{
@@ -314,18 +299,13 @@ namespace NFive.Client.Rpc
 			{
 				var message = InboundMessage.From(data);
 
-				if (message.Payloads.Count > 0)
-				{
-					Logger.Warn($"OnRequest Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}");
-				}
-				else
-				{
-					Logger.Warn($"OnRequest Received: \"{message.Event}\" with no payloads");
-				}
+				Logger.Warn(message.Payloads.Count > 0
+					? $"OnRequest Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}"
+					: $"OnRequest Received: \"{message.Event}\" with no payloads");
 
 				var args = new List<object>
 				{
-					new CommunicationMessage(@event, message.Id)
+					new CommunicationMessage(@event, message.Id, true)
 				};
 
 				args.AddRange(func(message));

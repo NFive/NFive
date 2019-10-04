@@ -1,13 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using NFive.Client.Rpc;
+using NFive.SDK.Client.Communications;
 
 namespace NFive.Client.Communications
 {
-	public interface ICommunicationTransmitServer : ICommunicationTransmit
-	{
-	}
-
 	public class CommunicationTransmitServer : ICommunicationTransmitServer
 	{
 		public string Event { get; }

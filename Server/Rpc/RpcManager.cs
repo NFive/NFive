@@ -253,14 +253,9 @@ namespace NFive.Server.Rpc
 			{
 				var message = InboundMessage.From(data);
 
-				if (message.Payloads.Count > 0)
-				{
-					logger.Trace($"Request Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}");
-				}
-				else
-				{
-					logger.Trace($"Request Received: \"{message.Event}\" with no payloads");
-				}
+				logger.Trace(message.Payloads.Count > 0
+					? $"Request Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}"
+					: $"Request Received: \"{message.Event}\" with no payloads");
 
 				tcs.SetResult(message);
 			});
@@ -294,17 +289,17 @@ namespace NFive.Server.Rpc
 			events[@event] += new Action<byte[]>(data =>
 			{
 				var message = InboundMessage.From(data);
+				if (target != null && message.Source != target.Handle)
+				{
+					logger.Trace($"Ignoring event {@event} triggered by: {message.Source} | expected: {target.Handle}");
+					return;
+				}
 
 				if (!message.Event.StartsWith("nfive:log:"))
 				{
-					if (message.Payloads.Count > 0)
-					{
-						logger.Trace($"On Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}");
-					}
-					else
-					{
-						logger.Trace($"On Received: \"{message.Event}\" with no payloads");
-					}
+					logger.Trace(message.Payloads.Count > 0
+						? $"On Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}"
+						: $"On Received: \"{message.Event}\" with no payloads");
 				}
 
 				var args = new List<object>
@@ -325,17 +320,16 @@ namespace NFive.Server.Rpc
 			events[@event] += new Action<byte[]>(data =>
 			{
 				var message = InboundMessage.From(data);
-
+				if (target != null && message.Source != target.Handle)
+				{
+					logger.Trace($"Ignoring event {@event} triggered by: {message.Source} | expected: {target.Handle}");
+					return;
+				}
 				if (!message.Event.StartsWith("nfive:log:"))
 				{
-					if (message.Payloads.Count > 0)
-					{
-						logger.Trace($"OnRequest Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}");
-					}
-					else
-					{
-						logger.Trace($"OnRequest Received: \"{message.Event}\" with no payloads");
-					}
+					logger.Trace(message.Payloads.Count > 0
+						? $"OnRequest Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}"
+						: $"OnRequest Received: \"{message.Event}\" with no payloads");
 				}
 
 				var args = new List<object>

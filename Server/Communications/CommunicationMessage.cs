@@ -69,43 +69,6 @@ namespace NFive.Server.Communications
 			this.Id = id;
 		}
 
-		//public CommunicationMessage(ICommunicationTarget target)
-		//{
-		//	this.eventManager = target.EventManager;
-		//	this.Event = target.Event;
-		//}
-
-		//public CommunicationMessage(ICommunicationTarget target, IClient client) : this(target)
-		//{
-		//	this.Client = client;
-
-		//	this.user = new Lazy<User>(() =>
-		//	{
-		//		using (var context = new StorageContext())
-		//		{
-		//			context.Configuration.ProxyCreationEnabled = false;
-		//			context.Configuration.LazyLoadingEnabled = false;
-
-		//			return context.Users.Single(u => u.License == this.Client.License);
-		//		}
-		//	});
-
-		//	this.session = new Lazy<Session>(() =>
-		//	{
-		//		using (var context = new StorageContext())
-		//		{
-		//			context.Configuration.ProxyCreationEnabled = false;
-		//			context.Configuration.LazyLoadingEnabled = false;
-
-		//			var clientSession = context.Sessions.Single(s => s.UserId == this.User.Id && s.Disconnected == null);
-		//			clientSession.Handle = client.Handle;
-
-		//			return clientSession;
-		//		}
-		//	});
-		//}
-
-
 		public void Reply(params object[] payloads)
 		{
 			if (this.Client == null)

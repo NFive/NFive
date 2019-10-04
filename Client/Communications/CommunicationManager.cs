@@ -1,8 +1,10 @@
+using NFive.SDK.Client.Communications;
 using NFive.SDK.Client.Events;
 
 namespace NFive.Client.Communications
 {
-	public class CommunicationManager
+
+	public class CommunicationManager : ICommunicationManager
 	{
 		private readonly IEventManager eventManager;
 

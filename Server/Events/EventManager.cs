@@ -42,17 +42,17 @@ namespace NFive.Server.Events
 
 		public async Task<Tuple<T1, T2, T3, T4, T5>> Request<T1, T2, T3, T4, T5>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2, T3, T4, T5>>(@event, args);
 
-		public void OnRequest(string @event, Action<ICommunicationMessage> action) { } // TODO
+		public void OnRequest(string @event, Action<ICommunicationMessage> action) => InternalOnRequest(@event, action);
 
-		public void OnRequest<T>(string @event, Action<ICommunicationMessage, T> action) { }
+		public void OnRequest<T>(string @event, Action<ICommunicationMessage, T> action) => InternalOnRequest(@event, action);
 
-		public void OnRequest<T1, T2>(string @event, Action<ICommunicationMessage, T1, T2> action) { }
+		public void OnRequest<T1, T2>(string @event, Action<ICommunicationMessage, T1, T2> action) => InternalOnRequest(@event, action);
 
-		public void OnRequest<T1, T2, T3>(string @event, Action<ICommunicationMessage, T1, T2, T3> action) { }
+		public void OnRequest<T1, T2, T3>(string @event, Action<ICommunicationMessage, T1, T2, T3> action) => InternalOnRequest(@event, action);
 
-		public void OnRequest<T1, T2, T3, T4>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4> action) { }
+		public void OnRequest<T1, T2, T3, T4>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4> action) => InternalOnRequest(@event, action);
 
-		public void OnRequest<T1, T2, T3, T4, T5>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4, T5> action) { }
+		public void OnRequest<T1, T2, T3, T4, T5>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4, T5> action) => InternalOnRequest(@event, action);
 
 		public void Off(string @event, Delegate action)
 		{
@@ -99,6 +99,22 @@ namespace NFive.Server.Events
 				this.logger.Trace($"On: \"{@event}\" attached to \"{action.Method.DeclaringType?.Name}.{action.Method.Name}({string.Join(", ", action.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 			}
 		}
+
+		private void InternalOnRequest(string @event, Delegate action)
+		{
+			lock (this.subscriptions)
+			{
+				if (!this.subscriptions.ContainsKey(@event))
+				{
+					this.subscriptions.Add(@event, new List<Delegate>());
+				}
+
+				this.subscriptions[@event].Add(action);
+
+				this.logger.Trace($"On: \"{@event}\" attached to \"{action.Method.DeclaringType?.Name}.{action.Method.Name}({string.Join(", ", action.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
+			}
+		}
+
 
 		private async Task<TReturn> InternalRequest<TReturn>(string @event, params object[] args)
 		{
