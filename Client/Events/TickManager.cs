@@ -15,22 +15,22 @@ namespace NFive.Client.Events
 			this.detachCallback = detachCallback;
 		}
 
-		public void Attach(Action callback)
+		public void On(Action callback)
 		{
 			this.attachCallback(() => Task.Factory.StartNew(callback));
 		}
 
-		public void Attach(Func<Task> callback)
+		public void On(Func<Task> callback)
 		{
 			this.attachCallback(callback);
 		}
 
-		public void Detach(Action callback)
+		public void Off(Action callback)
 		{
 			this.detachCallback(() => Task.Factory.StartNew(callback));
 		}
 
-		public void Detach(Func<Task> callback)
+		public void Off(Func<Task> callback)
 		{
 			this.detachCallback(callback);
 		}
