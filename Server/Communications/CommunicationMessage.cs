@@ -1,15 +1,20 @@
+using NFive.SDK.Core.Models.Player;
+using NFive.SDK.Server.Communications;
+using NFive.SDK.Server.Events;
+using NFive.Server.Rpc;
+using NFive.Server.Storage;
 using System;
 using System.Linq;
-using NFive.SDK.Core.Models.Player;
-using NFive.SDK.Server.Rpc;
-using NFive.Server.Storage;
 
-namespace NFive.Server.Rpc
+namespace NFive.Server.Communications
 {
-	public class RpcEvent : IRpcEvent
+	public class CommunicationMessage : ICommunicationMessage
 	{
+		private readonly IEventManager eventManager;
 		private readonly Lazy<User> user;
 		private readonly Lazy<Session> session;
+
+		public Guid Id { get; } = Guid.NewGuid();
 
 		public string Event { get; }
 
@@ -19,9 +24,18 @@ namespace NFive.Server.Rpc
 
 		public Session Session => this.session.Value;
 
-		public RpcEvent(string @event, IClient client)
+		public CommunicationMessage(string @event)
 		{
 			this.Event = @event;
+		}
+
+		public CommunicationMessage(string @event, IEventManager eventManager) : this(@event)
+		{
+			this.eventManager = eventManager;
+		}
+
+		public CommunicationMessage(string @event, IClient client) : this(@event)
+		{
 			this.Client = client;
 
 			this.user = new Lazy<User>(() =>
@@ -50,9 +64,21 @@ namespace NFive.Server.Rpc
 			});
 		}
 
+		public CommunicationMessage(string @event, Guid id, IClient client) : this(@event, client)
+		{
+			this.Id = id;
+		}
+
 		public void Reply(params object[] payloads)
 		{
-			RpcManager.Event(this.Event).Target(this.Client).Trigger(payloads);
+			if (this.Client == null)
+			{
+				this.eventManager.Emit($"{this.Id}:{this.Event}", payloads);
+			}
+			else
+			{
+				RpcManager.Emit($"{this.Id}:{this.Event}", this.Client, payloads);
+			}
 		}
 	}
 }

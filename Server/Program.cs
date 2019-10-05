@@ -6,12 +6,13 @@ using NFive.SDK.Core.Plugins;
 using NFive.SDK.Plugins;
 using NFive.SDK.Plugins.Configuration;
 using NFive.SDK.Server;
+using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Configuration;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Events;
 using NFive.SDK.Server.Migrations;
 using NFive.SDK.Server.Rcon;
-using NFive.SDK.Server.Rpc;
+using NFive.Server.Communications;
 using NFive.Server.Configuration;
 using NFive.Server.Controllers;
 using NFive.Server.Diagnostics;
@@ -23,9 +24,11 @@ using System;
 using System.Collections.Generic;
 using System.Data.Entity.Migrations;
 using System.Data.Entity.Migrations.Infrastructure;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 
 namespace NFive.Server
 {
@@ -38,6 +41,10 @@ namespace NFive.Server
 
 		private async void Startup()
 		{
+			// Print exception messages in English
+			Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+			Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
+
 			// Set the AppDomain working directory to the current resource root
 			Environment.CurrentDirectory = Path.GetFullPath(API.GetResourcePath(API.GetCurrentResourceName()));
 
@@ -55,30 +62,27 @@ namespace NFive.Server
 			API.SetMapName(config.Display.Map);
 
 			// Setup RPC handlers
-			RpcManager.Configure(config.Log.Rpc, this.EventHandlers);
-
-			// Client log mirroring
-			new RpcHandler().Event("nfive:log:mirror").On(new Action<IRpcEvent, DateTime, LogLevel, string, string>((e, dt, level, prefix, message) =>
-			{
-				new Logger(LogLevel.Trace, $"Client#{e.Client.Handle}|{prefix}").Log(message, level);
-			}));
+			RpcManager.Configure(config.Log.Rpc, this.EventHandlers, this.Players);
 
 			var events = new EventManager(config.Log.Events);
-			var rcon = new RconManager(new RpcHandler());
+			var comms = new CommunicationManager(events);
+			var rcon = new RconManager(comms);
 
 			// Load core controllers
-			var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), events, new RpcHandler(), rcon, ConfigurationManager.Load<DatabaseConfiguration>("database.yml"));
+			var eventController = new EventController(new Logger(config.Log.Core, "RawEvents"), comms);
+			await eventController.Loaded();
+			this.controllers.Add(new Name("NFive/RawEvents"), new List<Controller> { eventController });
+
+			var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), ConfigurationManager.Load<DatabaseConfiguration>("database.yml"), comms);
 			await dbController.Loaded();
 			this.controllers.Add(new Name("NFive/Database"), new List<Controller> { dbController });
 
-			var sessionController = new SessionController(new Logger(config.Log.Core, "Session"), events, new RpcHandler(), rcon, ConfigurationManager.Load<SessionConfiguration>("session.yml"));
+			var sessionController = new SessionController(new Logger(config.Log.Core, "Session"), ConfigurationManager.Load<SessionConfiguration>("session.yml"), comms);
 			await sessionController.Loaded();
 			this.controllers.Add(new Name("NFive/Session"), new List<Controller> { sessionController });
 
 			// Resolve dependencies
 			var graph = DefinitionGraph.Load();
-
-			var pluginDefaultLogLevel = config.Log.Plugins.ContainsKey("default") ? config.Log.Plugins["default"] : LogLevel.Info;
 
 			// IoC
 			var assemblies = new List<Assembly>();
@@ -87,14 +91,17 @@ namespace NFive.Server
 
 			var registrar = new ContainerRegistrar();
 			registrar.RegisterService<ILogger>(s => new Logger());
-			registrar.RegisterType<IRpcHandler, RpcHandler>();
-			registrar.RegisterInstance<IEventManager>(events);
+			//registrar.RegisterType<IRpcHandler, RpcHandler>();
 			registrar.RegisterInstance<IRconManager>(rcon);
-			registrar.RegisterInstance<IClientList>(new ClientList(new Logger(config.Log.Core, "ClientList"), new RpcHandler()));
+			registrar.RegisterInstance<IEventManager>(events);
+			registrar.RegisterInstance<ICommunicationManager>(comms);
+			registrar.RegisterInstance<IClientList>(new ClientList(new Logger(config.Log.Core, "ClientList"), comms));
 			registrar.RegisterSdkComponents(assemblies.Distinct());
 
 			// DI
 			var container = registrar.Build();
+
+			var pluginDefaultLogLevel = config.Log.Plugins.ContainsKey("default") ? config.Log.Plugins["default"] : LogLevel.Info;
 
 			// Load plugins into the AppDomain
 			foreach (var plugin in graph.Plugins)
@@ -115,6 +122,20 @@ namespace NFive.Server
 				{
 					var mainFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{mainName}.net.dll");
 					if (!File.Exists(mainFile)) throw new FileNotFoundException(mainFile);
+
+					var asm = Assembly.LoadFrom(mainFile);
+
+					var sdkVersion = asm.GetCustomAttribute<ServerPluginAttribute>();
+
+					if (sdkVersion == null)
+					{
+						throw new Exception("Unable to load outdated SDK plugin");
+					}
+
+					if (sdkVersion.Target != SDK.Server.SDK.Version)
+					{
+						throw new Exception("Unable to load outdated SDK plugin");
+					}
 
 					var types = Assembly.LoadFrom(mainFile).GetTypes().Where(t => !t.IsAbstract && t.IsClass).ToList();
 
@@ -143,10 +164,7 @@ namespace NFive.Server
 
 						var constructorArgs = new List<object>
 						{
-							new Logger(logLevel, plugin.Name),
-							events,
-							new RpcHandler(),
-							rcon
+							new Logger(logLevel, plugin.Name)
 						};
 
 						// Check if controller is configurable
@@ -198,9 +216,9 @@ namespace NFive.Server
 
 			rcon.Controllers = this.controllers;
 
-			new RpcHandler().Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).On(e => e.Reply(graph.Plugins));
+			comms.Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).FromClients().OnRequest(e => e.Reply(graph.Plugins));
 
-			events.Raise(ServerEvents.ServerInitialized);
+			comms.Event(ServerEvents.ServerInitialized).ToServer().Emit();
 
 			logger.Debug($"{graph.Plugins.Count} plugin(s) loaded, {this.controllers.Count} controller(s) created");
 		}

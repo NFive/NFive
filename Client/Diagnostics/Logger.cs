@@ -8,8 +8,6 @@ namespace NFive.Client.Diagnostics
 {
 	public class Logger : ILogger
 	{
-		private RpcHandler rpc = new RpcHandler();
-
 		public string Prefix { get; }
 
 		public Logger(string prefix = "")
@@ -65,7 +63,7 @@ namespace NFive.Client.Diagnostics
 
 			if (ClientConfiguration.MirrorLogLevel <= level)
 			{
-				this.rpc.Event("nfive:log:mirror").Trigger(DateTime.UtcNow, level, this.Prefix, message);
+				//RpcManager.Emit("nfive:log:mirror", DateTime.UtcNow, level, this.Prefix, message);
 			}
 		}
 	}

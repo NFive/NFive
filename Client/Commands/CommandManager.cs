@@ -1,11 +1,13 @@
+using NFive.Client.Communications;
+using NFive.Client.Rpc;
 using NFive.SDK.Client.Commands;
-using NFive.SDK.Client.Rpc;
 using NFive.SDK.Core.Arguments;
 using NFive.SDK.Core.Chat;
 using NFive.SDK.Core.Rpc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NFive.SDK.Client.Events;
 
 namespace NFive.Client.Commands
 {
@@ -13,9 +15,9 @@ namespace NFive.Client.Commands
 	{
 		private readonly Dictionary<string, Action<IEnumerable<string>>> callbacks = new Dictionary<string, Action<IEnumerable<string>>>();
 
-		public CommandManager(IRpcHandler rpc)
+		public CommandManager()
 		{
-			rpc.Event(RpcEvents.ChatSendMessage).On<ChatMessage>(Handle);
+			RpcManager.On<ChatMessage>(RpcEvents.ChatSendMessage, Handle);
 		}
 
 		public void Register(string command, Action callback)
@@ -38,7 +40,7 @@ namespace NFive.Client.Commands
 			this.callbacks.Add(command.ToLowerInvariant(), a => callback(Argument.Parse<T>(a)));
 		}
 
-		private void Handle(IRpcEvent e, ChatMessage message)
+		private void Handle(ICommunicationMessage e, ChatMessage message)
 		{
 			var content = message.Content.Trim();
 			if (!content.StartsWith("/")) return;

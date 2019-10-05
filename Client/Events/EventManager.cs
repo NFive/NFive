@@ -1,13 +1,87 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using NFive.Client.Communications;
+using NFive.Client.Diagnostics;
 using NFive.SDK.Client.Events;
 
 namespace NFive.Client.Events
 {
 	public class EventManager : IEventManager
 	{
-		private readonly Dictionary<string, List<Subscription>> subscriptions = new Dictionary<string, List<Subscription>>();
+		private readonly Logger logger;
+		private readonly Dictionary<string, List<Delegate>> subscriptions = new Dictionary<string, List<Delegate>>();
+
+		public EventManager()
+		{
+			this.logger = new Logger("Events");
+		}
+
+		public void On(string @event, Action<ICommunicationMessage> action) => InternalOn(@event, action);
+
+		public void On<T>(string @event, Action<ICommunicationMessage, T> action) => InternalOn(@event, action);
+
+		public void On<T1, T2>(string @event, Action<ICommunicationMessage, T1, T2> action) => InternalOn(@event, action);
+
+		public void On<T1, T2, T3>(string @event, Action<ICommunicationMessage, T1, T2, T3> action) => InternalOn(@event, action);
+
+		public void On<T1, T2, T3, T4>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4> action) => InternalOn(@event, action);
+
+		public void On<T1, T2, T3, T4, T5>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4, T5> action) => InternalOn(@event, action);
+
+		public async Task<T1> Request<T1>(string @event, params object[] args) => await InternalRequest<T1>(@event, args);
+
+		public async Task<Tuple<T1, T2>> Request<T1, T2>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2>>(@event, args);
+
+		public async Task<Tuple<T1, T2, T3>> Request<T1, T2, T3>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2, T3>>(@event, args);
+
+		public async Task<Tuple<T1, T2, T3, T4>> Request<T1, T2, T3, T4>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2, T3, T4>>(@event, args);
+
+		public async Task<Tuple<T1, T2, T3, T4, T5>> Request<T1, T2, T3, T4, T5>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2, T3, T4, T5>>(@event, args);
+
+		public void OnRequest(string @event, Action<ICommunicationMessage> action) => InternalOnRequest(@event, action);
+
+		public void OnRequest<T>(string @event, Action<ICommunicationMessage, T> action) => InternalOnRequest(@event, action);
+
+		public void OnRequest<T1, T2>(string @event, Action<ICommunicationMessage, T1, T2> action) => InternalOnRequest(@event, action);
+
+		public void OnRequest<T1, T2, T3>(string @event, Action<ICommunicationMessage, T1, T2, T3> action) => InternalOnRequest(@event, action);
+
+		public void OnRequest<T1, T2, T3, T4>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4> action) => InternalOnRequest(@event, action);
+
+		public void OnRequest<T1, T2, T3, T4, T5>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4, T5> action) => InternalOnRequest(@event, action);
+
+		public void Off(string @event, Delegate action)
+		{
+			lock (this.subscriptions)
+			{
+				if (this.subscriptions.ContainsKey(@event) && this.subscriptions[@event].Contains(action))
+				{
+					this.subscriptions[@event].Remove(action);
+				}
+			}
+		}
+
+		public void Emit(string @event, params object[] args)
+		{
+			lock (this.subscriptions)
+			{
+				if (!this.subscriptions.ContainsKey(@event)) return;
+
+				var message = new CommunicationMessage(@event, this);
+
+				this.logger.Trace(args.Length > 0 ? $"Emit: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a?.ToString() ?? "NULL"))}" : $"Emit: \"{@event}\" without payload");
+
+				foreach (var subscription in this.subscriptions[@event])
+				{
+					var payload = new List<object> { message };
+					payload.AddRange(args);
+
+					subscription.DynamicInvoke(payload.ToArray());
+				}
+			}
+		}
 
 		private void InternalOn(string @event, Delegate action)
 		{
@@ -15,88 +89,61 @@ namespace NFive.Client.Events
 			{
 				if (!this.subscriptions.ContainsKey(@event))
 				{
-					this.subscriptions.Add(@event, new List<Subscription>());
+					this.subscriptions.Add(@event, new List<Delegate>());
 				}
 
-				this.subscriptions[@event].Add(new Subscription(action));
+				this.subscriptions[@event].Add(action);
+
+				this.logger.Trace($"On: \"{@event}\" attached to \"{action.Method.DeclaringType?.Name}.{action.Method.Name}({string.Join(", ", action.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 			}
 		}
 
-		public void On(string @event, Action action) => InternalOn(@event, action);
-
-		public void On<T>(string @event, Action<T> action) => InternalOn(@event, action);
-
-		public void On<T1, T2>(string @event, Action<T1, T2> action) => InternalOn(@event, action);
-
-		public void On<T1, T2, T3>(string @event, Action<T1, T2, T3> action) => InternalOn(@event, action);
-
-		public void On<T1, T2, T3, T4>(string @event, Action<T1, T2, T3, T4> action) => InternalOn(@event, action);
-
-		public void On<T1, T2, T3, T4, T5>(string @event, Action<T1, T2, T3, T4, T5> action) => InternalOn(@event, action);
-
-
-		private void InternalRaise(string @event, params object[] args)
+		private void InternalOnRequest(string @event, Delegate action)
 		{
 			lock (this.subscriptions)
 			{
-				if (!this.subscriptions.ContainsKey(@event)) return;
-
-				foreach (var subscription in this.subscriptions[@event])
+				if (!this.subscriptions.ContainsKey(@event))
 				{
-					subscription.Handle(args);
+					this.subscriptions.Add(@event, new List<Delegate>());
 				}
+
+				this.subscriptions[@event].Add(action);
+
+				this.logger.Trace($"On: \"{@event}\" attached to \"{action.Method.DeclaringType?.Name}.{action.Method.Name}({string.Join(", ", action.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 			}
 		}
 
-		public void Raise(string @event) => InternalRaise(@event);
 
-		public void Raise<T>(string @event, T p1) => InternalRaise(@event, p1);
-
-		public void Raise<T1, T2>(string @event, T1 p1, T2 p2) => InternalRaise(@event, p1, p2);
-
-		public void Raise<T1, T2, T3>(string @event, T1 p1, T2 p2, T3 p3) => InternalRaise(@event, p1, p2, p3);
-
-		public void Raise<T1, T2, T3, T4>(string @event, T1 p1, T2 p2, T3 p3, T4 p4) => InternalRaise(@event, p1, p2, p3, p4);
-
-		public void Raise<T1, T2, T3, T4, T5>(string @event, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5) => InternalRaise(@event, p1, p2, p3, p4, p5);
-
-
-		private async Task InternalRaiseAsync(string @event, params object[] args)
+		private async Task<TReturn> InternalRequest<TReturn>(string @event, params object[] args)
 		{
-			await Task.Factory.StartNew(() =>
+			var message = new CommunicationMessage(@event, this);
+			var tcs = new TaskCompletionSource<TReturn>();
+
+			try
 			{
-				InternalRaise(@event, args);
-			});
-		}
+				InternalOn($"{message.Id}:{@event}", new Action<ICommunicationMessage, TReturn>((e, data) =>
+				{
+					tcs.SetResult(data);
+				}));
 
-		public Task RaiseAsync(string @event) => InternalRaiseAsync(@event);
+				this.logger.Trace(args.Length > 0 ? $"Request Emit: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a?.ToString() ?? "NULL"))}" : $"Fire: \"{@event}\" without payload");
 
-		public Task RaiseAsync<T>(string @event, T p1) => InternalRaiseAsync(@event, p1);
+				lock (this.subscriptions)
+				{
+					var payload = new List<object> { message };
+					payload.AddRange(args);
 
-		public Task RaiseAsync<T1, T2>(string @event, T1 p1, T2 p2) => InternalRaiseAsync(@event, p1, p2);
+					this.subscriptions.Single(s => s.Key == @event).Value.Single().DynamicInvoke(payload.ToArray());
+				}
 
-		public Task RaiseAsync<T1, T2, T3>(string @event, T1 p1, T2 p2, T3 p3) => InternalRaiseAsync(@event, p1, p2, p3);
-
-		public Task RaiseAsync<T1, T2, T3, T4>(string @event, T1 p1, T2 p2, T3 p3, T4 p4) => InternalRaiseAsync(@event, p1, p2, p3, p4);
-
-		public Task RaiseAsync<T1, T2, T3, T4, T5>(string @event, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5) => InternalRaiseAsync(@event, p1, p2, p3, p4, p5);
-
-		public class Subscription
-		{
-			private readonly Delegate handler;
-
-			public Subscription(Delegate handler)
-			{
-				this.handler = handler;
+				return await tcs.Task;
 			}
-
-			public bool Handle(params object[] args)
+			finally
 			{
-				var cancel = false;
-
-				this.handler.DynamicInvoke(args);
-
-				return cancel;
+				lock (this.subscriptions)
+				{
+					this.subscriptions.Remove($"{message.Id}:{@event}");
+				}
 			}
 		}
 	}

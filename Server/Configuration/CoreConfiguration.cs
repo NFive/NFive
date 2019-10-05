@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using NFive.SDK.Core.Diagnostics;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Controllers;
@@ -13,6 +15,8 @@ namespace NFive.Server.Configuration
 		public DisplayConfiguration Display { get; set; } = new DisplayConfiguration();
 
 		public LogConfiguration Log { get; set; } = new LogConfiguration();
+
+		public LocaleConfiguration Locale { get; set; } = new LocaleConfiguration();
 
 		[PublicAPI]
 		public class DisplayConfiguration
@@ -47,6 +51,13 @@ namespace NFive.Server.Configuration
 			public LogLevel ClientMirror { get; set; } = LogLevel.Warn;
 
 			public LogLevel ServerConsole { get; set; } = LogLevel.Warn;
+		}
+
+		public class LocaleConfiguration
+		{
+			public string Culture { get; set; } = "en-US";
+
+			public string TimeZone { get; set; } = "Eastern Standard Time";
 		}
 	}
 }
