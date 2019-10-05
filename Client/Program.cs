@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using CitizenFX.Core.Native;
 
 namespace NFive.Client
 {
@@ -49,6 +50,20 @@ namespace NFive.Client
 
 			ClientConfiguration.ConsoleLogLevel = config.Item2;
 			ClientConfiguration.MirrorLogLevel = config.Item3;
+
+			// Load key mapping
+			this.logger.Warn($"Reading control values");
+			var controlType = typeof(Control);
+			var keyType = typeof(Key);
+			var clientControls = new Dictionary<Control, Key>(KeyMapping.ControlMappings);
+			foreach (var control in KeyMapping.ControlMappings.Keys)
+			{
+				var controlMapping = API.GetControlInstructionalButton(0, (int)control, 0);
+				var keyMapping = KeyMapping.KeyMappings[controlMapping];
+				this.logger.Warn($"Control: {control} | Name: {Enum.GetName(controlType, control)} | ControlMapping: {controlMapping} | KeyMapping {Enum.GetName(keyType, keyMapping)}");
+				clientControls[control] = keyMapping;
+			}
+			KeyMapping.ControlMappings = clientControls;
 
 			var plugins = await rpc.Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).Request<List<Plugin>>();
 
