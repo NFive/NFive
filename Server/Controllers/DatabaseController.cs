@@ -1,10 +1,9 @@
 using MySql.Data.MySqlClient;
 using NFive.SDK.Core.Diagnostics;
+using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Configuration;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Events;
-using NFive.SDK.Server.Rcon;
-using NFive.SDK.Server.Rpc;
 using NFive.Server.Configuration;
 using NFive.Server.Models;
 using NFive.Server.Storage;
@@ -20,7 +19,7 @@ namespace NFive.Server.Controllers
 	{
 		private readonly BootHistory currentBoot;
 
-		public DatabaseController(ILogger logger, IEventManager events, IRpcHandler rpc, IRconManager rcon, DatabaseConfiguration configuration) : base(logger, events, rpc, rcon, configuration)
+		public DatabaseController(ILogger logger, DatabaseConfiguration configuration, ICommunicationManager comms) : base(logger, configuration)
 		{
 			// Set global database options
 			ServerConfiguration.DatabaseConnection = this.Configuration.Connection.ToString();
@@ -57,9 +56,9 @@ namespace NFive.Server.Controllers
 
 			Task.Factory.StartNew(UpdateBootHistory);
 
-			this.Events.OnRequest(BootEvents.GetTime, () => this.currentBoot.Created);
-			this.Events.OnRequest(BootEvents.GetLastTime, () => lastBoot.Created);
-			this.Events.OnRequest(BootEvents.GetLastActiveTime, () => lastBoot.LastActive);
+			comms.Event(BootEvents.GetTime).FromServer().On(e => e.Reply(this.currentBoot.Created));
+			comms.Event(BootEvents.GetLastTime).FromServer().On(e => e.Reply(lastBoot.Created));
+			comms.Event(BootEvents.GetLastActiveTime).FromServer().On(e => e.Reply(lastBoot.LastActive));
 		}
 
 		private async Task UpdateBootHistory()
