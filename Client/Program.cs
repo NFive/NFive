@@ -1,4 +1,5 @@
 using CitizenFX.Core;
+using CitizenFX.Core.Native;
 using JetBrains.Annotations;
 using NFive.Client.Commands;
 using NFive.Client.Communications;
@@ -16,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using NFive.SDK.Client.Input;
 
 namespace NFive.Client
 {
@@ -54,9 +56,10 @@ namespace NFive.Client
 			ClientConfiguration.ConsoleLogLevel = config.Item2;
 			ClientConfiguration.MirrorLogLevel = config.Item3;
 
-			this.logger.Warn("Request plugins...");
+      // Load user key mappings
+      Input.UserMappings.AddRange(Enum.GetValues(typeof(Control)).OfType<Control>().Select(c => new Hotkey(c)));
+      
 			var plugins = await comms.Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).ToServer().Request<List<Plugin>>();
-			this.logger.Warn($"Got plugins: {plugins.Count}");
 
 			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
 			{
