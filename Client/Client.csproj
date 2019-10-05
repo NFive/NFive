@@ -67,9 +67,6 @@
     <Compile Include="Events\EventManager.cs" />
     <Compile Include="Events\PedSpawnOptions.cs" />
     <Compile Include="Events\TickManager.cs" />
-    <Compile Include="Hotkey.cs" />
-    <Compile Include="KeyMapping.cs" />
-    <Compile Include="Key.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rpc\RpcPacker.cs" />
