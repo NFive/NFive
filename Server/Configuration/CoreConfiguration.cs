@@ -4,13 +4,14 @@ using System.Globalization;
 using NFive.SDK.Core.Diagnostics;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Controllers;
+using NFive.SDK.Server.Configuration;
 
 namespace NFive.Server.Configuration
 {
 	[PublicAPI]
 	public class CoreConfiguration : ControllerConfiguration
 	{
-		public override string FileName => "nfive";
+		public override string FileName => "core";
 
 		public DisplayConfiguration Display { get; set; } = new DisplayConfiguration();
 
@@ -53,11 +54,11 @@ namespace NFive.Server.Configuration
 			public LogLevel ServerConsole { get; set; } = LogLevel.Warn;
 		}
 
-		public class LocaleConfiguration
+		public class LocaleConfiguration : ILocaleConfiguration
 		{
-			public string Culture { get; set; } = "en-US";
+			public CultureInfo Culture { get; set; } = new CultureInfo("en-US");
 
-			public string TimeZone { get; set; } = "Eastern Standard Time";
+			public TimeZoneInfo TimeZone { get; set; } = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
 		}
 	}
 }

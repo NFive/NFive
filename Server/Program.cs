@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using ServerConfiguration = NFive.SDK.Server.Configuration.ServerConfiguration;
 
 namespace NFive.Server
 {
@@ -51,7 +52,7 @@ namespace NFive.Server
 			Logger.Initialize();
 			new Logger().Info($"NFive {typeof(Program).Assembly.GetCustomAttributes<AssemblyInformationalVersionAttribute>().First().InformationalVersion}");
 
-			var config = ConfigurationManager.Load<CoreConfiguration>("nfive.yml");
+			var config = ConfigurationManager.Load<CoreConfiguration>("core.yml");
 
 			ServerLogConfiguration.Output = config.Log.Output;
 			//ServerConfiguration.LogLevel = config.Log.Level;
@@ -96,6 +97,7 @@ namespace NFive.Server
 			registrar.RegisterInstance<IEventManager>(events);
 			registrar.RegisterInstance<ICommunicationManager>(comms);
 			registrar.RegisterInstance<IClientList>(new ClientList(new Logger(config.Log.Core, "ClientList"), comms));
+			registrar.RegisterInstance<IServerConfiguration>(new Configuration.ServerConfiguration(config.Locale));
 			registrar.RegisterSdkComponents(assemblies.Distinct());
 
 			// DI
