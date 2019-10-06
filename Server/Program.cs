@@ -52,7 +52,7 @@ namespace NFive.Server
 			Logger.Initialize();
 			new Logger().Info($"NFive {typeof(Program).Assembly.GetCustomAttributes<AssemblyInformationalVersionAttribute>().First().InformationalVersion}");
 
-			var config = ConfigurationManager.Load<CoreConfiguration>("nfive.yml");
+			var config = ConfigurationManager.Load<CoreConfiguration>("core.yml");
 
 			ServerLogConfiguration.Output = config.Log.Output;
 			//ServerConfiguration.LogLevel = config.Log.Level;

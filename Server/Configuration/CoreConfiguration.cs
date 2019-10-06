@@ -11,7 +11,7 @@ namespace NFive.Server.Configuration
 	[PublicAPI]
 	public class CoreConfiguration : ControllerConfiguration
 	{
-		public override string FileName => "nfive";
+		public override string FileName => "core";
 
 		public DisplayConfiguration Display { get; set; } = new DisplayConfiguration();
 
@@ -58,7 +58,7 @@ namespace NFive.Server.Configuration
 		{
 			public CultureInfo Culture { get; set; } = new CultureInfo("en-US");
 
-			public TimeZoneInfo TimeZone { get; set; } = TimeZoneInfo.FindSystemTimeZoneById("EST");
+			public TimeZoneInfo TimeZone { get; set; } = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
 		}
 	}
 }
