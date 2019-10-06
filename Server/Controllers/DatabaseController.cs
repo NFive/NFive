@@ -12,6 +12,7 @@ using System.Data.Entity.Migrations;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using ServerConfiguration = NFive.SDK.Server.Configuration.ServerConfiguration;
 
 namespace NFive.Server.Controllers
 {

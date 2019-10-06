@@ -114,6 +114,7 @@
     <Compile Include="Communications\CommunicationTransmitClient.cs" />
     <Compile Include="Communications\CommunicationTransmitServer.cs" />
     <Compile Include="Configuration\ClientConfiguration.cs" />
+    <Compile Include="Configuration\ServerConfiguration.cs" />
     <Compile Include="Configuration\ServerLogConfiguration.cs" />
     <Compile Include="Configuration\CoreConfiguration.cs" />
     <Compile Include="Configuration\DatabaseConfiguration.cs" />
