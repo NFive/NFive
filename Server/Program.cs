@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using JetBrains.Annotations;
@@ -217,8 +218,8 @@ namespace NFive.Server
 					}
 				}
 			}
-			
-			foreach (var controller in this.controllers.SelectMany(c => c.Value)) await controller.Started();
+
+			await Task.WhenAll(this.controllers.SelectMany(c => c.Value).Select(s => s.Started()));
 
 			rcon.Controllers = this.controllers;
 

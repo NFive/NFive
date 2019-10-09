@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using CitizenFX.Core;
 using JetBrains.Annotations;
 using NFive.Client.Commands;
@@ -101,7 +102,7 @@ namespace NFive.Client
 
 			this.logger.Info("Plugins loaded");
 
-			foreach (var service in this.services) await service.Started();
+			await Task.WhenAll(this.services.Select(s => s.Started()));
 
 			this.logger.Info("Plugins started");
 
