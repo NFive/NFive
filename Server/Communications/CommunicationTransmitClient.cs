@@ -1,8 +1,8 @@
+using System;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using NFive.SDK.Server.Communications;
 using NFive.Server.Rpc;
-using System;
-using System.Threading.Tasks;
 
 namespace NFive.Server.Communications
 {
@@ -22,7 +22,10 @@ namespace NFive.Server.Communications
 			this.target = client;
 		}
 
-		public void Emit(params object[] payloads) => RpcManager.Emit(this.@event, this.target, payloads);
+		public void Emit(params object[] payloads)
+		{
+			RpcManager.Emit(this.@event, this.target, payloads);
+		}
 
 		public async Task<T> Request<T>(params object[] payloads) => await RpcManager.Request<T>(this.@event, this.target, payloads);
 

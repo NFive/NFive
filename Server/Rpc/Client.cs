@@ -1,11 +1,13 @@
-using CitizenFX.Core.Native;
-using NFive.SDK.Server.Communications;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using CitizenFX.Core.Native;
+using JetBrains.Annotations;
+using NFive.SDK.Server.Communications;
 
 namespace NFive.Server.Rpc
 {
+	[PublicAPI]
 	public class Client : IClient
 	{
 		public int Handle { get; }

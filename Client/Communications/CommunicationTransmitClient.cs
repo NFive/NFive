@@ -1,24 +1,22 @@
-using JetBrains.Annotations;
-using NFive.Client.Rpc;
-using NFive.SDK.Client.Events;
 using System;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
+using NFive.Client.Events;
 using NFive.SDK.Client.Communications;
 
 namespace NFive.Client.Communications
 {
-
 	[PublicAPI]
 	public class CommunicationTransmitClient : ICommunicationTransmitClient
 	{
 		public string Event { get; }
 
-		public IEventManager EventManager { get; }
+		public EventManager EventManager { get; }
 
-		public CommunicationTransmitClient(ICommunicationTarget target)
+		public CommunicationTransmitClient(string @event, EventManager eventManager)
 		{
-			this.Event = target.Event;
-			this.EventManager = target.EventManager;
+			this.Event = @event;
+			this.EventManager = eventManager;
 		}
 
 		public void Emit(params object[] payloads) => this.EventManager.Emit(this.Event, payloads);

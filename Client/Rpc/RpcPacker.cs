@@ -1,9 +1,9 @@
-using Ionic.Zlib;
-using JetBrains.Annotations;
-using Newtonsoft.Json;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using Ionic.Zlib;
+using JetBrains.Annotations;
+using Newtonsoft.Json;
 
 namespace NFive.Client.Rpc
 {

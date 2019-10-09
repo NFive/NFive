@@ -1,11 +1,13 @@
+using System;
+using System.Collections.Generic;
 using CitizenFX.Core;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.IoC;
+using NFive.SDK.Core.Rpc;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Events;
-using System;
-using System.Collections.Generic;
+using NFive.Server.Controllers;
 
 namespace NFive.Server
 {
@@ -15,18 +17,18 @@ namespace NFive.Server
 	{
 		private readonly ILogger logger;
 
+		public List<IClient> Clients { get; } = new List<IClient>();
+
 		public event EventHandler<ClientEventArgs> ClientAdded;
 
 		public event EventHandler<ClientEventArgs> ClientRemoved;
-
-		public List<IClient> Clients { get; } = new List<IClient>();
 
 		public ClientList(ILogger logger, ICommunicationManager comms)
 		{
 			this.logger = logger;
 
-			comms.Event(SDK.Core.Rpc.RpcEvents.ClientInitialize).FromClients().On(OnInitialize);
-			comms.Event("nfive:server:playerDropped").FromServer().On<IClient, string, CallbackDelegate>(OnDropped);
+			//comms.Event(SessionEvents.ClientInitializing).FromClients().On(OnInitialize);
+			//comms.Event(NFiveServerEvents.PlayerDropped).FromServer().On<IClient, string, CallbackDelegate>(OnDropped);
 		}
 
 		private void OnInitialize(ICommunicationMessage e)
@@ -40,7 +42,7 @@ namespace NFive.Server
 
 		private void OnDropped(ICommunicationMessage e, IClient client, string disconnectMessage, CallbackDelegate drop)
 		{
-			this.logger.Trace($"Client disconnected: {client.Name}");
+			this.logger.Trace($"Client disconnected: {client.Name} [{e.Client.Handle}]");
 
 			this.Clients.RemoveAll(c => c.Handle == client.Handle);
 

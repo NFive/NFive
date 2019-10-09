@@ -1,9 +1,11 @@
 using System;
-using NFive.SDK.Core.Helpers;
 using System.ComponentModel.DataAnnotations;
+using JetBrains.Annotations;
+using NFive.SDK.Core.Helpers;
 
 namespace NFive.Server.Models
 {
+	[PublicAPI]
 	public class BootHistory
 	{
 		[Key]

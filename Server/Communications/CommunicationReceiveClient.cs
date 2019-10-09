@@ -1,13 +1,13 @@
+using System;
 using NFive.SDK.Server.Communications;
 using NFive.Server.Rpc;
-using System;
 
 namespace NFive.Server.Communications
 {
 	public class CommunicationReceiveClient : ICommunicationReceiveClient
 	{
-		private readonly IClient target;
 		private readonly string @event;
+		private readonly IClient target;
 
 		public CommunicationReceiveClient(string @event)
 		{

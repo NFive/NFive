@@ -1,15 +1,17 @@
-using CitizenFX.Core;
-using NFive.Client.Communications;
-using NFive.Client.Diagnostics;
-using NFive.SDK.Client.Events;
-using NFive.SDK.Core.Rpc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CitizenFX.Core;
+using JetBrains.Annotations;
+using NFive.Client.Communications;
+using NFive.Client.Diagnostics;
+using NFive.SDK.Client.Communications;
+using NFive.SDK.Core.Rpc;
 
 namespace NFive.Client.Rpc
 {
+	[PublicAPI]
 	public static class RpcManager
 	{
 		private static readonly Logger Logger = new Logger("RPC");
@@ -23,7 +25,7 @@ namespace NFive.Client.Rpc
 
 		public static void OnRaw(string @event, Delegate callback)
 		{
-			Logger.Trace($"OnRaw: \"{@event}\" attached to \"{callback?.Method?.DeclaringType?.Name}.{callback?.Method?.Name}({string.Join(", ", callback?.Method?.GetParameters()?.Select(p => p.ParameterType + " " + p.Name))})\"");
+			Logger.Trace($"OnRaw: \"{@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 
 			events[@event] += callback;
 		}
@@ -140,7 +142,7 @@ namespace NFive.Client.Rpc
 
 		public static void Off(string @event, Delegate callback)
 		{
-			Logger.Trace($"Off: \"{@event}\" detached from \"{callback?.Method?.DeclaringType?.Name}.{callback?.Method?.Name}({string.Join(", ", callback?.Method?.GetParameters()?.Select(p => p.ParameterType + " " + p.Name))})\"");
+			Logger.Trace($"Off: \"{@event}\" detached from \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 
 			events[@event] -= callback;
 		}
@@ -203,7 +205,7 @@ namespace NFive.Client.Rpc
 			);
 		}
 
-		public static async void Emit(string @event, OutboundMessage message)
+		private static async void Emit(OutboundMessage message)
 		{
 			Logger.Warn(message.Payloads.Count > 0
 				? $"Emit: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}"
@@ -218,7 +220,7 @@ namespace NFive.Client.Rpc
 
 		public static void Emit(string @event, params object[] payloads)
 		{
-			Emit(@event, new OutboundMessage
+			Emit(new OutboundMessage
 			{
 				Id = Guid.NewGuid(),
 				Event = @event,
@@ -232,7 +234,7 @@ namespace NFive.Client.Rpc
 
 			var callback = new Action<byte[]>(data =>
 			{
-				Logger.Warn($"Request callback");
+				Logger.Warn("Request callback");
 
 				var message = InboundMessage.From(data);
 
@@ -240,7 +242,7 @@ namespace NFive.Client.Rpc
 					? $"Request Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}"
 					: $"Request Received: \"{message.Event}\" with no payloads");
 
-				Logger.Warn($"Request callback SetResult");
+				Logger.Warn("Request callback SetResult");
 
 				tcs.SetResult(message);
 			});
@@ -257,9 +259,9 @@ namespace NFive.Client.Rpc
 			{
 				events[$"{msg.Id}:{@event}"] += callback;
 
-				Emit(@event, msg);
+				Emit(msg);
 
-				Logger.Warn($"await callback");
+				Logger.Warn("await callback");
 				return await tcs.Task;
 			}
 			finally
@@ -270,7 +272,7 @@ namespace NFive.Client.Rpc
 
 		private static void InternalOn(string @event, Delegate callback, Func<InboundMessage, IEnumerable<object>> func)
 		{
-			Logger.Warn($"On: \"{@event}\" attached to \"{callback.Method?.DeclaringType?.Name}.{callback?.Method?.Name}({string.Join(", ", callback?.Method?.GetParameters()?.Select(p => p.ParameterType + " " + p.Name))})\"");
+			Logger.Warn($"On: \"{@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 
 			events[@event] += new Action<byte[]>(data =>
 			{
@@ -293,7 +295,7 @@ namespace NFive.Client.Rpc
 
 		private static void InternalOnRequest(string @event, Delegate callback, Func<InboundMessage, IEnumerable<object>> func)
 		{
-			Logger.Warn($"OnRequest: \"{@event}\" attached to \"{callback.Method?.DeclaringType?.Name}.{callback?.Method?.Name}({string.Join(", ", callback?.Method?.GetParameters()?.Select(p => p.ParameterType + " " + p.Name))})\"");
+			Logger.Warn($"OnRequest: \"{@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 
 			events[@event] += new Action<byte[]>(data =>
 			{

@@ -1,14 +1,16 @@
 using System;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using NFive.Client.Rpc;
 using NFive.SDK.Client.Communications;
 
 namespace NFive.Client.Communications
 {
+	[PublicAPI]
 	public class CommunicationTransmitServer : ICommunicationTransmitServer
 	{
 		public string Event { get; }
-		
+
 		public CommunicationTransmitServer(CommunicationTarget target)
 		{
 			this.Event = target.Event;

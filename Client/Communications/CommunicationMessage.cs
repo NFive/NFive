@@ -1,12 +1,15 @@
-using NFive.Client.Rpc;
-using NFive.SDK.Client.Events;
 using System;
+using JetBrains.Annotations;
+using NFive.Client.Events;
+using NFive.Client.Rpc;
+using NFive.SDK.Client.Communications;
 
 namespace NFive.Client.Communications
 {
+	[PublicAPI]
 	public class CommunicationMessage : ICommunicationMessage
 	{
-		private readonly IEventManager eventManager;
+		private readonly EventManager eventManager;
 
 		private readonly bool networked;
 
@@ -19,7 +22,7 @@ namespace NFive.Client.Communications
 			this.Event = @event;
 		}
 
-		public CommunicationMessage(string @event, IEventManager eventManager) : this(@event)
+		public CommunicationMessage(string @event, EventManager eventManager) : this(@event)
 		{
 			this.eventManager = eventManager;
 		}

@@ -1,18 +1,20 @@
-using NFive.SDK.Core.Models.Player;
-using NFive.SDK.Server.Communications;
-using NFive.SDK.Server.Events;
-using NFive.Server.Rpc;
-using NFive.Server.Storage;
 using System;
 using System.Linq;
+using JetBrains.Annotations;
+using NFive.SDK.Core.Models.Player;
+using NFive.SDK.Server.Communications;
+using NFive.Server.Events;
+using NFive.Server.Rpc;
+using NFive.Server.Storage;
 
 namespace NFive.Server.Communications
 {
+	[PublicAPI]
 	public class CommunicationMessage : ICommunicationMessage
 	{
-		private readonly IEventManager eventManager;
-		private readonly Lazy<User> user;
+		private readonly EventManager eventManager;
 		private readonly Lazy<Session> session;
+		private readonly Lazy<User> user;
 
 		public Guid Id { get; } = Guid.NewGuid();
 
@@ -29,7 +31,7 @@ namespace NFive.Server.Communications
 			this.Event = @event;
 		}
 
-		public CommunicationMessage(string @event, IEventManager eventManager) : this(@event)
+		public CommunicationMessage(string @event, EventManager eventManager) : this(@event)
 		{
 			this.eventManager = eventManager;
 		}

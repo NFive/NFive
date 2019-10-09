@@ -1,16 +1,17 @@
-using NFive.SDK.Core.Diagnostics;
-using NFive.SDK.Server.Communications;
-using NFive.SDK.Server.Events;
-using NFive.Server.Communications;
-using NFive.Server.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
+using NFive.SDK.Core.Diagnostics;
+using NFive.SDK.Server.Communications;
+using NFive.Server.Communications;
+using NFive.Server.Diagnostics;
 
 namespace NFive.Server.Events
 {
-	public class EventManager : IEventManager
+	[PublicAPI]
+	public class EventManager
 	{
 		private readonly Logger logger;
 		private readonly Dictionary<string, List<Delegate>> subscriptions = new Dictionary<string, List<Delegate>>();

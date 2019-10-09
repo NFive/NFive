@@ -1,6 +1,6 @@
-using Griffin.Container;
 using System.Collections.Generic;
 using System.Reflection;
+using Griffin.Container;
 
 namespace NFive.Server.IoC
 {
@@ -8,7 +8,7 @@ namespace NFive.Server.IoC
 	{
 		public ContainerRegistrar() : base(Lifetime.Transient) { }
 
-		public void RegisterSdkComponents(IEnumerable<Assembly> assemblies)
+		public void RegisterPluginComponents(IEnumerable<Assembly> assemblies)
 		{
 			foreach (var assembly in assemblies)
 			{
