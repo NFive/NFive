@@ -351,7 +351,7 @@ namespace NFive.Server.Rpc
 
 		private static string PrintInboundMessage(InboundMessage message)
 		{
-			var str =  $"\"{message.Event}\" with ";
+			var str = $"\"{message.Event}\" with ";
 
 			if (message.Payloads.Count < 1) return str + "no payloads";
 
@@ -360,7 +360,7 @@ namespace NFive.Server.Rpc
 
 		private static string PrintOutboundMessage(OutboundMessage message)
 		{
-			var str =  $"\"{message.Event}\" with ";
+			var str = $"\"{message.Event}\" with ";
 
 			if (message.Target != null) str += $"to {message.Target.Handle} ";
 

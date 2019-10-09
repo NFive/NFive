@@ -7,7 +7,6 @@ using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Models;
-using NFive.SDK.Core.Rpc;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Controllers;
 using NFive.Server.Diagnostics;
