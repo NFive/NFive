@@ -259,7 +259,7 @@ namespace NFive.Client.Rpc
 			{
 				events[$"{msg.Id}:{@event}"] += callback;
 
-				Emit(@event, msg);
+				Emit(msg);
 
 				Logger.Warn("await callback");
 				return await tcs.Task;

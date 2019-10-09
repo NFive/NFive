@@ -12,6 +12,6 @@ namespace NFive.Server.Controllers
 		public const string ResourceStart = "onResourceStart";
 		public const string ResourceStop = "onResourceStop";
 		public const string RconCommand = "rconCommand";
-		public const string GameEventTriggered = "gameEventTriggered";
+		public const string ExplosionEvent = "explosionEvent";
 	}
 }

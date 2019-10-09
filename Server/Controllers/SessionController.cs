@@ -44,7 +44,7 @@ namespace NFive.Server.Controllers
 			RpcManager.OnRaw(FiveMServerEvents.HostedSession, new Action<Player>(OnHostedSessionRaw));
 
 			this.comms.Event(NFiveServerEvents.HostedSession).FromServer().On<IClient>(OnHostedSession);
-			this.comms.Event(NFiveServerEvents.PlayerConnecting).FromServer().On<IClient, string, CallbackDelegate, ExpandoObject>(OnConnecting);
+			this.comms.Event(NFiveServerEvents.PlayerConnecting).FromServer().On<IClient, ConnectionDeferrals>(OnConnecting);
 			this.comms.Event(NFiveServerEvents.PlayerDropped).FromServer().On<IClient, string>(OnDropped);
 
 			this.comms.Event(RpcEvents.ClientInitialize).FromClients().OnRequest<string>(OnInitialize);
@@ -146,9 +146,8 @@ namespace NFive.Server.Controllers
 			this.CurrentHost = null;
 		}
 
-		private async void OnConnecting(ICommunicationMessage e, IClient client, string playerName, CallbackDelegate drop, ExpandoObject callbacks)
+		private async void OnConnecting(ICommunicationMessage e, IClient client, ConnectionDeferrals deferrals)
 		{
-			var deferrals = new ConnectionDeferrals(callbacks, drop);
 			Session session = null;
 			User user = null;
 
@@ -271,17 +270,17 @@ namespace NFive.Server.Controllers
 			this.comms.Event(SessionEvents.ClientReconnected).ToServer().Emit(client, session, oldSession);
 		}
 
-		private void OnDropped(ICommunicationMessage e, IClient client, string disconnectMessage)
+		private void OnDropped(ICommunicationMessage e, IClient client, string disconnectReason)
 		{
-			OnDisconnecting(client, disconnectMessage);
+			OnDisconnecting(client, disconnectReason);
 		}
 
-		private static void OnDisconnect(ICommunicationMessage e, string reason)
+		private static void OnDisconnect(ICommunicationMessage e, string disconnectReason)
 		{
-			API.DropPlayer(e.Client.Handle.ToString(), reason);
+			API.DropPlayer(e.Client.Handle.ToString(), disconnectReason);
 		}
 
-		private async void OnDisconnecting(IClient client, string disconnectMessage)
+		private async void OnDisconnecting(IClient client, string disconnectReason)
 		{
 			this.comms.Event(SessionEvents.ClientDisconnecting).ToServer().Emit(client);
 
@@ -293,7 +292,7 @@ namespace NFive.Server.Controllers
 				if (session == null) throw new Exception($"No session to end for disconnected user \"{client.Name}\""); // TODO: SessionException
 
 				session.Disconnected = DateTime.UtcNow;
-				session.DisconnectReason = disconnectMessage;
+				session.DisconnectReason = disconnectReason;
 				context.Sessions.AddOrUpdate(session);
 				await context.SaveChangesAsync();
 

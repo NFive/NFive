@@ -56,6 +56,11 @@ namespace NFive.Client
 
 			this.logger.Warn($"Got config: {config.Item1.Name}");
 
+			//RpcManager.OnRaw("onClientResourceStart", new Action<Player, string>(OnClientResourceStartRaw));
+			//RpcManager.OnRaw("onClientResourceStop", new Action<Player, string>(OnClientResourceStopRaw));
+			//RpcManager.OnRaw("gameEventTriggered", new Action<Player, string, List<dynamic>>(OnGameEventTriggeredRaw));
+			// RpcManager.OnRaw(FiveMClientEvents.PopulationPedCreating, new Action<float, float, float, uint, IPopulationPedCreatingSetter>(OnPopulationPedCreatingRaw));
+
 			ClientConfiguration.ConsoleLogLevel = config.Item2;
 			ClientConfiguration.MirrorLogLevel = config.Item3;
 

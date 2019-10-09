@@ -63,7 +63,7 @@ namespace NFive.Client.Diagnostics
 
 			if (ClientConfiguration.MirrorLogLevel <= level)
 			{
-				RpcManager.Emit("nfive:log:mirror", DateTime.UtcNow, level, this.Prefix, message); // TODO: Event const
+				//RpcManager.Emit("nfive:log:mirror", DateTime.UtcNow, level, this.Prefix, message); // TODO: Event const
 			}
 		}
 	}
