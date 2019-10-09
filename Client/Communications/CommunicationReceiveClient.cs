@@ -1,19 +1,21 @@
-using NFive.SDK.Client.Events;
 using System;
+using JetBrains.Annotations;
+using NFive.Client.Events;
 using NFive.SDK.Client.Communications;
 
 namespace NFive.Client.Communications
 {
+	[PublicAPI]
 	public class CommunicationReceiveClient : ICommunicationReceiveClient
 	{
 		public string Event { get; }
 
-		public IEventManager EventManager { get; }
+		public EventManager EventManager { get; }
 
-		public CommunicationReceiveClient(ICommunicationTarget target)
+		public CommunicationReceiveClient(string @event, EventManager eventManager)
 		{
-			this.Event = target.Event;
-			this.EventManager = target.EventManager;
+			this.Event = @event;
+			this.EventManager = eventManager;
 		}
 
 		public void On(Action<ICommunicationMessage> callback) => this.EventManager.On(this.Event, callback);

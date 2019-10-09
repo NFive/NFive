@@ -1,8 +1,8 @@
+using System;
+using System.Linq;
 using NFive.Client.Rpc;
 using NFive.SDK.Client.Configuration;
 using NFive.SDK.Core.Diagnostics;
-using System;
-using System.Linq;
 
 namespace NFive.Client.Diagnostics
 {
@@ -37,12 +37,12 @@ namespace NFive.Client.Diagnostics
 
 		public void Error(Exception exception)
 		{
-			Log($"ERROR: {exception.Message}", LogLevel.Error);
+			Error(exception, "ERROR");
 		}
 
 		public void Error(Exception exception, string message)
 		{
-			Log($"{message}: {exception.Message}", LogLevel.Error);
+			Log($"{message}: {exception.Message}", LogLevel.Error); // TODO: Output more details
 		}
 
 		public void Log(string message, LogLevel level)
@@ -63,7 +63,7 @@ namespace NFive.Client.Diagnostics
 
 			if (ClientConfiguration.MirrorLogLevel <= level)
 			{
-				//RpcManager.Emit("nfive:log:mirror", DateTime.UtcNow, level, this.Prefix, message);
+				RpcManager.Emit("nfive:log:mirror", DateTime.UtcNow, level, this.Prefix, message); // TODO: Event const
 			}
 		}
 	}

@@ -1,17 +1,16 @@
-using MySql.Data.MySqlClient;
-using NFive.SDK.Core.Diagnostics;
-using NFive.SDK.Server.Communications;
-using NFive.SDK.Server.Configuration;
-using NFive.SDK.Server.Controllers;
-using NFive.SDK.Server.Events;
-using NFive.Server.Configuration;
-using NFive.Server.Models;
-using NFive.Server.Storage;
 using System;
 using System.Data.Entity.Migrations;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using MySql.Data.MySqlClient;
+using NFive.SDK.Core.Diagnostics;
+using NFive.SDK.Server.Communications;
+using NFive.SDK.Server.Controllers;
+using NFive.SDK.Server.Events;
+using NFive.Server.Configuration;
+using NFive.Server.Models;
+using NFive.Server.Storage;
 using ServerConfiguration = NFive.SDK.Server.Configuration.ServerConfiguration;
 
 namespace NFive.Server.Controllers

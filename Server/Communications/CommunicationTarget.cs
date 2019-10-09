@@ -1,15 +1,15 @@
 using NFive.SDK.Server.Communications;
-using NFive.SDK.Server.Events;
+using NFive.Server.Events;
 
 namespace NFive.Server.Communications
 {
 	public class CommunicationTarget : ICommunicationTarget
 	{
-		private readonly IEventManager eventManager;
+		private readonly EventManager eventManager;
 
 		public string Event { get; }
 
-		public CommunicationTarget(IEventManager eventManager, string @event)
+		public CommunicationTarget(EventManager eventManager, string @event)
 		{
 			this.eventManager = eventManager;
 			this.Event = @event;

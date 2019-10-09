@@ -1,11 +1,12 @@
+using System;
+using System.Collections.Generic;
 using CitizenFX.Core;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.IoC;
+using NFive.SDK.Core.Rpc;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Events;
-using System;
-using System.Collections.Generic;
 
 namespace NFive.Server
 {
@@ -15,17 +16,17 @@ namespace NFive.Server
 	{
 		private readonly ILogger logger;
 
+		public List<IClient> Clients { get; } = new List<IClient>();
+
 		public event EventHandler<ClientEventArgs> ClientAdded;
 
 		public event EventHandler<ClientEventArgs> ClientRemoved;
-
-		public List<IClient> Clients { get; } = new List<IClient>();
 
 		public ClientList(ILogger logger, ICommunicationManager comms)
 		{
 			this.logger = logger;
 
-			comms.Event(SDK.Core.Rpc.RpcEvents.ClientInitialize).FromClients().On(OnInitialize);
+			comms.Event(RpcEvents.ClientInitialize).FromClients().On(OnInitialize);
 			comms.Event("nfive:server:playerDropped").FromServer().On<IClient, string, CallbackDelegate>(OnDropped);
 		}
 

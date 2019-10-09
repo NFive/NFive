@@ -2,13 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using NFive.Client.Communications;
 using NFive.Client.Diagnostics;
-using NFive.SDK.Client.Events;
+using NFive.SDK.Client.Communications;
 
 namespace NFive.Client.Events
 {
-	public class EventManager : IEventManager
+	[PublicAPI]
+	public class EventManager
 	{
 		private readonly Logger logger;
 		private readonly Dictionary<string, List<Delegate>> subscriptions = new Dictionary<string, List<Delegate>>();
@@ -71,7 +73,9 @@ namespace NFive.Client.Events
 
 				var message = new CommunicationMessage(@event, this);
 
-				this.logger.Trace(args.Length > 0 ? $"Emit: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a?.ToString() ?? "NULL"))}" : $"Emit: \"{@event}\" without payload");
+				this.logger.Trace(args.Length > 0
+					? $"Emit: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a?.ToString() ?? "NULL"))}"
+					: $"Emit: \"{@event}\" without payload");
 
 				foreach (var subscription in this.subscriptions[@event])
 				{
@@ -112,8 +116,7 @@ namespace NFive.Client.Events
 				this.logger.Trace($"On: \"{@event}\" attached to \"{action.Method.DeclaringType?.Name}.{action.Method.Name}({string.Join(", ", action.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 			}
 		}
-
-
+		
 		private async Task<TReturn> InternalRequest<TReturn>(string @event, params object[] args)
 		{
 			var message = new CommunicationMessage(@event, this);
@@ -123,10 +126,14 @@ namespace NFive.Client.Events
 			{
 				InternalOn($"{message.Id}:{@event}", new Action<ICommunicationMessage, TReturn>((e, data) =>
 				{
+					this.logger.Trace($"Request Reply: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a?.ToString() ?? "NULL"))}");
+
 					tcs.SetResult(data);
 				}));
 
-				this.logger.Trace(args.Length > 0 ? $"Request Emit: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a?.ToString() ?? "NULL"))}" : $"Fire: \"{@event}\" without payload");
+				this.logger.Trace(args.Length > 0
+					? $"Request Emit: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a?.ToString() ?? "NULL"))}"
+					: $"Request Emit: \"{@event}\" without payload");
 
 				lock (this.subscriptions)
 				{

@@ -1,15 +1,15 @@
-using NFive.SDK.Server.Communications;
-using NFive.SDK.Server.Events;
 using System;
+using NFive.SDK.Server.Communications;
+using NFive.Server.Events;
 
 namespace NFive.Server.Communications
 {
 	public class CommunicationReceiveServer : ICommunicationReceiveServer
 	{
 		private readonly string @event;
-		private readonly IEventManager eventManager;
+		private readonly EventManager eventManager;
 
-		public CommunicationReceiveServer(string @event, IEventManager eventManager)
+		public CommunicationReceiveServer(string @event, EventManager eventManager)
 		{
 			this.@event = @event;
 			this.eventManager = eventManager;

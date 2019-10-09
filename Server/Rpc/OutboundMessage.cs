@@ -1,8 +1,8 @@
+using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using NFive.SDK.Server.Communications;
-using System;
-using System.Collections.Generic;
 
 namespace NFive.Server.Rpc
 {

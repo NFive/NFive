@@ -1,22 +1,25 @@
-using NFive.SDK.Server.Communications;
-using NFive.SDK.Server.Events;
 using System;
 using System.Threading.Tasks;
+using NFive.SDK.Server.Communications;
+using NFive.Server.Events;
 
 namespace NFive.Server.Communications
 {
 	public class CommunicationTransmitServer : ICommunicationTransmitServer
 	{
 		private readonly string @event;
-		private readonly IEventManager eventManager;
+		private readonly EventManager eventManager;
 
-		public CommunicationTransmitServer(string @event, IEventManager eventManager)
+		public CommunicationTransmitServer(string @event, EventManager eventManager)
 		{
 			this.@event = @event;
 			this.eventManager = eventManager;
 		}
 
-		public void Emit(params object[] payloads) => this.eventManager.Emit(this.@event, payloads);
+		public void Emit(params object[] payloads)
+		{
+			this.eventManager.Emit(this.@event, payloads);
+		}
 
 		public async Task<T> Request<T>(params object[] payloads) => await this.eventManager.Request<T>(this.@event, payloads);
 

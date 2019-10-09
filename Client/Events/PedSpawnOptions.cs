@@ -5,11 +5,11 @@ using JetBrains.Annotations;
 namespace NFive.Client.Events
 {
 	[PublicAPI]
-	public class PedSpawnOptions
+	public class PedSpawnOptions // TODO: Move to SDK
 	{
-		private Vector3 position;
-		private uint model;
 		private readonly dynamic setters;
+		private uint model;
+		private Vector3 position;
 
 		public Model Model
 		{

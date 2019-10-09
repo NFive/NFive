@@ -1,7 +1,6 @@
 using System;
 using NFive.Client.Rpc;
 using NFive.SDK.Client.Communications;
-using NFive.SDK.Client.Events;
 
 namespace NFive.Client.Communications
 {

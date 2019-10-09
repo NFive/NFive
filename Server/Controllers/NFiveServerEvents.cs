@@ -11,7 +11,7 @@ namespace NFive.Server.Controllers
 		public const string PlayerDropped = "nfive:server:playerDropped";
 		public const string ResourceStart = "nfive:server:resourceStart";
 		public const string ResourceStop = "nfive:server:resourceStop";
-		public const string RrconCommand = "nfive:server:rconCommand";
+		public const string RconCommand = "nfive:server:rconCommand";
 		public const string GameEventTriggered = "nfive:server:gameEventTriggered";
 	}
 }

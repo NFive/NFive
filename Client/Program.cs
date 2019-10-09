@@ -1,5 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using CitizenFX.Core;
-using CitizenFX.Core.Native;
 using JetBrains.Annotations;
 using NFive.Client.Commands;
 using NFive.Client.Communications;
@@ -8,16 +11,13 @@ using NFive.Client.Events;
 using NFive.Client.Rpc;
 using NFive.SDK.Client;
 using NFive.SDK.Client.Configuration;
+using NFive.SDK.Client.Input;
 using NFive.SDK.Client.Interface;
 using NFive.SDK.Client.Services;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Core.Plugins;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using NFive.SDK.Client.Input;
+using NFive.SDK.Core.Rpc;
 
 namespace NFive.Client
 {
@@ -29,9 +29,12 @@ namespace NFive.Client
 
 		/// <summary>
 		/// Primary client entry point.
-		/// Initializes a new instance of the <see cref="Program"/> class.
+		/// Initializes a new instance of the <see cref="Program" /> class.
 		/// </summary>
-		public Program() => Startup();
+		public Program()
+		{
+			Startup();
+		}
 
 		private async void Startup()
 		{
@@ -49,17 +52,17 @@ namespace NFive.Client
 			this.logger.Warn("Request config...");
 
 			// Initial connection
-			var config = await comms.Event(SDK.Core.Rpc.RpcEvents.ClientInitialize).ToServer().Request<User, LogLevel, LogLevel>(typeof(Program).Assembly.GetName().Version.ToString());
+			var config = await comms.Event(RpcEvents.ClientInitialize).ToServer().Request<User, LogLevel, LogLevel>(typeof(Program).Assembly.GetName().Version.ToString());
 
 			this.logger.Warn($"Got config: {config.Item1.Name}");
 
 			ClientConfiguration.ConsoleLogLevel = config.Item2;
 			ClientConfiguration.MirrorLogLevel = config.Item3;
 
-      // Load user key mappings
-      Input.UserMappings.AddRange(Enum.GetValues(typeof(Control)).OfType<Control>().Select(c => new Hotkey(c)));
-      
-			var plugins = await comms.Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).ToServer().Request<List<Plugin>>();
+			// Load user key mappings
+			Input.UserMappings.AddRange(Enum.GetValues(typeof(Control)).OfType<Control>().Select(c => new Hotkey(c)));
+
+			var plugins = await comms.Event(RpcEvents.ClientPlugins).ToServer().Request<List<Plugin>>();
 
 			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
 			{
@@ -93,16 +96,13 @@ namespace NFive.Client
 
 			this.logger.Info("Plugins loaded");
 
-#pragma warning disable 4014
-			foreach (var service in this.services) service.Started();
-#pragma warning restore 4014
+			foreach (var service in this.services) await service.Started();
 
 			this.logger.Info("Plugins started");
 
-			comms.Event(SDK.Core.Rpc.RpcEvents.ClientInitialized).ToServer().Emit();
+			comms.Event(RpcEvents.ClientInitialized).ToServer().Emit();
 
-			foreach (var service in this.services)
-				await service.HoldFocus();
+			foreach (var service in this.services) await service.HoldFocus();
 		}
 	}
 }

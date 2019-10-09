@@ -1,15 +1,15 @@
 using NFive.SDK.Core.IoC;
 using NFive.SDK.Server.Communications;
-using NFive.SDK.Server.Events;
+using NFive.Server.Events;
 
 namespace NFive.Server.Communications
 {
 	[Component(Lifetime = Lifetime.Singleton)]
 	public class CommunicationManager : ICommunicationManager
 	{
-		private readonly IEventManager eventManager;
+		private readonly EventManager eventManager;
 
-		public CommunicationManager(IEventManager eventManager)
+		public CommunicationManager(EventManager eventManager)
 		{
 			this.eventManager = eventManager;
 		}

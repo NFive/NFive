@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using CitizenFX.Core;
 using JetBrains.Annotations;
-using System.Collections.Generic;
 
 namespace NFive.Client.Rpc
 {

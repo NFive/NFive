@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using NFive.SDK.Core.Diagnostics;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Controllers;
+using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Server.Configuration;
 
 namespace NFive.Server.Configuration
@@ -29,6 +29,7 @@ namespace NFive.Server.Configuration
 			public string Map { get; set; } = "Los Santos";
 		}
 
+		[PublicAPI]
 		public class LogConfiguration
 		{
 			public LogOutputConfiguration Output { get; set; } = new LogOutputConfiguration();
@@ -45,6 +46,7 @@ namespace NFive.Server.Configuration
 			};
 		}
 
+		[PublicAPI]
 		public class LogOutputConfiguration
 		{
 			public LogLevel ClientConsole { get; set; } = LogLevel.Warn;
@@ -54,11 +56,12 @@ namespace NFive.Server.Configuration
 			public LogLevel ServerConsole { get; set; } = LogLevel.Warn;
 		}
 
+		[PublicAPI]
 		public class LocaleConfiguration : ILocaleConfiguration
 		{
 			public CultureInfo Culture { get; set; } = new CultureInfo("en-US");
 
-			public TimeZoneInfo TimeZone { get; set; } = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+			public TimeZoneInfo TimeZone { get; set; } = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
 		}
 	}
 }

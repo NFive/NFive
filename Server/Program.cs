@@ -1,8 +1,18 @@
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.Migrations;
+using System.Data.Entity.Migrations.Infrastructure;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Plugins;
+using NFive.SDK.Core.Rpc;
 using NFive.SDK.Plugins;
 using NFive.SDK.Plugins.Configuration;
 using NFive.SDK.Server;
@@ -20,16 +30,7 @@ using NFive.Server.Events;
 using NFive.Server.IoC;
 using NFive.Server.Rcon;
 using NFive.Server.Rpc;
-using System;
-using System.Collections.Generic;
-using System.Data.Entity.Migrations;
-using System.Data.Entity.Migrations.Infrastructure;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
-using ServerConfiguration = NFive.SDK.Server.Configuration.ServerConfiguration;
+using ServerConfiguration = NFive.Server.Configuration.ServerConfiguration;
 
 namespace NFive.Server
 {
@@ -38,13 +39,16 @@ namespace NFive.Server
 	{
 		private readonly Dictionary<Name, List<Controller>> controllers = new Dictionary<Name, List<Controller>>();
 
-		public Program() => Startup();
+		public Program()
+		{
+			Startup();
+		}
 
 		private async void Startup()
 		{
 			// Print exception messages in English
-			Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
+			CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
 			// Set the AppDomain working directory to the current resource root
 			Environment.CurrentDirectory = Path.GetFullPath(API.GetResourcePath(API.GetCurrentResourceName()));
@@ -53,6 +57,10 @@ namespace NFive.Server
 			new Logger().Info($"NFive {typeof(Program).Assembly.GetCustomAttributes<AssemblyInformationalVersionAttribute>().First().InformationalVersion}");
 
 			var config = ConfigurationManager.Load<CoreConfiguration>("core.yml");
+
+			// Use configured culture for output
+			Thread.CurrentThread.CurrentCulture = config.Locale.Culture;
+			CultureInfo.DefaultThreadCurrentCulture = config.Locale.Culture;
 
 			ServerLogConfiguration.Output = config.Log.Output;
 			//ServerConfiguration.LogLevel = config.Log.Level;
@@ -92,13 +100,11 @@ namespace NFive.Server
 
 			var registrar = new ContainerRegistrar();
 			registrar.RegisterService<ILogger>(s => new Logger());
-			//registrar.RegisterType<IRpcHandler, RpcHandler>();
 			registrar.RegisterInstance<IRconManager>(rcon);
-			registrar.RegisterInstance<IEventManager>(events);
 			registrar.RegisterInstance<ICommunicationManager>(comms);
 			registrar.RegisterInstance<IClientList>(new ClientList(new Logger(config.Log.Core, "ClientList"), comms));
-			registrar.RegisterInstance<IServerConfiguration>(new Configuration.ServerConfiguration(config.Locale));
-			registrar.RegisterSdkComponents(assemblies.Distinct());
+			registrar.RegisterInstance<IServerConfiguration>(new ServerConfiguration(config.Locale));
+			registrar.RegisterPluginComponents(assemblies.Distinct());
 
 			// DI
 			var container = registrar.Build();
@@ -131,7 +137,7 @@ namespace NFive.Server
 
 					if (sdkVersion == null)
 					{
-						throw new Exception("Unable to load outdated SDK plugin");
+						throw new Exception("Unable to load outdated SDK plugin"); // TODO
 					}
 
 					if (sdkVersion.Target != SDK.Server.SDK.Version)
@@ -149,7 +155,7 @@ namespace NFive.Server
 
 						if (!migrator.GetPendingMigrations().Any()) continue;
 
-						if (!ServerConfiguration.AutomaticMigrations) throw new MigrationsPendingException($"Plugin {plugin.FullName} has pending migrations but automatic migrations are disabled");
+						if (!SDK.Server.Configuration.ServerConfiguration.AutomaticMigrations) throw new MigrationsPendingException($"Plugin {plugin.FullName} has pending migrations but automatic migrations are disabled");
 
 						foreach (var migration in migrator.GetPendingMigrations())
 						{
@@ -211,18 +217,16 @@ namespace NFive.Server
 					}
 				}
 			}
-
-#pragma warning disable 4014
-			foreach (var controller in this.controllers.SelectMany(c => c.Value)) controller.Started();
-#pragma warning restore 4014
+			
+			foreach (var controller in this.controllers.SelectMany(c => c.Value)) await controller.Started();
 
 			rcon.Controllers = this.controllers;
 
-			comms.Event(SDK.Core.Rpc.RpcEvents.ClientPlugins).FromClients().OnRequest(e => e.Reply(graph.Plugins));
+			comms.Event(RpcEvents.ClientPlugins).FromClients().OnRequest(e => e.Reply(graph.Plugins));
 
 			comms.Event(ServerEvents.ServerInitialized).ToServer().Emit();
 
-			logger.Debug($"{graph.Plugins.Count} plugin(s) loaded, {this.controllers.Count} controller(s) created");
+			logger.Debug($"{graph.Plugins.Count.ToString(CultureInfo.InvariantCulture)} plugin(s) loaded, {this.controllers.Count.ToString(CultureInfo.InvariantCulture)} controller(s) created");
 		}
 	}
 }

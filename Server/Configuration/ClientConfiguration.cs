@@ -1,8 +1,8 @@
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Core.Plugins;
-using System.Collections.Generic;
 
 namespace NFive.Server.Configuration
 {

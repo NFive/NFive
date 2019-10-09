@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using CitizenFX.Core;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
@@ -5,17 +9,14 @@ using NFive.SDK.Core.Rpc;
 using NFive.SDK.Server.Communications;
 using NFive.Server.Communications;
 using NFive.Server.Diagnostics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NFive.Server.Rpc
 {
+	[PublicAPI]
 	public static class RpcManager
 	{
-		private static Logger logger;
 		private static readonly Serializer Serializer = new Serializer();
+		private static Logger logger;
 		private static EventHandlerDictionary events;
 		private static PlayerList players;
 
@@ -28,17 +29,17 @@ namespace NFive.Server.Rpc
 
 		public static void OnRaw(string @event, Delegate callback)
 		{
-			logger.Trace($"OnRaw: \"{@event}\" attached to \"{callback?.Method?.DeclaringType?.Name}.{callback?.Method?.Name}({string.Join(", ", callback?.Method?.GetParameters()?.Select(p => p.ParameterType + " " + p.Name))})\"");
+			logger.Trace($"OnRaw: \"{@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 
 			events[@event] += callback;
 		}
 
-		public static void On(string @event, [CanBeNull]IClient target, Action<ICommunicationMessage> callback)
+		public static void On(string @event, [CanBeNull] IClient target, Action<ICommunicationMessage> callback)
 		{
 			InternalOn(@event, target, callback, m => new object[0]);
 		}
 
-		public static void On<T>(string @event, [CanBeNull]IClient target, Action<ICommunicationMessage, T> callback)
+		public static void On<T>(string @event, [CanBeNull] IClient target, Action<ICommunicationMessage, T> callback)
 		{
 			InternalOn(@event, target, callback, m => new object[]
 			{
@@ -46,7 +47,7 @@ namespace NFive.Server.Rpc
 			});
 		}
 
-		public static void On<T1, T2>(string @event, [CanBeNull]IClient target, Action<ICommunicationMessage, T1, T2> callback)
+		public static void On<T1, T2>(string @event, [CanBeNull] IClient target, Action<ICommunicationMessage, T1, T2> callback)
 		{
 			InternalOn(@event, target, callback, m => new object[]
 			{
@@ -65,7 +66,7 @@ namespace NFive.Server.Rpc
 			});
 		}
 
-		public static void On<T1, T2, T3, T4>(string @event, [CanBeNull]IClient target, Action<ICommunicationMessage, T1, T2, T3, T4> callback)
+		public static void On<T1, T2, T3, T4>(string @event, [CanBeNull] IClient target, Action<ICommunicationMessage, T1, T2, T3, T4> callback)
 		{
 			InternalOn(@event, target, callback, m => new object[]
 			{
@@ -76,7 +77,7 @@ namespace NFive.Server.Rpc
 			});
 		}
 
-		public static void On<T1, T2, T3, T4, T5>(string @event, [CanBeNull]IClient target, Action<ICommunicationMessage, T1, T2, T3, T4, T5> callback)
+		public static void On<T1, T2, T3, T4, T5>(string @event, [CanBeNull] IClient target, Action<ICommunicationMessage, T1, T2, T3, T4, T5> callback)
 		{
 			InternalOn(@event, target, callback, m => new object[]
 			{
@@ -88,12 +89,12 @@ namespace NFive.Server.Rpc
 			});
 		}
 
-		public static void OnRequest(string @event, [CanBeNull]IClient target, Action<ICommunicationMessage> callback)
+		public static void OnRequest(string @event, [CanBeNull] IClient target, Action<ICommunicationMessage> callback)
 		{
 			InternalOnRequest(@event, target, callback, m => new object[0]);
 		}
 
-		public static void OnRequest<T>(string @event, [CanBeNull]IClient target, Action<ICommunicationMessage, T> callback)
+		public static void OnRequest<T>(string @event, [CanBeNull] IClient target, Action<ICommunicationMessage, T> callback)
 		{
 			InternalOnRequest(@event, target, callback, m => new object[]
 			{
@@ -101,7 +102,7 @@ namespace NFive.Server.Rpc
 			});
 		}
 
-		public static void OnRequest<T1, T2>(string @event, [CanBeNull]IClient target, Action<ICommunicationMessage, T1, T2> callback)
+		public static void OnRequest<T1, T2>(string @event, [CanBeNull] IClient target, Action<ICommunicationMessage, T1, T2> callback)
 		{
 			InternalOnRequest(@event, target, callback, m => new object[]
 			{
@@ -120,7 +121,7 @@ namespace NFive.Server.Rpc
 			});
 		}
 
-		public static void OnRequest<T1, T2, T3, T4>(string @event, [CanBeNull]IClient target, Action<ICommunicationMessage, T1, T2, T3, T4> callback)
+		public static void OnRequest<T1, T2, T3, T4>(string @event, [CanBeNull] IClient target, Action<ICommunicationMessage, T1, T2, T3, T4> callback)
 		{
 			InternalOnRequest(@event, target, callback, m => new object[]
 			{
@@ -131,7 +132,7 @@ namespace NFive.Server.Rpc
 			});
 		}
 
-		public static void OnRequest<T1, T2, T3, T4, T5>(string @event, [CanBeNull]IClient target, Action<ICommunicationMessage, T1, T2, T3, T4, T5> callback)
+		public static void OnRequest<T1, T2, T3, T4, T5>(string @event, [CanBeNull] IClient target, Action<ICommunicationMessage, T1, T2, T3, T4, T5> callback)
 		{
 			InternalOnRequest(@event, target, callback, m => new object[]
 			{
@@ -145,24 +146,24 @@ namespace NFive.Server.Rpc
 
 		public static void Off(string @event, Delegate callback)
 		{
-			logger.Trace($"Off: \"{@event}\" detached from \"{callback?.Method?.DeclaringType?.Name}.{callback?.Method?.Name}({string.Join(", ", callback?.Method?.GetParameters()?.Select(p => p.ParameterType + " " + p.Name))})\"");
+			logger.Trace($"Off: \"{@event}\" detached from \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 
 			events[@event] -= callback;
 		}
 
-		public static async Task Request(string @event, [CanBeNull]IClient target, params object[] payloads)
+		public static async Task Request(string @event, [CanBeNull] IClient target, params object[] payloads)
 		{
 			await InternalRequest(@event, target, payloads);
 		}
 
-		public static async Task<T> Request<T>(string @event, [CanBeNull]IClient target, params object[] payloads)
+		public static async Task<T> Request<T>(string @event, [CanBeNull] IClient target, params object[] payloads)
 		{
 			var results = await InternalRequest(@event, target, payloads);
 
 			return Serializer.Deserialize<T>(results.Payloads[0]);
 		}
 
-		public static async Task<Tuple<T1, T2>> Request<T1, T2>(string @event, [CanBeNull]IClient target, params object[] payloads)
+		public static async Task<Tuple<T1, T2>> Request<T1, T2>(string @event, [CanBeNull] IClient target, params object[] payloads)
 		{
 			var results = await InternalRequest(@event, target, payloads);
 
@@ -172,7 +173,7 @@ namespace NFive.Server.Rpc
 			);
 		}
 
-		public static async Task<Tuple<T1, T2, T3>> Request<T1, T2, T3>(string @event, [CanBeNull]IClient target, params object[] payloads)
+		public static async Task<Tuple<T1, T2, T3>> Request<T1, T2, T3>(string @event, [CanBeNull] IClient target, params object[] payloads)
 		{
 			var results = await InternalRequest(@event, target, payloads);
 
@@ -183,7 +184,7 @@ namespace NFive.Server.Rpc
 			);
 		}
 
-		public static async Task<Tuple<T1, T2, T3, T4>> Request<T1, T2, T3, T4>(string @event, [CanBeNull]IClient target, params object[] payloads)
+		public static async Task<Tuple<T1, T2, T3, T4>> Request<T1, T2, T3, T4>(string @event, [CanBeNull] IClient target, params object[] payloads)
 		{
 			var results = await InternalRequest(@event, target, payloads);
 
@@ -195,7 +196,7 @@ namespace NFive.Server.Rpc
 			);
 		}
 
-		public static async Task<Tuple<T1, T2, T3, T4, T5>> Request<T1, T2, T3, T4, T5>(string @event, [CanBeNull]IClient target, params object[] payloads)
+		public static async Task<Tuple<T1, T2, T3, T4, T5>> Request<T1, T2, T3, T4, T5>(string @event, [CanBeNull] IClient target, params object[] payloads)
 		{
 			var results = await InternalRequest(@event, target, payloads);
 
@@ -208,16 +209,11 @@ namespace NFive.Server.Rpc
 			);
 		}
 
-		public static async void Emit(string @event, [CanBeNull] IClient target, OutboundMessage message)
+		private static async void Emit(OutboundMessage message)
 		{
-			if (message.Payloads.Count > 0)
-			{
-				logger.Trace($"Fire: \"{message.Event}\" {(message.Target != null ? $"to {message.Target.Handle} " : string.Empty)}with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}");
-			}
-			else
-			{
-				logger.Trace($"Fire: \"{message.Event}\" {(message.Target != null ? $"to {message.Target.Handle} " : string.Empty)}with no payloads");
-			}
+			logger.Trace(message.Payloads.Count > 0
+				? $"Fire: \"{message.Event}\" {(message.Target != null ? $"to {message.Target.Handle} " : string.Empty)}with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}"
+				: $"Fire: \"{message.Event}\" {(message.Target != null ? $"to {message.Target.Handle} " : string.Empty)}with no payloads");
 
 			// Marshall back to the main thread in order to use a native call.
 			await BaseScript.Delay(0);
@@ -229,14 +225,14 @@ namespace NFive.Server.Rpc
 			}
 			else
 			{
-				logger.Trace($"TriggerClientEvent: All clients");
+				logger.Trace("TriggerClientEvent: All clients");
 				BaseScript.TriggerClientEvent(message.Event, message.Pack());
 			}
 		}
 
 		public static void Emit(string @event, [CanBeNull] IClient target, params object[] payloads)
 		{
-			Emit(@event, target, new OutboundMessage
+			Emit(new OutboundMessage
 			{
 				Id = Guid.NewGuid(),
 				Target = target,
@@ -245,7 +241,7 @@ namespace NFive.Server.Rpc
 			});
 		}
 
-		private static async Task<InboundMessage> InternalRequest(string @event, [CanBeNull]IClient target, params object[] payloads)
+		private static async Task<InboundMessage> InternalRequest(string @event, [CanBeNull] IClient target, params object[] payloads)
 		{
 			var tcs = new TaskCompletionSource<InboundMessage>();
 
@@ -284,11 +280,12 @@ namespace NFive.Server.Rpc
 
 		private static void InternalOn(string @event, IClient target, Delegate callback, Func<InboundMessage, IEnumerable<object>> func)
 		{
-			logger.Trace($"On: \"{@event}\" attached to \"{callback.Method?.DeclaringType?.Name}.{callback?.Method?.Name}({string.Join(", ", callback?.Method?.GetParameters()?.Select(p => p.ParameterType + " " + p.Name))})\"");
+			logger.Trace($"On: \"{@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 
 			events[@event] += new Action<byte[]>(data =>
 			{
 				var message = InboundMessage.From(data);
+
 				if (target != null && message.Source != target.Handle)
 				{
 					logger.Trace($"Ignoring event {@event} triggered by: {message.Source} | expected: {target.Handle}");
@@ -315,16 +312,18 @@ namespace NFive.Server.Rpc
 
 		private static void InternalOnRequest(string @event, IClient target, Delegate callback, Func<InboundMessage, IEnumerable<object>> func)
 		{
-			logger.Trace($"OnRequest: \"{@event}\" attached to \"{callback.Method?.DeclaringType?.Name}.{callback?.Method?.Name}({string.Join(", ", callback?.Method?.GetParameters()?.Select(p => p.ParameterType + " " + p.Name))})\"");
+			logger.Trace($"OnRequest: \"{@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 
 			events[@event] += new Action<byte[]>(data =>
 			{
 				var message = InboundMessage.From(data);
+
 				if (target != null && message.Source != target.Handle)
 				{
 					logger.Trace($"Ignoring event {@event} triggered by: {message.Source} | expected: {target.Handle}");
 					return;
 				}
+
 				if (!message.Event.StartsWith("nfive:log:"))
 				{
 					logger.Trace(message.Payloads.Count > 0

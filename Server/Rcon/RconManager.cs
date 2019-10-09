@@ -1,23 +1,23 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using CitizenFX.Core.Native;
 using NFive.SDK.Core.Arguments;
+using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Plugins;
 using NFive.SDK.Plugins.Configuration;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Rcon;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using NFive.SDK.Core.Diagnostics;
 using NFive.Server.Diagnostics;
 
 namespace NFive.Server.Rcon
 {
 	public class RconManager : IRconManager
 	{
-		public Dictionary<Name, List<Controller>> Controllers { get; set; } = new Dictionary<Name, List<Controller>>();
+		private readonly Dictionary<string, Delegate> callbacks = new Dictionary<string, Delegate>();
 
-		public Dictionary<string, Delegate> Callbacks { get; } = new Dictionary<string, Delegate>();
+		public Dictionary<Name, List<Controller>> Controllers { get; set; } = new Dictionary<Name, List<Controller>>();
 
 		public RconManager(ICommunicationManager comms)
 		{
@@ -26,7 +26,7 @@ namespace NFive.Server.Rcon
 
 		public void Register<T>(string command, Action<T> callback)
 		{
-			this.Callbacks.Add(command.ToLowerInvariant(), new Action<IEnumerable<string>>(a =>
+			this.callbacks.Add(command.ToLowerInvariant(), new Action<IEnumerable<string>>(a =>
 			{
 				callback(Argument.Parse<T>(a));
 			}));
@@ -34,16 +34,16 @@ namespace NFive.Server.Rcon
 
 		public void Register(string command, Action callback)
 		{
-			this.Callbacks.Add(command.ToLowerInvariant(), callback);
+			this.callbacks.Add(command.ToLowerInvariant(), callback);
 		}
 
 		private void OnCommand(ICommunicationMessage e, string command, string[] objArgs)
 		{
 			new Logger(LogLevel.Trace, "Rcon").Debug($"{command} {string.Join(" ", objArgs)}");
 
-			if (this.Callbacks.ContainsKey(command.ToLowerInvariant()))
+			if (this.callbacks.ContainsKey(command.ToLowerInvariant()))
 			{
-				this.Callbacks[command].DynamicInvoke(objArgs);
+				this.callbacks[command].DynamicInvoke(objArgs.Cast<object>().ToArray());
 				API.CancelEvent();
 				return;
 			}
@@ -65,10 +65,7 @@ namespace NFive.Server.Rcon
 
 						if (controllerType.BaseType != null && controllerType.BaseType.IsGenericType && controllerType.BaseType.GetGenericTypeDefinition() == typeof(ConfigurableController<>))
 						{
-							controllerType.GetMethods().FirstOrDefault(m => m.DeclaringType == controllerType && m.Name == "Reload")?.Invoke(
-								controller,
-								new[] { ConfigurationManager.InitializeConfig(pluginName, controllerType.BaseType.GetGenericArguments()[0]) }
-							);
+							controllerType.GetMethods().FirstOrDefault(m => m.DeclaringType == controllerType && m.Name == "Reload")?.Invoke(controller, new[] { ConfigurationManager.InitializeConfig(pluginName, controllerType.BaseType.GetGenericArguments()[0]) });
 						}
 						else
 						{

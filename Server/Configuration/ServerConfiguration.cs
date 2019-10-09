@@ -12,7 +12,5 @@ namespace NFive.Server.Configuration
 		{
 			this.Locale = locale;
 		}
-
-		
 	}
 }

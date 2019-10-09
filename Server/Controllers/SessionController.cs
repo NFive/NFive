@@ -1,3 +1,12 @@
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Data.Entity.Migrations;
+using System.Data.Entity.Validation;
+using System.Dynamic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using NFive.SDK.Core.Diagnostics;
@@ -10,15 +19,6 @@ using NFive.SDK.Server.Events;
 using NFive.Server.Configuration;
 using NFive.Server.Rpc;
 using NFive.Server.Storage;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Data.Entity.Migrations;
-using System.Data.Entity.Validation;
-using System.Dynamic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace NFive.Server.Controllers
 {
@@ -198,7 +198,7 @@ namespace NFive.Server.Controllers
 						User = user,
 						IpAddress = client.EndPoint,
 						Created = DateTime.UtcNow,
-						Handle = client.Handle,
+						Handle = client.Handle
 					};
 
 					context.Sessions.Add(session);
@@ -209,9 +209,7 @@ namespace NFive.Server.Controllers
 				}
 				catch (DbEntityValidationException ex)
 				{
-					var errorMessages = ex.EntityValidationErrors
-						.SelectMany(x => x.ValidationErrors)
-						.Select(x => x.ErrorMessage);
+					var errorMessages = ex.EntityValidationErrors.SelectMany(x => x.ValidationErrors).Select(x => x.ErrorMessage);
 
 					var fullErrorMessage = string.Join("; ", errorMessages);
 
@@ -231,12 +229,10 @@ namespace NFive.Server.Controllers
 
 			this.sessions[session.Id] = session;
 			var threadCancellationToken = new CancellationTokenSource();
+
 			lock (this.threads)
 			{
-				this.threads.TryAdd(
-					session,
-					new Tuple<Task, CancellationTokenSource>(Task.Factory.StartNew(() => MonitorSession(session, client), threadCancellationToken.Token), threadCancellationToken)
-				);
+				this.threads.TryAdd(session, new Tuple<Task, CancellationTokenSource>(Task.Factory.StartNew(() => MonitorSession(session, client), threadCancellationToken.Token), threadCancellationToken));
 			}
 
 			this.comms.Event(SessionEvents.SessionCreated).ToServer().Emit(client, session, deferrals);
@@ -261,7 +257,6 @@ namespace NFive.Server.Controllers
 				var oldThread = this.threads.OrderBy(t => t.Key.Created).FirstOrDefault(t => t.Key.UserId == session.UserId).Key;
 				if (oldThread != null)
 				{
-
 					this.Logger.Trace($"Disposing of old thread: {oldThread.User.Name}");
 					this.threads[oldThread].Item2.Cancel();
 					this.threads[oldThread].Item1.Wait();
@@ -281,7 +276,7 @@ namespace NFive.Server.Controllers
 			OnDisconnecting(client, disconnectMessage);
 		}
 
-		private void OnDisconnect(ICommunicationMessage e, string reason)
+		private static void OnDisconnect(ICommunicationMessage e, string reason)
 		{
 			API.DropPlayer(e.Client.Handle.ToString(), reason);
 		}
@@ -313,11 +308,9 @@ namespace NFive.Server.Controllers
 						this.threads[oldThread].Item1.Dispose();
 						this.threads.TryRemove(oldThread, out _);
 					}
+
 					var threadCancellationToken = new CancellationTokenSource();
-					this.threads.TryAdd(
-						session,
-						Tuple.Create<Task, CancellationTokenSource>(Task.Factory.StartNew(() => MonitorSession(session, client), threadCancellationToken.Token), threadCancellationToken)
-					);
+					this.threads.TryAdd(session, Tuple.Create<Task, CancellationTokenSource>(Task.Factory.StartNew(() => MonitorSession(session, client), threadCancellationToken.Token), threadCancellationToken));
 				}
 
 				this.comms.Event(SessionEvents.ClientDisconnected).ToServer().Emit(client, session);
