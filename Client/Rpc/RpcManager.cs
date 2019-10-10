@@ -205,6 +205,16 @@ namespace NFive.Client.Rpc
 			);
 		}
 
+		public static void Emit(string @event, params object[] payloads)
+		{
+			Emit(new OutboundMessage
+			{
+				Id = Guid.NewGuid(),
+				Event = @event,
+				Payloads = payloads.Select(p => Serializer.Serialize(p)).ToList()
+			});
+		}
+
 		private static async void Emit(OutboundMessage message)
 		{
 			Logger.Warn(message.Payloads.Count > 0
@@ -216,16 +226,6 @@ namespace NFive.Client.Rpc
 
 			Logger.Warn($"TriggerServerEvent: {message.Event}");
 			BaseScript.TriggerServerEvent(message.Event, message.Pack());
-		}
-
-		public static void Emit(string @event, params object[] payloads)
-		{
-			Emit(new OutboundMessage
-			{
-				Id = Guid.NewGuid(),
-				Event = @event,
-				Payloads = payloads.Select(p => Serializer.Serialize(p)).ToList()
-			});
 		}
 
 		private static async Task<InboundMessage> InternalRequest(string @event, params object[] payloads)

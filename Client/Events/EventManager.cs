@@ -20,40 +20,6 @@ namespace NFive.Client.Events
 			this.logger = new Logger("Events");
 		}
 
-		public void On(string @event, Action<ICommunicationMessage> action) => InternalOn(@event, action);
-
-		public void On<T>(string @event, Action<ICommunicationMessage, T> action) => InternalOn(@event, action);
-
-		public void On<T1, T2>(string @event, Action<ICommunicationMessage, T1, T2> action) => InternalOn(@event, action);
-
-		public void On<T1, T2, T3>(string @event, Action<ICommunicationMessage, T1, T2, T3> action) => InternalOn(@event, action);
-
-		public void On<T1, T2, T3, T4>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4> action) => InternalOn(@event, action);
-
-		public void On<T1, T2, T3, T4, T5>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4, T5> action) => InternalOn(@event, action);
-
-		public async Task<T1> Request<T1>(string @event, params object[] args) => await InternalRequest<T1>(@event, args);
-
-		public async Task<Tuple<T1, T2>> Request<T1, T2>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2>>(@event, args);
-
-		public async Task<Tuple<T1, T2, T3>> Request<T1, T2, T3>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2, T3>>(@event, args);
-
-		public async Task<Tuple<T1, T2, T3, T4>> Request<T1, T2, T3, T4>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2, T3, T4>>(@event, args);
-
-		public async Task<Tuple<T1, T2, T3, T4, T5>> Request<T1, T2, T3, T4, T5>(string @event, params object[] args) => await InternalRequest<Tuple<T1, T2, T3, T4, T5>>(@event, args);
-
-		public void OnRequest(string @event, Action<ICommunicationMessage> action) => InternalOnRequest(@event, action);
-
-		public void OnRequest<T>(string @event, Action<ICommunicationMessage, T> action) => InternalOnRequest(@event, action);
-
-		public void OnRequest<T1, T2>(string @event, Action<ICommunicationMessage, T1, T2> action) => InternalOnRequest(@event, action);
-
-		public void OnRequest<T1, T2, T3>(string @event, Action<ICommunicationMessage, T1, T2, T3> action) => InternalOnRequest(@event, action);
-
-		public void OnRequest<T1, T2, T3, T4>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4> action) => InternalOnRequest(@event, action);
-
-		public void OnRequest<T1, T2, T3, T4, T5>(string @event, Action<ICommunicationMessage, T1, T2, T3, T4, T5> action) => InternalOnRequest(@event, action);
-
 		public void Off(string @event, Delegate action)
 		{
 			lock (this.subscriptions)
@@ -87,7 +53,7 @@ namespace NFive.Client.Events
 			}
 		}
 
-		private void InternalOn(string @event, Delegate action)
+		internal void On(string @event, Delegate action)
 		{
 			lock (this.subscriptions)
 			{
@@ -102,7 +68,7 @@ namespace NFive.Client.Events
 			}
 		}
 
-		private void InternalOnRequest(string @event, Delegate action)
+		internal void OnRequest(string @event, Delegate action)
 		{
 			lock (this.subscriptions)
 			{
@@ -116,15 +82,15 @@ namespace NFive.Client.Events
 				this.logger.Trace($"On: \"{@event}\" attached to \"{action.Method.DeclaringType?.Name}.{action.Method.Name}({string.Join(", ", action.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 			}
 		}
-		
-		private async Task<TReturn> InternalRequest<TReturn>(string @event, params object[] args)
+
+		internal async Task<TReturn> Request<TReturn>(string @event, params object[] args)
 		{
 			var message = new CommunicationMessage(@event, this);
 			var tcs = new TaskCompletionSource<TReturn>();
 
 			try
 			{
-				InternalOn($"{message.Id}:{@event}", new Action<ICommunicationMessage, TReturn>((e, data) =>
+				On($"{message.Id}:{@event}", new Action<ICommunicationMessage, TReturn>((e, data) =>
 				{
 					this.logger.Trace($"Request Reply: \"{@event}\" with {args.Length} payload(s): {string.Join(", ", args.Select(a => a?.ToString() ?? "NULL"))}");
 
