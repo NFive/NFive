@@ -15,7 +15,6 @@ using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Events;
-using NFive.Server.Communications;
 using NFive.Server.Configuration;
 using NFive.Server.Events;
 using NFive.Server.Rpc;

@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using CitizenFX.Core;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Events;
+using NFive.SDK.Core.Extensions;
 using NFive.SDK.Core.Utilities;
 using NFive.SDK.Server.Communications;
 using NFive.Server.Communications;
@@ -336,13 +336,6 @@ namespace NFive.Server.Rpc
 
 				callback.DynamicInvoke(args.ToArray());
 			});
-		}
-
-		// TODO: Move from client SDK to core
-		public static string Pluralize(this string str, int value, string extension = "s", CultureInfo culture = null)
-		{
-			var val = value.ToString(culture ?? CultureInfo.InvariantCulture);
-			return value == 1 ? $"{val} {str}" : $"{val} {str}{extension}";
 		}
 
 		private static string PrintCallback(Delegate callback)

@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using NFive.Client.Rpc;
 using NFive.SDK.Client.Configuration;
 using NFive.SDK.Core.Diagnostics;
 
