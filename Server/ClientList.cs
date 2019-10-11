@@ -4,10 +4,8 @@ using CitizenFX.Core;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.IoC;
-using NFive.SDK.Core.Rpc;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Events;
-using NFive.Server.Controllers;
 
 namespace NFive.Server
 {

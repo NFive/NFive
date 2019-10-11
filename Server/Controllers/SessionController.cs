@@ -8,13 +8,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
+using NFive.SDK.Core.Communications;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Helpers;
 using NFive.SDK.Core.Models.Player;
-using NFive.SDK.Core.Rpc;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Events;
+using NFive.Server.Communications;
 using NFive.Server.Configuration;
 using NFive.Server.Rpc;
 using NFive.Server.Storage;
@@ -46,8 +47,8 @@ namespace NFive.Server.Controllers
 			this.comms.Event(NFiveServerEvents.PlayerConnecting).FromServer().On<IClient, ConnectionDeferrals>(OnConnecting);
 			this.comms.Event(NFiveServerEvents.PlayerDropped).FromServer().On<IClient, string>(OnDropped);
 
-			this.comms.Event(RpcEvents.ClientInitialize).FromClients().OnRequest<string>(OnInitialize);
-			this.comms.Event(RpcEvents.ClientInitialized).FromClients().On(OnInitialized);
+			this.comms.Event(NFiveCoreEvents.ClientInitialize).FromClients().OnRequest<string>(OnInitialize);
+			this.comms.Event(NFiveCoreEvents.ClientInitialized).FromClients().On(OnInitialized);
 			this.comms.Event(SessionEvents.DisconnectPlayer).FromClients().On<string>(OnDisconnect);
 			this.comms.Event(ServerEvents.ServerInitialized).FromServer().On(OnSeverInitialized);
 

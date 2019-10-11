@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using JetBrains.Annotations;
+using NFive.SDK.Core.Communications;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Plugins;
-using NFive.SDK.Core.Rpc;
 using NFive.SDK.Plugins;
 using NFive.SDK.Plugins.Configuration;
 using NFive.SDK.Server;
@@ -79,7 +79,7 @@ namespace NFive.Server
 			var rcon = new RconManager(comms);
 
 			// Load core controllers
-			var eventController = new EventController(new Logger(config.Log.Core, "RawEvents"), comms);
+			var eventController = new EventController(new Logger(config.Log.Core, "FiveM"), comms);
 			await eventController.Loaded();
 			this.controllers.Add(new Name("NFive/RawEvents"), new List<Controller> { eventController });
 
@@ -223,7 +223,7 @@ namespace NFive.Server
 
 			rcon.Controllers = this.controllers;
 
-			comms.Event(RpcEvents.ClientPlugins).FromClients().OnRequest(e => e.Reply(graph.Plugins));
+			comms.Event(NFiveCoreEvents.ClientPlugins).FromClients().OnRequest(e => e.Reply(graph.Plugins));
 
 			comms.Event(ServerEvents.ServerInitialized).ToServer().Emit();
 
