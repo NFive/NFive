@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using NFive.SDK.Server.Events;
 
-namespace NFive.Server.Communications
+namespace NFive.Server.Events
 {
 	[PublicAPI]
 	public class ConnectionDeferrals : IConnectionDeferrals

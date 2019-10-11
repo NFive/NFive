@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CitizenFX.Core;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
+using NFive.SDK.Core.Events;
 using NFive.SDK.Core.Utilities;
 using NFive.SDK.Server.Communications;
 using NFive.Server.Communications;
@@ -295,7 +296,7 @@ namespace NFive.Server.Rpc
 					return;
 				}
 
-				if (!message.Event.StartsWith("nfive:log:")) logger.Trace($"OnRequest Received: {PrintInboundMessage(message)}");
+				if (message.Event != CoreEvents.LogMirror) logger.Trace($"OnRequest Received: {PrintInboundMessage(message)}");
 
 				var args = new List<object>
 				{
@@ -322,7 +323,7 @@ namespace NFive.Server.Rpc
 					return;
 				}
 
-				if (!message.Event.StartsWith("nfive:log:")) logger.Trace($"OnRequest Received: {PrintInboundMessage(message)}");
+				if (message.Event != CoreEvents.LogMirror) logger.Trace($"OnRequest Received: {PrintInboundMessage(message)}");
 
 				var args = new List<object>
 				{

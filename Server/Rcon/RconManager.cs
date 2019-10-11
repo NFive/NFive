@@ -8,6 +8,7 @@ using NFive.SDK.Core.Plugins;
 using NFive.SDK.Plugins.Configuration;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Controllers;
+using NFive.SDK.Server.Events;
 using NFive.SDK.Server.Rcon;
 using NFive.Server.Diagnostics;
 
@@ -21,7 +22,7 @@ namespace NFive.Server.Rcon
 
 		public RconManager(ICommunicationManager comms)
 		{
-			comms.Event("nfive:server:rconCommand").FromServer().On<string, string[]>(OnCommand);
+			comms.Event(ServerEvents.RconCommand).FromServer().On<string, string[]>(OnCommand);
 		}
 
 		public void Register<T>(string command, Action<T> callback)

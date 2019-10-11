@@ -106,7 +106,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClientList.cs" />
-    <Compile Include="Communications\ConnectionDeferrals.cs" />
+    <Compile Include="Events\ConnectionDeferrals.cs" />
     <Compile Include="Communications\CommunicationManager.cs" />
     <Compile Include="Communications\CommunicationMessage.cs" />
     <Compile Include="Communications\CommunicationReceiveClient.cs" />
