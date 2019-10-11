@@ -4,10 +4,8 @@ using System.Dynamic;
 using System.Linq;
 using System.Threading.Tasks;
 using CitizenFX.Core;
-using CitizenFX.Core.Native;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Events;
-using NFive.SDK.Core.Models;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Events;
@@ -92,40 +90,6 @@ namespace NFive.Server.Controllers
 			this.Logger.Trace($"Triggered: {FiveMServerEvents.Explosion}");
 
 			this.comms.Event(ServerEvents.Explosion).ToServer().Emit(source, new ExplosionEvent(args));
-		}
-
-		public class ExplosionEvent // TODO: Interface
-		{
-			public int OwnerNetId { get; }
-
-			public int ExplosionType { get; }
-
-			public float DamageScale { get; }
-
-			public float CameraShake { get; }
-
-			public Position Position { get; }
-
-			public bool IsAudible { get; }
-
-			public bool IsInvisible { get; }
-
-			public ExplosionEvent(dynamic @event)
-			{
-				this.OwnerNetId = @event.ownerNetId;
-				this.ExplosionType = @event.explosionType;
-				this.DamageScale = @event.damageScale;
-				this.CameraShake = @event.cameraShake;
-				this.Position = new Position(@event.posX, @event.posY, @event.posZ);
-				this.IsAudible = @event.isAudible;
-				this.IsInvisible = @event.isInvisible;
-			}
-
-			// TODO: Test
-			public void Cancel()
-			{
-				API.CancelEvent();
-			}
 		}
 	}
 }

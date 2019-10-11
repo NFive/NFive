@@ -85,8 +85,8 @@
     <Reference Include="NFive.SDK.Plugins, Version=0.1.0.36, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NFive.SDK.Plugins.0.1.0.36\lib\net452\NFive.SDK.Plugins.dll</HintPath>
     </Reference>
-    <Reference Include="NFive.SDK.Server.net, Version=0.1.0.66, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NFive.SDK.Server.0.1.0.66\lib\net452\NFive.SDK.Server.net.dll</HintPath>
+    <Reference Include="NFive.SDK.Server.net, Version=0.1.0.67, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NFive.SDK.Server.0.1.0.67\lib\net452\NFive.SDK.Server.net.dll</HintPath>
     </Reference>
     <Reference Include="Renci.SshNet, Version=2016.1.0.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
       <HintPath>..\packages\SSH.NET.2016.1.0\lib\net40\Renci.SshNet.dll</HintPath>
@@ -125,6 +125,7 @@
     <Compile Include="Controllers\SessionController.cs" />
     <Compile Include="Diagnostics\Logger.cs" />
     <Compile Include="Events\EventManager.cs" />
+    <Compile Include="Events\ExplosionEvent.cs" />
     <Compile Include="IoC\ContainerRegistrar.cs" />
     <Compile Include="Migrations\201903231848283_Init.cs" />
     <Compile Include="Migrations\201903231933413_RemoveSteamIdIndex.cs" />
