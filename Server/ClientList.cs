@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using CitizenFX.Core;
+using Griffin.Container;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
-using NFive.SDK.Core.IoC;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Events;
 

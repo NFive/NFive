@@ -7,7 +7,7 @@ using NFive.SDK.Client.Commands;
 using NFive.SDK.Client.Communications;
 using NFive.SDK.Core.Arguments;
 using NFive.SDK.Core.Chat;
-using NFive.SDK.Core.Communications;
+using NFive.SDK.Core.Events;
 
 namespace NFive.Client.Commands
 {
@@ -18,7 +18,7 @@ namespace NFive.Client.Commands
 
 		public CommandManager()
 		{
-			RpcManager.On<ChatMessage>(NFiveCoreEvents.ChatSendMessage, OnChatSendMessage);
+			RpcManager.On<ChatMessage>(CoreEvents.ChatSendMessage, OnChatSendMessage);
 		}
 
 		public void On(string command, Action action)

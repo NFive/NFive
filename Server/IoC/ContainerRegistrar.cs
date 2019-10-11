@@ -12,7 +12,7 @@ namespace NFive.Server.IoC
 		{
 			foreach (var assembly in assemblies)
 			{
-				FindTypesUsing<SDK.Core.IoC.ComponentAttribute>(assembly, (attr, type) => RegisterComponent(type, attr.Lifetime == SDK.Core.IoC.Lifetime.Transient ? Lifetime.Transient : Lifetime.Singleton));
+				FindTypesUsing<SDK.Server.IoC.ComponentAttribute>(assembly, (attr, type) => RegisterComponent(type, attr.Lifetime == SDK.Server.IoC.Lifetime.Transient ? Lifetime.Transient : Lifetime.Singleton));
 			}
 		}
 	}

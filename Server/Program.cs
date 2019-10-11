@@ -11,8 +11,8 @@ using System.Threading.Tasks;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using JetBrains.Annotations;
-using NFive.SDK.Core.Communications;
 using NFive.SDK.Core.Diagnostics;
+using NFive.SDK.Core.Events;
 using NFive.SDK.Core.Plugins;
 using NFive.SDK.Plugins;
 using NFive.SDK.Plugins.Configuration;
@@ -223,7 +223,7 @@ namespace NFive.Server
 
 			rcon.Controllers = this.controllers;
 
-			comms.Event(NFiveCoreEvents.ClientPlugins).FromClients().OnRequest(e => e.Reply(graph.Plugins));
+			comms.Event(CoreEvents.ClientPlugins).FromClients().OnRequest(e => e.Reply(graph.Plugins));
 
 			comms.Event(ServerEvents.ServerInitialized).ToServer().Emit();
 

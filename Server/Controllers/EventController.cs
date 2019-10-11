@@ -5,13 +5,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
-using NFive.SDK.Core.Communications;
 using NFive.SDK.Core.Diagnostics;
+using NFive.SDK.Core.Events;
 using NFive.SDK.Core.Models;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Controllers;
+using NFive.SDK.Server.Events;
 using NFive.Server.Communications;
 using NFive.Server.Diagnostics;
+using NFive.Server.Events;
 using NFive.Server.Rpc;
 
 namespace NFive.Server.Controllers
@@ -28,7 +30,7 @@ namespace NFive.Server.Controllers
 		public override Task Loaded()
 		{
 			// Client log mirroring
-			this.comms.Event("nfive:log:mirror").FromClients().On<DateTime, LogLevel, string, string>(OnLogMirror); // TODO: Const
+			this.comms.Event(CoreEvents.LogMirror).FromClients().On<DateTime, LogLevel, string, string>(OnLogMirror); // TODO: Const
 
 			// Rebroadcast raw FiveM server events as wrapped server events
 			RpcManager.OnRaw(FiveMServerEvents.PlayerConnecting, new Action<Player, string, CallbackDelegate, ExpandoObject>(OnPlayerConnectingRaw));
@@ -41,7 +43,7 @@ namespace NFive.Server.Controllers
 			RpcManager.OnRaw(FiveMServerEvents.RconCommand, new Action<string, List<object>>(OnRconCommandRaw));
 
 			// Requires FiveM server version >= 1543
-			RpcManager.OnRaw(FiveMServerEvents.ExplosionEvent, new Action<string, dynamic>(OnExplosionEventRaw));
+			RpcManager.OnRaw(FiveMServerEvents.Explosion, new Action<string, dynamic>(OnExplosionEventRaw));
 
 			return base.Loaded();
 		}
@@ -55,42 +57,42 @@ namespace NFive.Server.Controllers
 		{
 			this.Logger.Trace($"Triggered: {FiveMServerEvents.PlayerConnecting}");
 
-			this.comms.Event(NFiveServerEvents.PlayerConnecting).ToServer().Emit(new Client(player.Handle), new ConnectionDeferrals(deferrals));
+			this.comms.Event(ServerEvents.PlayerConnecting).ToServer().Emit(new Client(player.Handle), new ConnectionDeferrals(deferrals));
 		}
 
 		private void OnPlayerDroppedRaw([FromSource] Player player, string reason)
 		{
 			this.Logger.Trace($"Triggered: {FiveMServerEvents.PlayerDropped}");
 
-			this.comms.Event(NFiveServerEvents.PlayerDropped).ToServer().Emit(new Client(player.Handle), reason);
+			this.comms.Event(ServerEvents.PlayerDropped).ToServer().Emit(new Client(player.Handle), reason);
 		}
 
 		private void OnResourceStartRaw(string resourceName)
 		{
 			this.Logger.Trace($"Triggered: {FiveMServerEvents.ResourceStart}");
 
-			this.comms.Event(NFiveServerEvents.ResourceStart).ToServer().Emit(resourceName);
+			this.comms.Event(ServerEvents.ResourceStart).ToServer().Emit(resourceName);
 		}
 
 		private void OnResourceStopRaw(string resourceName)
 		{
 			this.Logger.Trace($"Triggered: {FiveMServerEvents.ResourceStop}");
 
-			this.comms.Event(NFiveServerEvents.ResourceStop).ToServer().Emit(resourceName);
+			this.comms.Event(ServerEvents.ResourceStop).ToServer().Emit(resourceName);
 		}
 
 		private void OnRconCommandRaw(string command, List<object> args)
 		{
 			this.Logger.Trace($"Triggered: {FiveMServerEvents.RconCommand}");
 
-			this.comms.Event("nfive:server:rconCommand").ToServer().Emit(command, args.Select(a => a.ToString()).ToArray());
+			this.comms.Event(ServerEvents.RconCommand).ToServer().Emit(command, args.Select(a => a.ToString()).ToArray());
 		}
 
-		private void OnExplosionEventRaw(string source, dynamic obj)
+		private void OnExplosionEventRaw(string source, dynamic args)
 		{
-			this.Logger.Trace($"Triggered: {FiveMServerEvents.ExplosionEvent}");
+			this.Logger.Trace($"Triggered: {FiveMServerEvents.Explosion}");
 
-			this.comms.Event("nfive:server:explosionEvent").ToServer().Emit(source, new ExplosionEvent(obj));
+			this.comms.Event(ServerEvents.Explosion).ToServer().Emit(source, new ExplosionEvent(args));
 		}
 
 		public class ExplosionEvent // TODO: Interface

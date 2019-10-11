@@ -15,8 +15,8 @@ using NFive.SDK.Client.Configuration;
 using NFive.SDK.Client.Input;
 using NFive.SDK.Client.Interface;
 using NFive.SDK.Client.Services;
-using NFive.SDK.Core.Communications;
 using NFive.SDK.Core.Diagnostics;
+using NFive.SDK.Core.Events;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Core.Plugins;
 
@@ -53,7 +53,7 @@ namespace NFive.Client
 			this.logger.Warn("Request config...");
 
 			// Initial connection
-			var config = await comms.Event(NFiveCoreEvents.ClientInitialize).ToServer().Request<User, LogLevel, LogLevel>(typeof(Program).Assembly.GetName().Version.ToString());
+			var config = await comms.Event(CoreEvents.ClientInitialize).ToServer().Request<User, LogLevel, LogLevel>(typeof(Program).Assembly.GetName().Version.ToString());
 
 			this.logger.Warn($"Got config: {config.Item1.Name}");
 
@@ -68,7 +68,7 @@ namespace NFive.Client
 			// Load user key mappings
 			Input.UserMappings.AddRange(Enum.GetValues(typeof(Control)).OfType<Control>().Select(c => new Hotkey(c)));
 
-			var plugins = await comms.Event(NFiveCoreEvents.ClientPlugins).ToServer().Request<List<Plugin>>();
+			var plugins = await comms.Event(CoreEvents.ClientPlugins).ToServer().Request<List<Plugin>>();
 
 			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
 			{
@@ -106,7 +106,7 @@ namespace NFive.Client
 
 			this.logger.Info("Plugins started");
 
-			comms.Event(NFiveCoreEvents.ClientInitialized).ToServer().Emit();
+			comms.Event(CoreEvents.ClientInitialized).ToServer().Emit();
 
 			foreach (var service in this.services) await service.HoldFocus();
 		}

@@ -8,8 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
-using NFive.SDK.Core.Communications;
 using NFive.SDK.Core.Diagnostics;
+using NFive.SDK.Core.Events;
 using NFive.SDK.Core.Helpers;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Server.Communications;
@@ -17,6 +17,7 @@ using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Events;
 using NFive.Server.Communications;
 using NFive.Server.Configuration;
+using NFive.Server.Events;
 using NFive.Server.Rpc;
 using NFive.Server.Storage;
 
@@ -43,12 +44,12 @@ namespace NFive.Server.Controllers
 			RpcManager.OnRaw(FiveMServerEvents.HostingSession, new Action<Player>(OnHostingSessionRaw));
 			RpcManager.OnRaw(FiveMServerEvents.HostedSession, new Action<Player>(OnHostedSessionRaw));
 
-			this.comms.Event(NFiveServerEvents.HostedSession).FromServer().On<IClient>(OnHostedSession);
-			this.comms.Event(NFiveServerEvents.PlayerConnecting).FromServer().On<IClient, ConnectionDeferrals>(OnConnecting);
-			this.comms.Event(NFiveServerEvents.PlayerDropped).FromServer().On<IClient, string>(OnDropped);
+			this.comms.Event(ServerEvents.HostedSession).FromServer().On<IClient>(OnHostedSession);
+			this.comms.Event(ServerEvents.PlayerConnecting).FromServer().On<IClient, ConnectionDeferrals>(OnConnecting);
+			this.comms.Event(ServerEvents.PlayerDropped).FromServer().On<IClient, string>(OnDropped);
 
-			this.comms.Event(NFiveCoreEvents.ClientInitialize).FromClients().OnRequest<string>(OnInitialize);
-			this.comms.Event(NFiveCoreEvents.ClientInitialized).FromClients().On(OnInitialized);
+			this.comms.Event(CoreEvents.ClientInitialize).FromClients().OnRequest<string>(OnInitialize);
+			this.comms.Event(CoreEvents.ClientInitialized).FromClients().On(OnInitialized);
 			this.comms.Event(SessionEvents.DisconnectPlayer).FromClients().On<string>(OnDisconnect);
 			this.comms.Event(ServerEvents.ServerInitialized).FromServer().On(OnSeverInitialized);
 
@@ -70,7 +71,7 @@ namespace NFive.Server.Controllers
 		{
 			var client = new Client(player.Handle);
 
-			this.comms.Event(NFiveServerEvents.HostingSession).ToServer().Emit(client);
+			this.comms.Event(ServerEvents.HostingSession).ToServer().Emit(client);
 
 			if (this.CurrentHost != null)
 			{
@@ -114,7 +115,7 @@ namespace NFive.Server.Controllers
 
 		private void OnHostedSessionRaw([FromSource] Player player)
 		{
-			this.comms.Event(NFiveServerEvents.HostedSession).ToServer().Emit(new Client(player.Handle));
+			this.comms.Event(ServerEvents.HostedSession).ToServer().Emit(new Client(player.Handle));
 		}
 
 		private async void OnSeverInitialized(ICommunicationMessage e)

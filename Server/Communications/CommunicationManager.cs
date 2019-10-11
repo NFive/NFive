@@ -1,4 +1,4 @@
-using NFive.SDK.Core.IoC;
+using Griffin.Container;
 using NFive.SDK.Server.Communications;
 using NFive.Server.Events;
 

@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 using NFive.Client.Communications;
 using NFive.Client.Diagnostics;
 using NFive.SDK.Client.Communications;
-using NFive.SDK.Core.Communications;
+using NFive.SDK.Core.Utilities;
 
 namespace NFive.Client.Rpc
 {
