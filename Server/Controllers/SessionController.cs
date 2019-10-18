@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Entity.Migrations;
 using System.Data.Entity.Validation;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,12 +14,14 @@ using NFive.SDK.Core.Events;
 using NFive.SDK.Core.Helpers;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Server.Communications;
+using NFive.SDK.Server.Configuration;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Events;
 using NFive.Server.Configuration;
 using NFive.Server.Events;
 using NFive.Server.Rpc;
 using NFive.Server.Storage;
+using TimeZoneConverter;
 
 namespace NFive.Server.Controllers
 {
@@ -261,7 +264,7 @@ namespace NFive.Server.Controllers
 					this.threads[oldThread].Item1.Wait();
 					this.threads[oldThread].Item2.Dispose();
 					this.threads[oldThread].Item1.Dispose();
-					this.threads.TryRemove(oldThread, out _);
+					this.threads.TryRemove(oldThread, out var _);
 				}
 			}
 
@@ -305,7 +308,7 @@ namespace NFive.Server.Controllers
 						this.threads[oldThread].Item1.Wait();
 						this.threads[oldThread].Item2.Dispose();
 						this.threads[oldThread].Item1.Dispose();
-						this.threads.TryRemove(oldThread, out _);
+						this.threads.TryRemove(oldThread, out var _);
 					}
 
 					var threadCancellationToken = new CancellationTokenSource();
@@ -331,15 +334,21 @@ namespace NFive.Server.Controllers
 
 			this.comms.Event(SessionEvents.ClientInitializing).ToServer().Emit(e.Client);
 
-			this.Logger.Warn($"OnInitialize: {e.Client.Name}");
+			var logs = new Tuple<LogLevel, LogLevel>(
+				ServerLogConfiguration.Output.ClientConsole,
+				ServerLogConfiguration.Output.ClientMirror
+			);
 
-			e.Reply(e.User, ServerLogConfiguration.Output.ClientConsole, ServerLogConfiguration.Output.ClientMirror);
+			var locale = new Tuple<List<string>, string>(
+				ServerConfiguration.Locale.Culture.Select(c => c.Name).ToList(),
+				TZConvert.WindowsToIana(ServerConfiguration.Locale.TimeZone.Id, new RegionInfo(ServerConfiguration.Locale.Culture.First().Name).TwoLetterISORegionName)
+			);
+
+			e.Reply(e.User, logs, locale);
 		}
 
 		private async void OnInitialized(ICommunicationMessage e)
 		{
-			this.Logger.Trace($"Client Initialized: {e.Client.Name}");
-
 			var session = this.sessions.Select(s => s.Value).Single(s => s.User.Id == e.User.Id);
 
 			using (var context = new StorageContext())

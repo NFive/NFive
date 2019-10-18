@@ -31,7 +31,6 @@ using NFive.Server.Events;
 using NFive.Server.IoC;
 using NFive.Server.Rcon;
 using NFive.Server.Rpc;
-using ServerConfiguration = NFive.Server.Configuration.ServerConfiguration;
 
 namespace NFive.Server
 {
@@ -60,11 +59,11 @@ namespace NFive.Server
 			var config = ConfigurationManager.Load<CoreConfiguration>("core.yml");
 
 			// Use configured culture for output
-			Thread.CurrentThread.CurrentCulture = config.Locale.Culture;
-			CultureInfo.DefaultThreadCurrentCulture = config.Locale.Culture;
+			Thread.CurrentThread.CurrentCulture = config.Locale.Culture.First();
+			CultureInfo.DefaultThreadCurrentCulture = config.Locale.Culture.First();
 
+			ServerConfiguration.Locale = config.Locale;
 			ServerLogConfiguration.Output = config.Log.Output;
-			//ServerConfiguration.LogLevel = config.Log.Level;
 
 			var logger = new Logger(config.Log.Core);
 
@@ -72,9 +71,9 @@ namespace NFive.Server
 			API.SetMapName(config.Display.Map);
 
 			// Setup RPC handlers
-			RpcManager.Configure(config.Log.Rpc, this.EventHandlers, this.Players);
+			RpcManager.Configure(config.Log.Comms, this.EventHandlers, this.Players);
 
-			var events = new EventManager(config.Log.Events);
+			var events = new EventManager(config.Log.Comms);
 			var comms = new CommunicationManager(events);
 			var rcon = new RconManager(comms);
 
@@ -104,7 +103,6 @@ namespace NFive.Server
 			registrar.RegisterInstance<IRconManager>(rcon);
 			registrar.RegisterInstance<ICommunicationManager>(comms);
 			registrar.RegisterInstance<IClientList>(new ClientList(new Logger(config.Log.Core, "ClientList"), comms));
-			registrar.RegisterInstance<IServerConfiguration>(new ServerConfiguration(config.Locale));
 			registrar.RegisterPluginComponents(assemblies.Distinct());
 
 			// DI
@@ -156,7 +154,7 @@ namespace NFive.Server
 
 						if (!migrator.GetPendingMigrations().Any()) continue;
 
-						if (!SDK.Server.Configuration.ServerConfiguration.AutomaticMigrations) throw new MigrationsPendingException($"Plugin {plugin.FullName} has pending migrations but automatic migrations are disabled");
+						if (!ServerConfiguration.AutomaticMigrations) throw new MigrationsPendingException($"Plugin {plugin.FullName} has pending migrations but automatic migrations are disabled");
 
 						foreach (var migration in migrator.GetPendingMigrations())
 						{

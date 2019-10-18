@@ -1,2 +1,5 @@
-connection_timeout: 1 min # How long since last packet before a client is timed out
-reconnect_grace: 2 mins # How long clients have to reconnect to receive the same session
+# How long since last packet before a client is timed out
+connection_timeout: 1 min
+
+# How long clients have to reconnect to receive the same session
+reconnect_grace: 2 mins

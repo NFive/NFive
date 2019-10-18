@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using JetBrains.Annotations;
+using NFive.SDK.Core.Configuration;
 using NFive.SDK.Core.Controllers;
 using NFive.SDK.Core.Diagnostics;
-using NFive.SDK.Server.Configuration;
 
 namespace NFive.Server.Configuration
 {
@@ -15,9 +15,16 @@ namespace NFive.Server.Configuration
 
 		public DisplayConfiguration Display { get; set; } = new DisplayConfiguration();
 
-		public LogConfiguration Log { get; set; } = new LogConfiguration();
+		public LocaleConfiguration Locale { get; set; } = new LocaleConfiguration
+		{
+			Culture = new List<CultureInfo>
+			{
+				new CultureInfo("en-US")
+			},
+			TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time")
+		};
 
-		public LocaleConfiguration Locale { get; set; } = new LocaleConfiguration();
+		public LogConfiguration Log { get; set; } = new LogConfiguration();
 
 		[PublicAPI]
 		public class DisplayConfiguration
@@ -36,9 +43,7 @@ namespace NFive.Server.Configuration
 
 			public LogLevel Core { get; set; } = LogLevel.Info;
 
-			public LogLevel Rpc { get; set; } = LogLevel.Info;
-
-			public LogLevel Events { get; set; } = LogLevel.Info;
+			public LogLevel Comms { get; set; } = LogLevel.Info;
 
 			public Dictionary<string, LogLevel> Plugins { get; set; } = new Dictionary<string, LogLevel>
 			{
@@ -54,14 +59,6 @@ namespace NFive.Server.Configuration
 			public LogLevel ClientMirror { get; set; } = LogLevel.Warn;
 
 			public LogLevel ServerConsole { get; set; } = LogLevel.Warn;
-		}
-
-		[PublicAPI]
-		public class LocaleConfiguration : ILocaleConfiguration
-		{
-			public CultureInfo Culture { get; set; } = new CultureInfo("en-US");
-
-			public TimeZoneInfo TimeZone { get; set; } = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
 		}
 	}
 }

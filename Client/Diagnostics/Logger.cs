@@ -46,7 +46,7 @@ namespace NFive.Client.Diagnostics
 
 		public void Log(string message, LogLevel level)
 		{
-			if (ClientConfiguration.ConsoleLogLevel > level && ClientConfiguration.MirrorLogLevel > level) return;
+			if (ClientConfiguration.Log.ConsoleLogLevel > level && ClientConfiguration.Log.MirrorLogLevel > level) return;
 
 			var output = $"{DateTime.Now:s} [{level}]";
 
@@ -55,12 +55,12 @@ namespace NFive.Client.Diagnostics
 			var lines = message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 			var formattedMessage = string.Join(Environment.NewLine, lines.Select(l => $"{output} {l}"));
 
-			if (ClientConfiguration.ConsoleLogLevel <= level)
+			if (ClientConfiguration.Log.ConsoleLogLevel <= level)
 			{
 				CitizenFX.Core.Debug.Write($"{formattedMessage}{Environment.NewLine}");
 			}
 
-			if (ClientConfiguration.MirrorLogLevel <= level)
+			if (ClientConfiguration.Log.MirrorLogLevel <= level)
 			{
 				//RpcManager.Emit(CoreEvents.LogMirror, DateTime.UtcNow, level, this.Prefix, message); // TODO: Event const
 			}

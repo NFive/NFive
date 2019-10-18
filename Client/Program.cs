@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -39,7 +40,7 @@ namespace NFive.Client
 
 		private async void Startup()
 		{
-			this.logger.Info($"NFive {typeof(Program).Assembly.GetCustomAttributes<AssemblyInformationalVersionAttribute>().First().InformationalVersion}");
+			var asm = GetType().Assembly;
 
 			// Setup RPC handlers
 			RpcManager.Configure(this.EventHandlers);
@@ -50,20 +51,33 @@ namespace NFive.Client
 			var commands = new CommandManager();
 			var nui = new NuiManager(this.EventHandlers);
 
-			this.logger.Warn("Request config...");
-
 			// Initial connection
-			var config = await comms.Event(CoreEvents.ClientInitialize).ToServer().Request<User, LogLevel, LogLevel>(typeof(Program).Assembly.GetName().Version.ToString());
-
-			this.logger.Warn($"Got config: {config.Item1.Name}");
+			var config = await comms.Event(CoreEvents.ClientInitialize).ToServer().Request<User, Tuple<LogLevel, LogLevel>, Tuple<List<string>, string>>(asm.GetName().Version.ToString());
 
 			//RpcManager.OnRaw("onClientResourceStart", new Action<Player, string>(OnClientResourceStartRaw));
 			//RpcManager.OnRaw("onClientResourceStop", new Action<Player, string>(OnClientResourceStopRaw));
 			//RpcManager.OnRaw("gameEventTriggered", new Action<Player, string, List<dynamic>>(OnGameEventTriggeredRaw));
-			// RpcManager.OnRaw(FiveMClientEvents.PopulationPedCreating, new Action<float, float, float, uint, IPopulationPedCreatingSetter>(OnPopulationPedCreatingRaw));
+			//RpcManager.OnRaw(FiveMClientEvents.PopulationPedCreating, new Action<float, float, float, uint, IPopulationPedCreatingSetter>(OnPopulationPedCreatingRaw));
 
-			ClientConfiguration.ConsoleLogLevel = config.Item2;
-			ClientConfiguration.MirrorLogLevel = config.Item3;
+			ClientConfiguration.Log.ConsoleLogLevel = config.Item2.Item1;
+			ClientConfiguration.Log.MirrorLogLevel = config.Item2.Item2;
+			ClientConfiguration.Locale.Culture = config.Item3.Item1.Select(c => new CultureInfo(c)).ToList();
+			ClientConfiguration.Locale.TimeZone = TimeZoneInfo.Utc; // TODO: ??? + store IANA timezone
+
+			nui.Emit(new
+			{
+				@event = "config",
+				data = new
+				{
+					locale = ClientConfiguration.Locale.Culture.First().Name,
+					currency = new RegionInfo(ClientConfiguration.Locale.Culture.First().Name).ISOCurrencySymbol,
+					timezone = config.Item3.Item2
+				}
+			});
+
+			// Use configured culture for output
+			//Thread.CurrentThread.CurrentCulture = config.Locale.Culture;
+			//CultureInfo.DefaultThreadCurrentCulture = config.Locale.Culture;
 
 			// Load user key mappings
 			Input.UserMappings.AddRange(Enum.GetValues(typeof(Control)).OfType<Control>().Select(c => new Hotkey(c)));
@@ -74,11 +88,11 @@ namespace NFive.Client
 			{
 				if (assembly.GetCustomAttribute<ClientPluginAttribute>() == null) continue;
 
-				var plugin = plugins.FirstOrDefault(p => p.Client?.Main?.FirstOrDefault(m => m + ".net" == assembly.GetName().Name) != null);
+				var plugin = plugins.FirstOrDefault(p => p.Client?.Main?.FirstOrDefault(m => $"{m}.net" == assembly.GetName().Name) != null);
 
 				if (plugin == null)
 				{
-					this.logger.Debug("Skipping " + assembly.GetName().Name);
+					this.logger.Debug($"Skipping {assembly.GetName().Name}");
 					continue;
 				}
 

@@ -33,7 +33,7 @@ namespace NFive.Server.Migrations
 				c => new
 				{
 					Id = c.Guid(nullable: false),
-					IpAddress = c.String(nullable: false, maxLength: 15, unicode: false),
+					IpAddress = c.String(nullable: false, maxLength: 47, unicode: false),
 					Created = c.DateTime(nullable: false, precision: 0),
 					Connected = c.DateTime(precision: 0),
 					Disconnected = c.DateTime(precision: 0),

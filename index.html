@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="en-US">
+<html>
 	<head>
 		<meta charset="utf-8">
-		<title>NFive</title>
 
 		<style type="text/css">
 			body {
@@ -24,18 +23,33 @@
 		</style>
 
 		<script type="module">
-			import EventEmitter from 'https://unpkg.com/event-e3@^7/EventEmitter3.mjs';
+			import Emitter from 'https://unpkg.com/event-e3@^8/event-e3.js';
 
-			class NFive extends EventEmitter {
-				constructor(name, frame) {
+			class NFive extends Emitter {
+				constructor(name, frame, localeOptions) {
 					super();
 
 					this.name = name;
 					this.frame = frame;
+					this.localeValue = localeOptions.locale;
+					this.currencyValue = localeOptions.currency;
+					this.timezoneValue = localeOptions.timezone;
 				}
 
 				get pluginName() {
 					return this.name;
+				}
+
+				get locale() {
+					return this.localeValue;
+				}
+
+				get currency() {
+					return this.currencyValue;
+				}
+
+				get timezone() {
+					return this.timezoneValue;
 				}
 
 				log(...args) {
@@ -52,7 +66,13 @@
 					this.frame.contentWindow.blur();
 				}
 
-				async send(event, data = {}) {
+				focus() {
+					this.frame.contentWindow.focus();
+				}
+
+				async send(event, data = null) {
+					console.log('send', event, data);
+
 					return await fetch('http://nfive/' + this.name + '/' + event, {
 						method: 'post',
 						headers: {
@@ -65,15 +85,35 @@
 
 			const frames = [];
 
+			const frameReady = (frame, callback) => {
+				frame.addEventListener('load', () => {
+					if (frame.contentDocument.readyState !== 'loading') return callback();
+
+					return frame.contentDocument.addEventListener('DOMContentLoaded', callback);
+				});
+			}
+
+			let localeOptions = {
+				locale: 'en-US',
+				currency: 'USD',
+				timezone: 'America/Los_Angeles'
+			};
+
 			function load(plugin, url) {
 				const frame = document.createElement('iframe');
+
+				frameReady(frame, async () => {
+					const response = await frame.contentWindow.nfive.send('ready');
+					frame.contentWindow.nfive.emit('ready', JSON.parse(await response.json()));
+				});
+
 				frame.style.visibility = 'hidden';
 				frame.allow = 'microphone *;';
 				frame.src = url;
 
 				document.body.appendChild(frame);
 
-				frame.contentWindow.nfive = new NFive(plugin, frame);
+				frame.contentWindow.nfive = new NFive(plugin, frame, localeOptions);
 
 				frames[plugin] = frame;
 			};
@@ -82,16 +122,23 @@
 				if (e.data === undefined) return;
 				if (e.data.event === undefined) return;
 
+				console.log('[NUI] message: ' + JSON.stringify(e.data));
+
 				const event = e.data.event;
 				const plugin = e.data.plugin || null;
 				const data = e.data.data || null;
-
-				console.log('[NUI RECV]: ' + plugin + ' - ' + event);
+				
+				if (event == 'config' && plugin == null) {
+					localeOptions = data;
+					return;
+				}
 
 				if (event == 'load-overlay') {
 					load(plugin, 'plugins/' + plugin + '/Overlays/' + data.file);
 					return;
 				}
+
+				console.log('[NUI]: event: ' + plugin + ' - ' + event);
 
 				for (let frame in frames) {
 					if (frame != plugin) continue;
@@ -110,7 +157,7 @@
 						continue;
 					}
 
-					console.log('Sending ' + event + ' to ' + frame);
+					console.log('[NUI]: trigger: ' + frame + ' - ' + event);
 
 					frames[frame].contentWindow.nfive.emit(event, data);
 				}
