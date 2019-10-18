@@ -1,11 +1,13 @@
-using CitizenFX.Core.Native;
-using NFive.SDK.Server.Rpc;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using CitizenFX.Core.Native;
+using JetBrains.Annotations;
+using NFive.SDK.Server.Communications;
 
 namespace NFive.Server.Rpc
 {
+	[PublicAPI]
 	public class Client : IClient
 	{
 		public int Handle { get; }
@@ -65,7 +67,5 @@ namespace NFive.Server.Rpc
 
 			return results;
 		}
-
-		public IRpcTrigger Event(string @event) => RpcManager.Event(@event);
 	}
 }

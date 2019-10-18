@@ -1,12 +1,14 @@
-using NFive.SDK.Core.Diagnostics;
-using NFive.Server.Configuration;
 using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using JetBrains.Annotations;
+using NFive.SDK.Core.Diagnostics;
+using NFive.Server.Configuration;
 
 namespace NFive.Server.Diagnostics
 {
+	[PublicAPI]
 	public class Logger : ILogger
 	{
 		public LogLevel Level { get; }
@@ -55,7 +57,7 @@ namespace NFive.Server.Diagnostics
 				ex = ex.InnerException;
 			}
 
-			Log($"{output}  {exception.TargetSite} in {exception.Source}{Environment.NewLine}{exception.StackTrace}", LogLevel.Error);
+			Log($"{output} {exception.TargetSite} in {exception.Source}{Environment.NewLine}{exception.StackTrace}", LogLevel.Error);
 		}
 
 		public void Log(string message, LogLevel level)
@@ -76,13 +78,13 @@ namespace NFive.Server.Diagnostics
 
 		public static void Initialize()
 		{
-			var filePath = "nfive.log";
-			var maxLogs = 10;
+			const string filePath = "nfive.log";
+			const int maxLogs = 10;
 
 			if (!File.Exists(filePath)) return;
 
-			var fileRegex = new Regex($"^nfive\\.log(\\.[0-9])?$", RegexOptions.Compiled);
-			var logFiles = Directory.EnumerateFiles(Environment.CurrentDirectory, $"{filePath}.?", SearchOption.TopDirectoryOnly).Where(f => fileRegex.Match(Path.GetFileName(f)).Success).OrderBy(f => f).ToList();
+			var fileRegex = new Regex("^nfive\\.log(\\.[0-9])?$", RegexOptions.Compiled);
+			var logFiles = Directory.EnumerateFiles(Environment.CurrentDirectory, $"{filePath}.?", SearchOption.TopDirectoryOnly).Where(f => fileRegex.Match(Path.GetFileName(f) ?? f).Success).OrderBy(f => f).ToList();
 
 			if (logFiles.Count >= maxLogs)
 			{

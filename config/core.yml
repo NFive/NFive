@@ -1,0 +1,43 @@
+# Display options
+display:
+  name: NFive
+  game: Custom
+  map: Los Santos
+
+# Localization options
+locale:
+  # Culture to use for in game formatting of dates, numbers, currency and writing systems
+  # Plugins will load the first available language from the list, falling back to en-US if all are unavailable
+  # Must be in BCP 47 format as supported by Microsoft:
+  # https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-lcid/a9eac961-e77d-41a6-90a5-ce1a8b0cdb9c
+  culture:
+    - en-US
+
+  # Timezone to use in game
+  # Must be the full timezone name as supported by Microsoft:
+  # https://support.microsoft.com/en-gb/help/973627/microsoft-time-zone-index-values
+  time_zone: Pacific Standard Time
+
+# Logging output level per component
+# Levels: Trace|Debug|Info|Warn|Error
+log:
+  core: Trace
+  comms: Trace
+
+  plugins:
+    # Default log level for plugins unless overridden
+    default: Trace
+
+    # Override individual plugin log level
+    NFive/plugin-example: Error
+
+  # Where the logs will output
+  output:
+    # Minimum log level to forward client log to the server log
+    client_mirror: Trace
+
+    # Minimum log level to be written to the client console
+    client_console: Trace
+
+    # Minimum log level to be written to the server console
+    server_console: Trace

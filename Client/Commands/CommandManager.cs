@@ -1,54 +1,59 @@
-using NFive.SDK.Client.Commands;
-using NFive.SDK.Client.Rpc;
-using NFive.SDK.Core.Arguments;
-using NFive.SDK.Core.Chat;
-using NFive.SDK.Core.Rpc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
+using NFive.Client.Rpc;
+using NFive.SDK.Client.Commands;
+using NFive.SDK.Client.Communications;
+using NFive.SDK.Core.Arguments;
+using NFive.SDK.Core.Chat;
+using NFive.SDK.Core.Events;
 
 namespace NFive.Client.Commands
 {
+	[PublicAPI]
 	public class CommandManager : ICommandManager
 	{
-		private readonly Dictionary<string, Action<IEnumerable<string>>> callbacks = new Dictionary<string, Action<IEnumerable<string>>>();
+		private readonly Dictionary<string, Action<IEnumerable<string>>> subscriptions = new Dictionary<string, Action<IEnumerable<string>>>();
 
-		public CommandManager(IRpcHandler rpc)
+		public CommandManager()
 		{
-			rpc.Event(RpcEvents.ChatSendMessage).On<ChatMessage>(Handle);
+			RpcManager.On<ChatMessage>(CoreEvents.ChatSendMessage, OnChatSendMessage);
 		}
 
-		public void Register(string command, Action callback)
+		public void On(string command, Action action)
 		{
-			this.callbacks.Add(command.ToLowerInvariant(), a => callback());
+			this.subscriptions.Add(command.ToLowerInvariant(), a => action());
 		}
 
-		public void Register(string command, Action<string> callback)
+		public void On(string command, Action<string> action)
 		{
-			this.callbacks.Add(command.ToLowerInvariant(), a => callback(string.Join(" ", a)));
+			this.subscriptions.Add(command.ToLowerInvariant(), a => action(string.Join(" ", a)));
 		}
 
-		public void Register(string command, Action<IEnumerable<string>> callback)
+		public void On(string command, Action<IEnumerable<string>> action)
 		{
-			this.callbacks.Add(command.ToLowerInvariant(), callback);
+			this.subscriptions.Add(command.ToLowerInvariant(), action);
 		}
 
-		public void Register<T>(string command, Action<T> callback)
+		public void On<T>(string command, Action<T> action)
 		{
-			this.callbacks.Add(command.ToLowerInvariant(), a => callback(Argument.Parse<T>(a)));
+			this.subscriptions.Add(command.ToLowerInvariant(), a => action(Argument.Parse<T>(a))); // TODO: Check client side arguments work
 		}
 
-		private void Handle(IRpcEvent e, ChatMessage message)
+		// TODO: Off()s
+
+		private void OnChatSendMessage(ICommunicationMessage e, ChatMessage message)
 		{
 			var content = message.Content.Trim();
-			if (!content.StartsWith("/")) return;
+			if (!content.StartsWith("/")) return; // TODO: Unneeded?
 
 			var commandArgs = content.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
 			var command = commandArgs.First().Substring(1).ToLowerInvariant();
-			if (!this.callbacks.ContainsKey(command)) return;
+			if (!this.subscriptions.ContainsKey(command)) return;
 
-			this.callbacks[command](commandArgs.Skip(1));
+			this.subscriptions[command](commandArgs.Skip(1));
 		}
 	}
 }

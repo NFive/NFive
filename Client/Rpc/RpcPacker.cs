@@ -1,13 +1,14 @@
-using Ionic.Zlib;
-using Newtonsoft.Json;
-using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using Ionic.Zlib;
+using JetBrains.Annotations;
+using Newtonsoft.Json;
 
 namespace NFive.Client.Rpc
 {
-	public class RpcPacker
+	[PublicAPI]
+	public static class RpcPacker
 	{
 		private static readonly JsonSerializer Serializer = new JsonSerializer
 		{
@@ -15,8 +16,6 @@ namespace NFive.Client.Rpc
 			DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate,
 			NullValueHandling = NullValueHandling.Ignore
 		};
-
-		public static int Level { get; set; } = 6;
 
 		public static byte[] Serialize(object obj)
 		{
@@ -40,11 +39,9 @@ namespace NFive.Client.Rpc
 
 		public static byte[] Pack(OutboundMessage message)
 		{
-			message.Sent = DateTime.UtcNow;
-
 			var json = Serialize(message);
 
-			using (var compressedStream = new ZlibStream(new MemoryStream(json, false), CompressionMode.Compress, (CompressionLevel)Level, false))
+			using (var compressedStream = new ZlibStream(new MemoryStream(json, false), CompressionMode.Compress, CompressionLevel.Default, false))
 			using (var outputStream = new MemoryStream())
 			{
 				compressedStream.CopyTo(outputStream);
@@ -58,10 +55,7 @@ namespace NFive.Client.Rpc
 			using (var compressionStream = new ZlibStream(new MemoryStream(data, false), CompressionMode.Decompress, false))
 			using (var streamReader = new StreamReader(compressionStream, new UnicodeEncoding(false, false)))
 			{
-				var message = Deserialize<InboundMessage>(streamReader.ReadToEnd());
-				message.Received = DateTime.UtcNow;
-
-				return message;
+				return Deserialize<InboundMessage>(streamReader.ReadToEnd());
 			}
 		}
 	}

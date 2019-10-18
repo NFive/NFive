@@ -37,12 +37,12 @@
     </AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CitizenFX.Core, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\CitizenFX.Client.1.3.0.1130210\lib\net452\CitizenFX.Core.dll</HintPath>
+    <Reference Include="CitizenFX.Core.Client, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CitizenFX.Core.Client.1.0.1634\lib\net45\CitizenFX.Core.Client.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="DotNetZip, Version=1.13.3.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
-      <HintPath>..\packages\DotNetZip.1.13.3\lib\net40\DotNetZip.dll</HintPath>
+    <Reference Include="DotNetZip, Version=1.13.4.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
+      <HintPath>..\packages\DotNetZip.1.13.4\lib\net40\DotNetZip.dll</HintPath>
     </Reference>
     <Reference Include="JetBrains.Annotations, Version=2019.1.3.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
       <HintPath>..\packages\JetBrains.Annotations.2019.1.3\lib\net20\JetBrains.Annotations.dll</HintPath>
@@ -53,16 +53,27 @@
       <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="NFive.SDK.Client.net, Version=0.1.0.37, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NFive.SDK.Client.0.1.0.37\lib\net452\NFive.SDK.Client.net.dll</HintPath>
+    <Reference Include="NFive.SDK.Client.net, Version=0.1.0.53, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NFive.SDK.Client.0.1.0.53\lib\net452\NFive.SDK.Client.net.dll</HintPath>
     </Reference>
-    <Reference Include="NFive.SDK.Core.net, Version=0.1.0.43, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NFive.SDK.Core.0.1.0.43\lib\net452\NFive.SDK.Core.net.dll</HintPath>
+    <Reference Include="NFive.SDK.Core.net, Version=0.1.0.50, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NFive.SDK.Core.0.1.0.50\lib\net452\NFive.SDK.Core.net.dll</HintPath>
+    </Reference>
+    <Reference Include="NGettext, Version=0.6.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\NGettext.0.6.4\lib\net45\NGettext.dll</HintPath>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\CommandManager.cs" />
+    <Compile Include="Communications\CommunicationManager.cs" />
+    <Compile Include="Communications\CommunicationMessage.cs" />
+    <Compile Include="Communications\CommunicationReceiveClient.cs" />
+    <Compile Include="Communications\CommunicationReceiveServer.cs" />
+    <Compile Include="Communications\CommunicationTarget.cs" />
+    <Compile Include="Communications\CommunicationTransmitClient.cs" />
+    <Compile Include="Communications\CommunicationTransmitServer.cs" />
     <Compile Include="Diagnostics\Logger.cs" />
     <Compile Include="Events\EventManager.cs" />
     <Compile Include="Events\PedSpawnOptions.cs" />
@@ -72,12 +83,7 @@
     <Compile Include="Rpc\RpcPacker.cs" />
     <Compile Include="Rpc\InboundMessage.cs" />
     <Compile Include="Rpc\OutboundMessage.cs" />
-    <Compile Include="Rpc\Rpc.cs" />
-    <Compile Include="Rpc\RpcEvent.cs" />
-    <Compile Include="Rpc\RpcHandler.cs" />
     <Compile Include="Rpc\RpcManager.cs" />
-    <Compile Include="Rpc\RpcTrigger.cs" />
-    <Compile Include="Rpc\ServerHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">

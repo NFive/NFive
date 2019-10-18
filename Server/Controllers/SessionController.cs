@@ -1,61 +1,63 @@
-using CitizenFX.Core;
-using CitizenFX.Core.Native;
-using NFive.SDK.Core.Diagnostics;
-using NFive.SDK.Core.Helpers;
-using NFive.SDK.Core.Models.Player;
-using NFive.SDK.Core.Rpc;
-using NFive.SDK.Server;
-using NFive.SDK.Server.Controllers;
-using NFive.SDK.Server.Events;
-using NFive.SDK.Server.Rcon;
-using NFive.SDK.Server.Rpc;
-using NFive.Server.Configuration;
-using NFive.Server.Rpc;
-using NFive.Server.Storage;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Entity.Migrations;
 using System.Data.Entity.Validation;
-using System.Dynamic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CitizenFX.Core;
+using CitizenFX.Core.Native;
+using NFive.SDK.Core.Diagnostics;
+using NFive.SDK.Core.Events;
+using NFive.SDK.Core.Helpers;
+using NFive.SDK.Core.Models.Player;
+using NFive.SDK.Server.Communications;
+using NFive.SDK.Server.Configuration;
+using NFive.SDK.Server.Controllers;
+using NFive.SDK.Server.Events;
+using NFive.Server.Configuration;
+using NFive.Server.Events;
+using NFive.Server.Rpc;
+using NFive.Server.Storage;
+using TimeZoneConverter;
 
 namespace NFive.Server.Controllers
 {
 	public class SessionController : ConfigurableController<SessionConfiguration>
 	{
+		private readonly ICommunicationManager comms;
 		private readonly List<Action> sessionCallbacks = new List<Action>();
 		private readonly ConcurrentDictionary<Guid, Session> sessions = new ConcurrentDictionary<Guid, Session>();
 		private readonly object threadLock = new object();
 		private readonly ConcurrentDictionary<Session, Tuple<Task, CancellationTokenSource>> threads = new ConcurrentDictionary<Session, Tuple<Task, CancellationTokenSource>>();
 
-		private int? CurrentHost { get; set; }
+		private int? CurrentHost { get; set; } // TODO: Make available
 
-		public SessionController(ILogger logger, IEventManager events, IRpcHandler rpc, IRconManager rcon, SessionConfiguration configuration) : base(logger, events, rpc, rcon, configuration) { }
+		public SessionController(ILogger logger, SessionConfiguration configuration, ICommunicationManager comms) : base(logger, configuration)
+		{
+			this.comms = comms;
+		}
 
 		public override Task Loaded()
 		{
 			// Rebroadcast raw FiveM RPC events as wrapped server events
-			this.Rpc.Event("hostingSession").OnRaw(new Action<Player>(OnHostingSessionRaw));
-			this.Rpc.Event("HostedSession").OnRaw(new Action<Player>(OnHostedSessionRaw));
-			this.Rpc.Event("playerConnecting").OnRaw(new Action<Player, string, CallbackDelegate, ExpandoObject>(OnPlayerConnectingRaw));
-			this.Rpc.Event("playerDropped").OnRaw(new Action<Player, string, CallbackDelegate>(OnPlayerDroppedRaw));
+			RpcManager.OnRaw(FiveMServerEvents.HostingSession, new Action<Player>(OnHostingSessionRaw));
+			RpcManager.OnRaw(FiveMServerEvents.HostedSession, new Action<Player>(OnHostedSessionRaw));
 
-			this.Events.On<IClient>("nfive:server:hostedSession", OnHostedSession);
-			this.Events.On<IClient, string, CallbackDelegate, ExpandoObject>("nfive:server:playerConnecting", OnConnecting);
-			this.Events.On<IClient, string, CallbackDelegate>("nfive:server:playerDropped", OnDropped);
+			this.comms.Event(ServerEvents.HostedSession).FromServer().On<IClient>(OnHostedSession);
+			this.comms.Event(ServerEvents.PlayerConnecting).FromServer().On<IClient, ConnectionDeferrals>(OnConnecting);
+			this.comms.Event(ServerEvents.PlayerDropped).FromServer().On<IClient, string>(OnDropped);
 
-			this.Rpc.Event(RpcEvents.ClientInitialize).On<string>(Initialize);
-			this.Rpc.Event(RpcEvents.ClientInitialized).On(Initialized);
-			this.Rpc.Event(SessionEvents.DisconnectPlayer).On<string>(Disconnect);
+			this.comms.Event(CoreEvents.ClientInitialize).FromClients().OnRequest<string>(OnInitialize);
+			this.comms.Event(CoreEvents.ClientInitialized).FromClients().On(OnInitialized);
+			this.comms.Event(SessionEvents.DisconnectPlayer).FromClients().On<string>(OnDisconnect);
+			this.comms.Event(ServerEvents.ServerInitialized).FromServer().On(OnSeverInitialized);
 
-			this.Events.On(ServerEvents.ServerInitialized, OnSeverInitialized);
-
-			this.Events.OnRequest(SessionEvents.GetMaxPlayers, () => this.Configuration.MaxClients);
-			this.Events.OnRequest(SessionEvents.GetCurrentSessionsCount, () => this.sessions.Count);
-			this.Events.OnRequest(SessionEvents.GetCurrentSessions, () => this.sessions.ToList());
+			this.comms.Event(SessionEvents.GetMaxPlayers).FromServer().On(e => e.Reply(this.Configuration.MaxClients));
+			this.comms.Event(SessionEvents.GetCurrentSessionsCount).FromServer().On(e => e.Reply(this.sessions.Count));
+			this.comms.Event(SessionEvents.GetCurrentSessions).FromServer().On(e => e.Reply(this.sessions.ToList()));
 
 			return base.Loaded();
 		}
@@ -71,8 +73,7 @@ namespace NFive.Server.Controllers
 		{
 			var client = new Client(player.Handle);
 
-			// TODO: Add to SessionEvents
-			this.Events.Raise("nfive:server:hostingSession", client);
+			this.comms.Event(ServerEvents.HostingSession).ToServer().Emit(client);
 
 			if (this.CurrentHost != null)
 			{
@@ -116,25 +117,13 @@ namespace NFive.Server.Controllers
 
 		private void OnHostedSessionRaw([FromSource] Player player)
 		{
-			// TODO: Add to SessionEvents
-			this.Events.Raise("nfive:server:hostedSession", new Client(player.Handle));
+			this.comms.Event(ServerEvents.HostedSession).ToServer().Emit(new Client(player.Handle));
 		}
 
-		private void OnPlayerConnectingRaw([FromSource] Player player, string playerName, CallbackDelegate drop, ExpandoObject callbacks)
+		private async void OnSeverInitialized(ICommunicationMessage e)
 		{
-			// TODO: Add to SessionEvents
-			this.Events.Raise("nfive:server:playerConnecting", new Client(player.Handle), playerName, drop, callbacks);
-		}
+			var lastActive = await this.comms.Event(BootEvents.GetLastActiveTime).ToServer().Request<DateTime>();
 
-		private void OnPlayerDroppedRaw([FromSource] Player player, string disconnectMessage, CallbackDelegate drop)
-		{
-			// TODO: Add to SessionEvents
-			this.Events.Raise("nfive:server:playerDropped", new Client(player.Handle), disconnectMessage, drop);
-		}
-
-		private void OnSeverInitialized()
-		{
-			var lastActive = this.Events.Request<DateTime>(BootEvents.GetLastActiveTime);
 			using (var context = new StorageContext())
 			using (var transaction = context.Database.BeginTransaction())
 			{
@@ -152,7 +141,7 @@ namespace NFive.Server.Controllers
 			}
 		}
 
-		private void OnHostedSession(IClient client)
+		private void OnHostedSession(ICommunicationMessage e, IClient client)
 		{
 			if (this.CurrentHost != null && this.CurrentHost != client.Handle) return;
 
@@ -160,13 +149,12 @@ namespace NFive.Server.Controllers
 			this.CurrentHost = null;
 		}
 
-		private async void OnConnecting(IClient client, string playerName, CallbackDelegate drop, ExpandoObject callbacks)
+		private async void OnConnecting(ICommunicationMessage e, IClient client, ConnectionDeferrals deferrals)
 		{
-			var deferrals = new Deferrals(callbacks, drop);
 			Session session = null;
 			User user = null;
 
-			await this.Events.RaiseAsync(SessionEvents.ClientConnecting, client, deferrals);
+			this.comms.Event(SessionEvents.ClientConnecting).ToServer().Emit(client, deferrals);
 
 			using (var context = new StorageContext())
 			using (var transaction = context.Database.BeginTransaction())
@@ -180,7 +168,7 @@ namespace NFive.Server.Controllers
 
 					if (user == default(User))
 					{
-						await this.Events.RaiseAsync(SessionEvents.UserCreating, client);
+						this.comms.Event(SessionEvents.UserCreating).ToServer().Emit(client);
 
 						// Create user
 						user = new User
@@ -193,7 +181,8 @@ namespace NFive.Server.Controllers
 
 						context.Users.Add(user);
 						await context.SaveChangesAsync();
-						await this.Events.RaiseAsync(SessionEvents.UserCreated, client, user);
+
+						this.comms.Event(SessionEvents.UserCreated).ToServer().Emit(client, user);
 					}
 					else
 					{
@@ -202,7 +191,8 @@ namespace NFive.Server.Controllers
 						if (client.SteamId.HasValue) user.SteamId = client.SteamId;
 					}
 
-					await this.Events.RaiseAsync(SessionEvents.SessionCreating, client);
+					this.comms.Event(SessionEvents.SessionCreating).ToServer().Emit(client);
+
 					// Create session
 					session = new Session
 					{
@@ -210,7 +200,7 @@ namespace NFive.Server.Controllers
 						User = user,
 						IpAddress = client.EndPoint,
 						Created = DateTime.UtcNow,
-						Handle = client.Handle,
+						Handle = client.Handle
 					};
 
 					context.Sessions.Add(session);
@@ -221,9 +211,7 @@ namespace NFive.Server.Controllers
 				}
 				catch (DbEntityValidationException ex)
 				{
-					var errorMessages = ex.EntityValidationErrors
-						.SelectMany(x => x.ValidationErrors)
-						.Select(x => x.ErrorMessage);
+					var errorMessages = ex.EntityValidationErrors.SelectMany(x => x.ValidationErrors).Select(x => x.ErrorMessage);
 
 					var fullErrorMessage = string.Join("; ", errorMessages);
 
@@ -243,63 +231,61 @@ namespace NFive.Server.Controllers
 
 			this.sessions[session.Id] = session;
 			var threadCancellationToken = new CancellationTokenSource();
+
 			lock (this.threads)
 			{
-				this.threads.TryAdd(
-					session,
-					new Tuple<Task, CancellationTokenSource>(Task.Factory.StartNew(() => MonitorSession(session, client), threadCancellationToken.Token), threadCancellationToken)
-				);
+				this.threads.TryAdd(session, new Tuple<Task, CancellationTokenSource>(Task.Factory.StartNew(() => MonitorSession(session, client), threadCancellationToken.Token), threadCancellationToken));
 			}
 
-			await this.Events.RaiseAsync(SessionEvents.SessionCreated, client, session, deferrals);
+			this.comms.Event(SessionEvents.SessionCreated).ToServer().Emit(client, session, deferrals);
 
-			if (this.sessions.Any(s => s.Value.User.Id == user.Id && s.Key != session.Id)) Reconnecting(client, session);
+			if (this.sessions.Any(s => s.Value.User.Id == user.Id && s.Key != session.Id)) OnReconnecting(client, session);
 
-			await this.Events.RaiseAsync(SessionEvents.ClientConnected, client, session);
+			this.comms.Event(SessionEvents.ClientConnected).ToServer().Emit(client, session);
+
 			this.Logger.Debug($"[{session.Id}] Player \"{user.Name}\" connected from {session.IpAddress}");
 		}
 
-		private async void Reconnecting(IClient client, Session session)
+		private void OnReconnecting(IClient client, Session session)
 		{
 			this.Logger.Trace($"Client reconnecting: {session.UserId}");
 			var oldSession = this.sessions.Select(s => s.Value).OrderBy(s => s.Created).FirstOrDefault(s => s.User.Id == session.UserId);
 			if (oldSession == null) return;
-			await this.Events.RaiseAsync(SessionEvents.ClientReconnecting, client, session, oldSession);
+
+			this.comms.Event(SessionEvents.ClientReconnecting).ToServer().Emit(client, session, oldSession);
 
 			lock (this.threadLock)
 			{
 				var oldThread = this.threads.OrderBy(t => t.Key.Created).FirstOrDefault(t => t.Key.UserId == session.UserId).Key;
 				if (oldThread != null)
 				{
-
 					this.Logger.Trace($"Disposing of old thread: {oldThread.User.Name}");
 					this.threads[oldThread].Item2.Cancel();
 					this.threads[oldThread].Item1.Wait();
 					this.threads[oldThread].Item2.Dispose();
 					this.threads[oldThread].Item1.Dispose();
-					this.threads.TryRemove(oldThread, out _);
+					this.threads.TryRemove(oldThread, out var _);
 				}
 			}
 
 			this.sessions.TryRemove(oldSession.Id, out oldSession);
-			await this.Events.RaiseAsync(SessionEvents.ClientReconnected, client, session, oldSession);
+
+			this.comms.Event(SessionEvents.ClientReconnected).ToServer().Emit(client, session, oldSession);
 		}
 
-		private void OnDropped(IClient client, string disconnectMessage, CallbackDelegate drop)
+		private void OnDropped(ICommunicationMessage e, IClient client, string disconnectReason)
 		{
-			this.Logger.Debug($"Player Dropped: {client.Name} | Reason: {disconnectMessage}");
-
-			Disconnecting(client, disconnectMessage);
+			OnDisconnecting(client, disconnectReason);
 		}
 
-		private void Disconnect(IRpcEvent e, string reason)
+		private static void OnDisconnect(ICommunicationMessage e, string disconnectReason)
 		{
-			API.DropPlayer(e.Client.Handle.ToString(), reason);
+			API.DropPlayer(e.Client.Handle.ToString(), disconnectReason);
 		}
 
-		private async void Disconnecting(IClient client, string disconnectMessage)
+		private async void OnDisconnecting(IClient client, string disconnectReason)
 		{
-			await this.Events.RaiseAsync(SessionEvents.ClientDisconnecting, client);
+			this.comms.Event(SessionEvents.ClientDisconnecting).ToServer().Emit(client);
 
 			using (var context = new StorageContext())
 			{
@@ -309,7 +295,7 @@ namespace NFive.Server.Controllers
 				if (session == null) throw new Exception($"No session to end for disconnected user \"{client.Name}\""); // TODO: SessionException
 
 				session.Disconnected = DateTime.UtcNow;
-				session.DisconnectReason = disconnectMessage;
+				session.DisconnectReason = disconnectReason;
 				context.Sessions.AddOrUpdate(session);
 				await context.SaveChangesAsync();
 
@@ -322,40 +308,47 @@ namespace NFive.Server.Controllers
 						this.threads[oldThread].Item1.Wait();
 						this.threads[oldThread].Item2.Dispose();
 						this.threads[oldThread].Item1.Dispose();
-						this.threads.TryRemove(oldThread, out _);
+						this.threads.TryRemove(oldThread, out var _);
 					}
+
 					var threadCancellationToken = new CancellationTokenSource();
-					this.threads.TryAdd(
-						session,
-						Tuple.Create<Task, CancellationTokenSource>(Task.Factory.StartNew(() => MonitorSession(session, client), threadCancellationToken.Token), threadCancellationToken)
-					);
+					this.threads.TryAdd(session, Tuple.Create<Task, CancellationTokenSource>(Task.Factory.StartNew(() => MonitorSession(session, client), threadCancellationToken.Token), threadCancellationToken));
 				}
-				await this.Events.RaiseAsync(SessionEvents.ClientDisconnected, client, session);
+
+				this.comms.Event(SessionEvents.ClientDisconnected).ToServer().Emit(client, session);
 
 				this.Logger.Debug($"[{session.Id}] Player \"{client.Name}\" disconnected: {session.DisconnectReason}");
 			}
 		}
 
-		private async void Initialize(IRpcEvent e, string clientVersion)
+		private void OnInitialize(ICommunicationMessage e, string clientVersion)
 		{
 			if (clientVersion != typeof(Program).Assembly.GetName().Version.ToString())
 			{
 				this.Logger.Warn($"Client version does not match server version, got {clientVersion}, expecting {typeof(Program).Assembly.GetName().Version}, dropping client: {e.Client.Handle}");
 
-				API.DropPlayer(e.Client.Handle.ToString(), $"Please reconnect to get the latest NFive client version");
+				API.DropPlayer(e.Client.Handle.ToString(), "Please reconnect to get the latest NFive client version");
 
 				return;
 			}
 
-			await this.Events.RaiseAsync(SessionEvents.ClientInitializing, e.Client);
+			this.comms.Event(SessionEvents.ClientInitializing).ToServer().Emit(e.Client);
 
-			e.Reply(e.User, ServerLogConfiguration.Output.ClientConsole, ServerLogConfiguration.Output.ClientMirror);
+			var logs = new Tuple<LogLevel, LogLevel>(
+				ServerLogConfiguration.Output.ClientConsole,
+				ServerLogConfiguration.Output.ClientMirror
+			);
+
+			var locale = new Tuple<List<string>, string>(
+				ServerConfiguration.Locale.Culture.Select(c => c.Name).ToList(),
+				TZConvert.WindowsToIana(ServerConfiguration.Locale.TimeZone.Id, new RegionInfo(ServerConfiguration.Locale.Culture.First().Name).TwoLetterISORegionName)
+			);
+
+			e.Reply(e.User, logs, locale);
 		}
 
-		private async void Initialized(IRpcEvent e)
+		private async void OnInitialized(ICommunicationMessage e)
 		{
-			this.Logger.Trace($"Client Initialized: {e.Client.Name}");
-
 			var session = this.sessions.Select(s => s.Value).Single(s => s.User.Id == e.User.Id);
 
 			using (var context = new StorageContext())
@@ -368,7 +361,7 @@ namespace NFive.Server.Controllers
 				transaction.Commit();
 			}
 
-			this.Events.Raise(SessionEvents.ClientInitialized, e.Client, session);
+			this.comms.Event(SessionEvents.ClientInitialized).ToServer().Emit(e.Client, session);
 		}
 
 		private async Task MonitorSession(Session session, IClient client)
@@ -379,12 +372,11 @@ namespace NFive.Server.Controllers
 
 				if (API.GetPlayerLastMsg(client.Handle.ToString()) <= this.Configuration.ConnectionTimeout.TotalMilliseconds) continue;
 
-				await this.Events.RaiseAsync(SessionEvents.SessionTimedOut, client, session);
-				session.Disconnected = DateTime.UtcNow;
-				Disconnecting(client, "Session Timed Out");
-			}
+				this.comms.Event(SessionEvents.SessionTimedOut).ToServer().Emit(client, session);
 
-			this.Logger.Trace("Starting reconnect grace checks");
+				session.Disconnected = DateTime.UtcNow;
+				OnDisconnecting(client, "Session Timed Out");
+			}
 
 			while (DateTime.UtcNow.Subtract(session.Disconnected ?? DateTime.UtcNow) < this.Configuration.ReconnectGrace && this.threads.ContainsKey(session) && !this.threads[session].Item2.Token.IsCancellationRequested)
 			{

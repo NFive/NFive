@@ -1,15 +1,14 @@
+using System;
+using System.Linq;
 using NFive.Client.Rpc;
 using NFive.SDK.Client.Configuration;
 using NFive.SDK.Core.Diagnostics;
-using System;
-using System.Linq;
+using NFive.SDK.Core.Events;
 
 namespace NFive.Client.Diagnostics
 {
 	public class Logger : ILogger
 	{
-		private RpcHandler rpc = new RpcHandler();
-
 		public string Prefix { get; }
 
 		public Logger(string prefix = "")
@@ -39,17 +38,17 @@ namespace NFive.Client.Diagnostics
 
 		public void Error(Exception exception)
 		{
-			Log($"ERROR: {exception.Message}", LogLevel.Error);
+			Error(exception, "ERROR");
 		}
 
 		public void Error(Exception exception, string message)
 		{
-			Log($"{message}: {exception.Message}", LogLevel.Error);
+			Log($"{message}: {exception.Message}", LogLevel.Error); // TODO: Output more details
 		}
 
 		public void Log(string message, LogLevel level)
 		{
-			if (ClientConfiguration.ConsoleLogLevel > level && ClientConfiguration.MirrorLogLevel > level) return;
+			if (ClientConfiguration.Log.ConsoleLogLevel > level && ClientConfiguration.Log.MirrorLogLevel > level) return;
 
 			var output = $"{DateTime.Now:s} [{level}]";
 
@@ -58,14 +57,14 @@ namespace NFive.Client.Diagnostics
 			var lines = message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 			var formattedMessage = string.Join(Environment.NewLine, lines.Select(l => $"{output} {l}"));
 
-			if (ClientConfiguration.ConsoleLogLevel <= level)
+			if (ClientConfiguration.Log.ConsoleLogLevel <= level)
 			{
 				CitizenFX.Core.Debug.Write($"{formattedMessage}{Environment.NewLine}");
 			}
 
-			if (ClientConfiguration.MirrorLogLevel <= level)
+			if (ClientConfiguration.Log.MirrorLogLevel <= level && !message.Contains(CoreEvents.LogMirror))
 			{
-				this.rpc.Event("nfive:log:mirror").Trigger(DateTime.UtcNow, level, this.Prefix, message);
+				RpcManager.Emit(CoreEvents.LogMirror, DateTime.UtcNow, level, this.Prefix, message);
 			}
 		}
 	}

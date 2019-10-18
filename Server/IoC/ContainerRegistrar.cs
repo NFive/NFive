@@ -1,6 +1,6 @@
-using Griffin.Container;
 using System.Collections.Generic;
 using System.Reflection;
+using Griffin.Container;
 
 namespace NFive.Server.IoC
 {
@@ -8,11 +8,11 @@ namespace NFive.Server.IoC
 	{
 		public ContainerRegistrar() : base(Lifetime.Transient) { }
 
-		public void RegisterSdkComponents(IEnumerable<Assembly> assemblies)
+		public void RegisterPluginComponents(IEnumerable<Assembly> assemblies)
 		{
 			foreach (var assembly in assemblies)
 			{
-				FindTypesUsing<SDK.Core.IoC.ComponentAttribute>(assembly, (attr, type) => RegisterComponent(type, attr.Lifetime == SDK.Core.IoC.Lifetime.Transient ? Lifetime.Transient : Lifetime.Singleton));
+				FindTypesUsing<SDK.Server.IoC.ComponentAttribute>(assembly, (attr, type) => RegisterComponent(type, attr.Lifetime == SDK.Server.IoC.Lifetime.Transient ? Lifetime.Transient : Lifetime.Singleton));
 			}
 		}
 	}

@@ -1,16 +1,28 @@
+using System;
 using System.Collections.Generic;
-using NFive.SDK.Core.Diagnostics;
+using System.Globalization;
 using JetBrains.Annotations;
+using NFive.SDK.Core.Configuration;
 using NFive.SDK.Core.Controllers;
+using NFive.SDK.Core.Diagnostics;
 
 namespace NFive.Server.Configuration
 {
 	[PublicAPI]
 	public class CoreConfiguration : ControllerConfiguration
 	{
-		public override string FileName => "nfive";
+		public override string FileName => "core";
 
 		public DisplayConfiguration Display { get; set; } = new DisplayConfiguration();
+
+		public LocaleConfiguration Locale { get; set; } = new LocaleConfiguration
+		{
+			Culture = new List<CultureInfo>
+			{
+				new CultureInfo("en-US")
+			},
+			TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time")
+		};
 
 		public LogConfiguration Log { get; set; } = new LogConfiguration();
 
@@ -24,15 +36,14 @@ namespace NFive.Server.Configuration
 			public string Map { get; set; } = "Los Santos";
 		}
 
+		[PublicAPI]
 		public class LogConfiguration
 		{
 			public LogOutputConfiguration Output { get; set; } = new LogOutputConfiguration();
 
 			public LogLevel Core { get; set; } = LogLevel.Info;
 
-			public LogLevel Rpc { get; set; } = LogLevel.Info;
-
-			public LogLevel Events { get; set; } = LogLevel.Info;
+			public LogLevel Comms { get; set; } = LogLevel.Info;
 
 			public Dictionary<string, LogLevel> Plugins { get; set; } = new Dictionary<string, LogLevel>
 			{
@@ -40,6 +51,7 @@ namespace NFive.Server.Configuration
 			};
 		}
 
+		[PublicAPI]
 		public class LogOutputConfiguration
 		{
 			public LogLevel ClientConsole { get; set; } = LogLevel.Warn;
