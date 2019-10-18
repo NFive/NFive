@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 using NFive.Client.Communications;
 using NFive.Client.Diagnostics;
 using NFive.SDK.Client.Communications;
+using NFive.SDK.Core.Events;
 using NFive.SDK.Core.Utilities;
 
 namespace NFive.Client.Rpc
@@ -217,14 +218,13 @@ namespace NFive.Client.Rpc
 
 		private static async void Emit(OutboundMessage message)
 		{
-			Logger.Warn(message.Payloads.Count > 0
+			if (message.Event != CoreEvents.LogMirror) Logger.Debug(message.Payloads.Count > 0
 				? $"Emit: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}"
 				: $"Emit: \"{message.Event}\" with no payloads");
 
 			// Marshall back to the main thread in order to use a native call.
 			await BaseScript.Delay(0);
 
-			Logger.Warn($"TriggerServerEvent: {message.Event}");
 			BaseScript.TriggerServerEvent(message.Event, message.Pack());
 		}
 

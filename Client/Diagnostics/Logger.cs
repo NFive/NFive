@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
+using NFive.Client.Rpc;
 using NFive.SDK.Client.Configuration;
 using NFive.SDK.Core.Diagnostics;
+using NFive.SDK.Core.Events;
 
 namespace NFive.Client.Diagnostics
 {
@@ -60,9 +62,9 @@ namespace NFive.Client.Diagnostics
 				CitizenFX.Core.Debug.Write($"{formattedMessage}{Environment.NewLine}");
 			}
 
-			if (ClientConfiguration.Log.MirrorLogLevel <= level)
+			if (ClientConfiguration.Log.MirrorLogLevel <= level && !message.Contains(CoreEvents.LogMirror))
 			{
-				//RpcManager.Emit(CoreEvents.LogMirror, DateTime.UtcNow, level, this.Prefix, message); // TODO: Event const
+				RpcManager.Emit(CoreEvents.LogMirror, DateTime.UtcNow, level, this.Prefix, message);
 			}
 		}
 	}
