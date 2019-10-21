@@ -5,7 +5,6 @@ using JetBrains.Annotations;
 using NFive.Client.Rpc;
 using NFive.SDK.Client.Commands;
 using NFive.SDK.Client.Communications;
-using NFive.SDK.Core.Arguments;
 using NFive.SDK.Core.Chat;
 using NFive.SDK.Core.Events;
 
@@ -36,17 +35,12 @@ namespace NFive.Client.Commands
 			this.subscriptions.Add(command.ToLowerInvariant(), action);
 		}
 
-		public void On<T>(string command, Action<T> action)
-		{
-			this.subscriptions.Add(command.ToLowerInvariant(), a => action(Argument.Parse<T>(a))); // TODO: Check client side arguments work
-		}
-
 		// TODO: Off()s
 
 		private void OnChatSendMessage(ICommunicationMessage e, ChatMessage message)
 		{
 			var content = message.Content.Trim();
-			if (!content.StartsWith("/")) return; // TODO: Unneeded?
+			if (!content.StartsWith("/")) return;
 
 			var commandArgs = content.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 

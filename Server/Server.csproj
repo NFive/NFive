@@ -46,7 +46,7 @@
       <HintPath>..\packages\BouncyCastle.1.8.5\lib\BouncyCastle.Crypto.dll</HintPath>
     </Reference>
     <Reference Include="CitizenFX.Core.Server, Version=0.0.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\CitizenFX.Core.Server.1.0.1634\lib\net45\CitizenFX.Core.Server.dll</HintPath>
+      <HintPath>..\packages\CitizenFX.Core.Server.1.0.1636\lib\net45\CitizenFX.Core.Server.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="DotNetZip, Version=1.13.4.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
@@ -79,14 +79,14 @@
       <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="NFive.SDK.Core.net, Version=0.1.0.50, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NFive.SDK.Core.0.1.0.50\lib\net452\NFive.SDK.Core.net.dll</HintPath>
+    <Reference Include="NFive.SDK.Core.net, Version=0.1.0.51, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NFive.SDK.Core.0.1.0.51\lib\net452\NFive.SDK.Core.net.dll</HintPath>
     </Reference>
     <Reference Include="NFive.SDK.Plugins, Version=0.1.0.37, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NFive.SDK.Plugins.0.1.0.37\lib\net452\NFive.SDK.Plugins.dll</HintPath>
     </Reference>
-    <Reference Include="NFive.SDK.Server.net, Version=0.1.0.70, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NFive.SDK.Server.0.1.0.70\lib\net452\NFive.SDK.Server.net.dll</HintPath>
+    <Reference Include="NFive.SDK.Server.net, Version=0.1.0.71, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NFive.SDK.Server.0.1.0.71\lib\net452\NFive.SDK.Server.net.dll</HintPath>
     </Reference>
     <Reference Include="NGettext, Version=0.6.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NGettext.0.6.4\lib\net45\NGettext.dll</HintPath>
@@ -103,8 +103,8 @@
     <Reference Include="TimeZoneConverter, Version=3.2.0.0, Culture=neutral, PublicKeyToken=e20ab7d0d9479841, processorArchitecture=MSIL">
       <HintPath>..\packages\TimeZoneConverter.3.2.0\lib\net45\TimeZoneConverter.dll</HintPath>
     </Reference>
-    <Reference Include="YamlDotNet, Version=7.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
-      <HintPath>..\packages\YamlDotNet.7.0.0\lib\net45\YamlDotNet.dll</HintPath>
+    <Reference Include="YamlDotNet, Version=8.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
+      <HintPath>..\packages\YamlDotNet.8.0.0\lib\net45\YamlDotNet.dll</HintPath>
     </Reference>
     <Reference Include="Z.EntityFramework.Plus.EF6, Version=1.10.3.0, Culture=neutral, PublicKeyToken=59b66d028979105b, processorArchitecture=MSIL">
       <HintPath>..\packages\Z.EntityFramework.Plus.EF6.1.10.3\lib\net45\Z.EntityFramework.Plus.EF6.dll</HintPath>

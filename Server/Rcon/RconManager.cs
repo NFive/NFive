@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CitizenFX.Core.Native;
-using NFive.SDK.Core.Arguments;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Plugins;
 using NFive.SDK.Plugins.Configuration;
@@ -25,17 +24,19 @@ namespace NFive.Server.Rcon
 			comms.Event(ServerEvents.RconCommand).FromServer().On<string, string[]>(OnCommand);
 		}
 
-		public void Register<T>(string command, Action<T> callback)
-		{
-			this.callbacks.Add(command.ToLowerInvariant(), new Action<IEnumerable<string>>(a =>
-			{
-				callback(Argument.Parse<T>(a));
-			}));
-		}
-
 		public void Register(string command, Action callback)
 		{
-			this.callbacks.Add(command.ToLowerInvariant(), callback);
+			this.callbacks.Add(command.ToLowerInvariant(), new Action<object[]>(a => callback()));
+		}
+
+		public void Register(string command, Action<string> callback)
+		{
+			this.callbacks.Add(command.ToLowerInvariant(), new Action<object[]>(a => callback(string.Join(" ", a))));
+		}
+
+		public void Register(string command, Action<IEnumerable<string>> callback)
+		{
+			this.callbacks.Add(command.ToLowerInvariant(), new Action<object[]>(a => callback(a.Select(p => p.ToString()))));
 		}
 
 		private void OnCommand(ICommunicationMessage e, string command, string[] objArgs)
