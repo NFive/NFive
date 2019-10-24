@@ -56,6 +56,8 @@ namespace NFive.Server
 			Logger.Initialize();
 			new Logger().Info($"NFive {typeof(Program).Assembly.GetCustomAttributes<AssemblyInformationalVersionAttribute>().First().InformationalVersion}");
 
+			// TODO: Check and warn if local CitizenFX.Core.Server.dll is found
+
 			var config = ConfigurationManager.Load<CoreConfiguration>("core.yml");
 
 			// Use configured culture for output

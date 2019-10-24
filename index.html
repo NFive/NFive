@@ -71,7 +71,7 @@
 				}
 
 				async send(event, data = null) {
-					console.log('send', event, data);
+					console.log('[NUI] send: ' + this.name + ' - ' + event, JSON.stringify(data));
 
 					return await fetch('http://nfive/' + this.name + '/' + event, {
 						method: 'post',
@@ -103,8 +103,8 @@
 				const frame = document.createElement('iframe');
 
 				frameReady(frame, async () => {
-					const response = await frame.contentWindow.nfive.send('ready');
-					frame.contentWindow.nfive.emit('ready', JSON.parse(await response.json()));
+					const response = await frame.contentWindow.nfive.send('nfive:ready');
+					frame.contentWindow.nfive.emit('ready', JSON.parse(await response.json())); // TODO: Avoid double encoding
 				});
 
 				frame.style.visibility = 'hidden';
@@ -127,28 +127,28 @@
 				const event = e.data.event;
 				const plugin = e.data.plugin || null;
 				const data = e.data.data || null;
-				
-				if (event == 'config' && plugin == null) {
+
+				console.log('[NUI] event: ' + plugin + ' - ' + event, JSON.stringify(data));
+
+				if (event == 'nfive:config' && plugin == null) {
 					localeOptions = data;
 					return;
 				}
 
-				if (event == 'load-overlay') {
+				if (event == 'nfive:load') {
 					load(plugin, 'plugins/' + plugin + '/Overlays/' + data.file);
 					return;
 				}
 
-				console.log('[NUI]: event: ' + plugin + ' - ' + event);
-
 				for (let frame in frames) {
 					if (frame != plugin) continue;
 
-					if (event == 'destroy-overlay') {
+					if (event == 'nfive:destroy') {
 						document.body.removeChild(frames[frame]);
 						continue;
 					}
 
-					if (event == 'show') {
+					if (event == 'nfive:visible') {
 						if (data) {
 							frames[frame].contentWindow.nfive.show();
 						} else {
@@ -157,7 +157,7 @@
 						continue;
 					}
 
-					console.log('[NUI]: trigger: ' + frame + ' - ' + event);
+					console.log('[NUI] trigger: ' + plugin + ' - ' + event);
 
 					frames[frame].contentWindow.nfive.emit(event, data);
 				}

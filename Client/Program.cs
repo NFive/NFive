@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using CitizenFX.Core;
 using JetBrains.Annotations;
@@ -10,16 +11,17 @@ using NFive.Client.Commands;
 using NFive.Client.Communications;
 using NFive.Client.Diagnostics;
 using NFive.Client.Events;
+using NFive.Client.Interface;
 using NFive.Client.Rpc;
 using NFive.SDK.Client;
 using NFive.SDK.Client.Configuration;
 using NFive.SDK.Client.Input;
-using NFive.SDK.Client.Interface;
 using NFive.SDK.Client.Services;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Events;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Core.Plugins;
+using NuiManager = NFive.Client.Interface.NuiManager;
 
 namespace NFive.Client
 {
@@ -35,11 +37,22 @@ namespace NFive.Client
 		/// </summary>
 		public Program()
 		{
-			Startup();
+			try
+			{
+				Startup();
+			}
+			catch (Exception ex)
+			{
+				this.logger.Error(ex, "Fatal core exception");
+			}
 		}
 
 		private async void Startup()
 		{
+			// Print exception messages in English
+			// TODO: Test
+			Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
+
 			var asm = GetType().Assembly;
 
 			// Setup RPC handlers
@@ -54,19 +67,19 @@ namespace NFive.Client
 			// Initial connection
 			var config = await comms.Event(CoreEvents.ClientInitialize).ToServer().Request<User, Tuple<LogLevel, LogLevel>, Tuple<List<string>, string>>(asm.GetName().Version.ToString());
 
-			//RpcManager.OnRaw("onClientResourceStart", new Action<Player, string>(OnClientResourceStartRaw));
-			//RpcManager.OnRaw("onClientResourceStop", new Action<Player, string>(OnClientResourceStopRaw));
-			//RpcManager.OnRaw("gameEventTriggered", new Action<Player, string, List<dynamic>>(OnGameEventTriggeredRaw));
-			//RpcManager.OnRaw(FiveMClientEvents.PopulationPedCreating, new Action<float, float, float, uint, IPopulationPedCreatingSetter>(OnPopulationPedCreatingRaw));
-
 			ClientConfiguration.Log.ConsoleLogLevel = config.Item2.Item1;
 			ClientConfiguration.Log.MirrorLogLevel = config.Item2.Item2;
 			ClientConfiguration.Locale.Culture = config.Item3.Item1.Select(c => new CultureInfo(c)).ToList();
 			ClientConfiguration.Locale.TimeZone = TimeZoneInfo.Utc; // TODO: ??? + store IANA timezone
 
+			// Use configured culture for output
+			// TODO: Test
+			Thread.CurrentThread.CurrentCulture = ClientConfiguration.Locale.Culture.First();
+
+			// Configure overlays
 			nui.Emit(new
 			{
-				@event = "config",
+				@event = "nfive:config",
 				data = new
 				{
 					locale = ClientConfiguration.Locale.Culture.First().Name,
@@ -75,9 +88,13 @@ namespace NFive.Client
 				}
 			});
 
-			// Use configured culture for output
-			//Thread.CurrentThread.CurrentCulture = config.Locale.Culture;
-			//CultureInfo.DefaultThreadCurrentCulture = config.Locale.Culture;
+			// Forward raw FiveM events
+			//this.EventHandlers.Add("gameEventTriggered", new Action<string, List<object>>((s, a) => events.Emit("gameEventTriggered", s, a)));
+			//this.EventHandlers.Add("populationPedCreating", new Action<float, float, float, uint, object>((x, y, z, model, setters) => events.Emit("populationPedCreating", new PedSpawnOptions(x, y, z, model, setters))));
+			//RpcManager.OnRaw("onClientResourceStart", new Action<Player, string>(OnClientResourceStartRaw));
+			//RpcManager.OnRaw("onClientResourceStop", new Action<Player, string>(OnClientResourceStopRaw));
+			//RpcManager.OnRaw("gameEventTriggered", new Action<Player, string, List<dynamic>>(OnGameEventTriggeredRaw));
+			//RpcManager.OnRaw(FiveMClientEvents.PopulationPedCreating, new Action<float, float, float, uint, IPopulationPedCreatingSetter>(OnPopulationPedCreatingRaw));
 
 			// Load user key mappings
 			Input.UserMappings.AddRange(Enum.GetValues(typeof(Control)).OfType<Control>().Select(c => new Hotkey(c)));
@@ -109,10 +126,6 @@ namespace NFive.Client
 					this.services.Add(service);
 				}
 			}
-
-			// Forward raw FiveM events
-			//this.EventHandlers.Add("gameEventTriggered", new Action<string, List<object>>((s, a) => events.Emit("gameEventTriggered", s, a)));
-			//this.EventHandlers.Add("populationPedCreating", new Action<float, float, float, uint, object>((x, y, z, model, setters) => events.Emit("populationPedCreating", new PedSpawnOptions(x, y, z, model, setters))));
 
 			this.logger.Info("Plugins loaded");
 
