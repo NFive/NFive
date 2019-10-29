@@ -19,6 +19,7 @@ using NFive.SDK.Client.Input;
 using NFive.SDK.Client.Services;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Events;
+using NFive.SDK.Core.Input;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Core.Plugins;
 using NuiManager = NFive.Client.Interface.NuiManager;
@@ -97,7 +98,7 @@ namespace NFive.Client
 			//RpcManager.OnRaw(FiveMClientEvents.PopulationPedCreating, new Action<float, float, float, uint, IPopulationPedCreatingSetter>(OnPopulationPedCreatingRaw));
 
 			// Load user key mappings
-			Input.UserMappings.AddRange(Enum.GetValues(typeof(Control)).OfType<Control>().Select(c => new Hotkey(c)));
+			Input.UserMappings.AddRange(Enum.GetValues(typeof(InputControl)).OfType<InputControl>().Select(c => new Hotkey(c)));
 
 			var plugins = await comms.Event(CoreEvents.ClientPlugins).ToServer().Request<List<Plugin>>();
 
