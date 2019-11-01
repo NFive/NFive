@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using NFive.Client.Rpc;
 using NFive.SDK.Client.Commands;
 using NFive.SDK.Client.Communications;
-using NFive.SDK.Core.Chat;
 using NFive.SDK.Core.Events;
 
 namespace NFive.Client.Commands
@@ -15,9 +13,9 @@ namespace NFive.Client.Commands
 	{
 		private readonly Dictionary<string, Action<IEnumerable<string>>> subscriptions = new Dictionary<string, Action<IEnumerable<string>>>();
 
-		public CommandManager()
+		public CommandManager(ICommunicationManager comms)
 		{
-			RpcManager.On<ChatMessage>(CoreEvents.ChatSendMessage, OnChatSendMessage);
+			comms.Event(CoreEvents.CommandDispatch).FromServer().On<List<string>>(OnCommandDispatch);
 		}
 
 		public void On(string command, Action action)
@@ -37,17 +35,12 @@ namespace NFive.Client.Commands
 
 		// TODO: Off()s
 
-		private void OnChatSendMessage(ICommunicationMessage e, ChatMessage message)
+		private void OnCommandDispatch(ICommunicationMessage e, List<string> args)
 		{
-			var content = message.Content.Trim();
-			if (!content.StartsWith("/")) return;
-
-			var commandArgs = content.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-			var command = commandArgs.First().Substring(1).ToLowerInvariant();
+			var command = args.First().ToLowerInvariant();
 			if (!this.subscriptions.ContainsKey(command)) return;
 
-			this.subscriptions[command](commandArgs.Skip(1));
+			this.subscriptions[command](args.Skip(1));
 		}
 	}
 }

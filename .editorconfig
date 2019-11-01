@@ -54,6 +54,10 @@ resharper_space_within_single_line_array_initializer_braces = true
 resharper_wrap_array_initializer_style = chop_always
 resharper_wrap_object_and_collection_initializer_style = chop_always
 resharper_xmldoc_indent_text = zero_indent
+resharper_unknown_css_class_highlighting = do_not_show
+resharper_missing_title_tag_highlighting = do_not_show
+resharper_possibly_unassigned_property_highlighting = do_not_show
+resharper_use_of_implicit_global_in_function_scope_highlighting = do_not_show
 
 [*.{csproj,config,nuspec,md,yml,lock}]
 indent_style = space

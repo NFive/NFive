@@ -22,7 +22,6 @@ using NFive.SDK.Core.Events;
 using NFive.SDK.Core.Input;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Core.Plugins;
-using NuiManager = NFive.Client.Interface.NuiManager;
 
 namespace NFive.Client
 {
@@ -62,7 +61,7 @@ namespace NFive.Client
 			var ticks = new TickManager(c => this.Tick += c, c => this.Tick -= c);
 			var events = new EventManager();
 			var comms = new CommunicationManager(events);
-			var commands = new CommandManager();
+			var commands = new CommandManager(comms);
 			var nui = new NuiManager(this.EventHandlers);
 
 			// Initial connection

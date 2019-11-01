@@ -11,7 +11,7 @@ namespace NFive.Client.Interface
 
 		public string Plugin { get; }
 
-		public OverlayManager(string plugin, NuiManager nui)
+		public OverlayManager(string plugin, INuiManager nui)
 		{
 			this.Plugin = plugin;
 			this.nui = nui;
