@@ -218,7 +218,7 @@ namespace NFive.Client.Rpc
 
 		private static async void Emit(OutboundMessage message)
 		{
-			if (message.Event != CoreEvents.LogMirror) Logger.Debug(message.Payloads.Count > 0
+			if (message.Event != CoreEvents.LogMirror) Logger.Trace(message.Payloads.Count > 0
 				? $"Emit: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}"
 				: $"Emit: \"{message.Event}\" with no payloads");
 
@@ -234,15 +234,11 @@ namespace NFive.Client.Rpc
 
 			var callback = new Action<byte[]>(data =>
 			{
-				Logger.Warn("Request callback");
-
 				var message = InboundMessage.From(data);
 
-				Logger.Warn(message.Payloads.Count > 0
+				Logger.Trace(message.Payloads.Count > 0
 					? $"Request Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}"
 					: $"Request Received: \"{message.Event}\" with no payloads");
-
-				Logger.Warn("Request callback SetResult");
 
 				tcs.SetResult(message);
 			});
@@ -261,7 +257,6 @@ namespace NFive.Client.Rpc
 
 				Emit(msg);
 
-				Logger.Warn("await callback");
 				return await tcs.Task;
 			}
 			finally
@@ -272,13 +267,13 @@ namespace NFive.Client.Rpc
 
 		private static void InternalOn(string @event, Delegate callback, Func<InboundMessage, IEnumerable<object>> func)
 		{
-			Logger.Warn($"On: \"{@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
+			Logger.Trace($"On: \"{@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 
 			events[@event] += new Action<byte[]>(data =>
 			{
 				var message = InboundMessage.From(data);
 
-				Logger.Warn(message.Payloads.Count > 0
+				Logger.Trace(message.Payloads.Count > 0
 					? $"On Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}"
 					: $"On Received: \"{message.Event}\" with no payloads");
 
@@ -295,13 +290,13 @@ namespace NFive.Client.Rpc
 
 		private static void InternalOnRequest(string @event, Delegate callback, Func<InboundMessage, IEnumerable<object>> func)
 		{
-			Logger.Warn($"OnRequest: \"{@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
+			Logger.Trace($"OnRequest: \"{@event}\" attached to \"{callback.Method.DeclaringType?.Name}.{callback.Method.Name}({string.Join(", ", callback.Method.GetParameters().Select(p => p.ParameterType + " " + p.Name))})\"");
 
 			events[@event] += new Action<byte[]>(data =>
 			{
 				var message = InboundMessage.From(data);
 
-				Logger.Warn(message.Payloads.Count > 0
+				Logger.Trace(message.Payloads.Count > 0
 					? $"OnRequest Received: \"{message.Event}\" with {message.Payloads.Count} payload{(message.Payloads.Count > 1 ? "s" : string.Empty)}:{Environment.NewLine}\t{string.Join($"{Environment.NewLine}\t", message.Payloads)}"
 					: $"OnRequest Received: \"{message.Event}\" with no payloads");
 
