@@ -80,13 +80,22 @@ namespace NFive.Server
 			var rcon = new RconManager(comms);
 
 			// Load core controllers
+			try
+			{
+				var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), ConfigurationManager.Load<DatabaseConfiguration>("database.yml"), comms);
+				await dbController.Loaded();
+				this.controllers.Add(new Name("NFive/Database"), new List<Controller> { dbController });
+			}
+			catch (Exception ex)
+			{
+				logger.Error(ex, "Database connection error");
+				logger.Warn("Fatal error, exiting");
+				Environment.Exit(1);
+			}
+
 			var eventController = new EventController(new Logger(config.Log.Core, "FiveM"), comms);
 			await eventController.Loaded();
 			this.controllers.Add(new Name("NFive/RawEvents"), new List<Controller> { eventController });
-
-			var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), ConfigurationManager.Load<DatabaseConfiguration>("database.yml"), comms);
-			await dbController.Loaded();
-			this.controllers.Add(new Name("NFive/Database"), new List<Controller> { dbController });
 
 			var sessionController = new SessionController(new Logger(config.Log.Core, "Session"), ConfigurationManager.Load<SessionConfiguration>("session.yml"), comms);
 			await sessionController.Loaded();
@@ -228,6 +237,8 @@ namespace NFive.Server
 			comms.Event(ServerEvents.ServerInitialized).ToServer().Emit();
 
 			logger.Debug($"{graph.Plugins.Count.ToString(CultureInfo.InvariantCulture)} plugin(s) loaded, {this.controllers.Count.ToString(CultureInfo.InvariantCulture)} controller(s) created");
+
+			logger.Info("Server ready");
 		}
 	}
 }
