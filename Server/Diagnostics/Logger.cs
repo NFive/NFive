@@ -15,6 +15,8 @@ namespace NFive.Server.Diagnostics
 
 		public string Prefix { get; }
 
+		private static object @lock = new object();
+
 		public Logger(LogLevel minLevel = LogLevel.Info, string prefix = "")
 		{
 			this.Level = minLevel;
@@ -71,8 +73,11 @@ namespace NFive.Server.Diagnostics
 			var lines = message?.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries) ?? new[] { "" };
 			message = string.Join(Environment.NewLine, lines.Select(l => $"{output} {l}"));
 
-			File.AppendAllText("nfive.log", $"{message}{Environment.NewLine}");
-
+			lock (@lock)
+			{
+				File.AppendAllText("nfive.log", $"{message}{Environment.NewLine}");
+			}
+			
 			if (ServerLogConfiguration.Output == null || ServerLogConfiguration.Output.ServerConsole <= level) CitizenFX.Core.Debug.Write($"{message}{Environment.NewLine}");
 		}
 
