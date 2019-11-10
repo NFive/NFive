@@ -33,8 +33,6 @@ namespace NFive.Server.Controllers
 
 			using (var context = new StorageContext())
 			{
-				context.Database.Connection.Open();
-
 				// Create database if needed
 				if (!context.Database.Exists())
 				{
