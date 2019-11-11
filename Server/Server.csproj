@@ -119,6 +119,7 @@
   <ItemGroup>
     <Compile Include="BaseScriptProxy.cs" />
     <Compile Include="ClientList.cs" />
+    <Compile Include="Diagnostics\LogWriter.cs" />
     <Compile Include="Events\ConnectionDeferrals.cs" />
     <Compile Include="Communications\CommunicationManager.cs" />
     <Compile Include="Communications\CommunicationMessage.cs" />

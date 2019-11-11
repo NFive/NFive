@@ -53,7 +53,6 @@ namespace NFive.Server
 			// Set the AppDomain working directory to the current resource root
 			Environment.CurrentDirectory = Path.GetFullPath(API.GetResourcePath(API.GetCurrentResourceName()));
 
-			Logger.Initialize();
 			new Logger().Info($"NFive {typeof(Program).Assembly.GetCustomAttributes<AssemblyInformationalVersionAttribute>().First().InformationalVersion}");
 
 			// TODO: Check and warn if local CitizenFX.Core.Server.dll is found
@@ -112,6 +111,7 @@ namespace NFive.Server
 			var registrar = new ContainerRegistrar();
 			registrar.RegisterService<ILogger>(s => new Logger());
 			registrar.RegisterInstance<IRconManager>(rcon);
+			registrar.RegisterInstance<IBaseScriptProxy>(new BaseScriptProxy(this.EventHandlers, this.Exports, this.Players));
 			registrar.RegisterInstance<ICommunicationManager>(comms);
 			registrar.RegisterInstance<IClientList>(new ClientList(new Logger(config.Log.Core, "ClientList"), comms));
 			registrar.RegisterPluginComponents(assemblies.Distinct());
@@ -234,9 +234,9 @@ namespace NFive.Server
 
 			comms.Event(CoreEvents.ClientPlugins).FromClients().OnRequest(e => e.Reply(graph.Plugins));
 
-			comms.Event(ServerEvents.ServerInitialized).ToServer().Emit();
-
 			logger.Debug($"{graph.Plugins.Count.ToString(CultureInfo.InvariantCulture)} plugin(s) loaded, {this.controllers.Count.ToString(CultureInfo.InvariantCulture)} controller(s) created");
+
+			comms.Event(ServerEvents.ServerInitialized).ToServer().Emit();
 
 			logger.Info("Server ready");
 		}

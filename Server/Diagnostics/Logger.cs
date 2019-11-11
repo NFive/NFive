@@ -15,8 +15,6 @@ namespace NFive.Server.Diagnostics
 
 		public string Prefix { get; }
 
-		private static object @lock = new object();
-
 		public Logger(LogLevel minLevel = LogLevel.Info, string prefix = "")
 		{
 			this.Level = minLevel;
@@ -73,37 +71,9 @@ namespace NFive.Server.Diagnostics
 			var lines = message?.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries) ?? new[] { "" };
 			message = string.Join(Environment.NewLine, lines.Select(l => $"{output} {l}"));
 
-			lock (@lock)
-			{
-				File.AppendAllText("nfive.log", $"{message}{Environment.NewLine}");
-			}
+			LogWriter.Add($"{message}{Environment.NewLine}");
 			
 			if (ServerLogConfiguration.Output == null || ServerLogConfiguration.Output.ServerConsole <= level) CitizenFX.Core.Debug.Write($"{message}{Environment.NewLine}");
-		}
-
-		public static void Initialize()
-		{
-			const string filePath = "nfive.log";
-			const int maxLogs = 10;
-
-			if (!File.Exists(filePath)) return;
-
-			var fileRegex = new Regex("^nfive\\.log(\\.[0-9])?$", RegexOptions.Compiled);
-			var logFiles = Directory.EnumerateFiles(Environment.CurrentDirectory, $"{filePath}.?", SearchOption.TopDirectoryOnly).Where(f => fileRegex.Match(Path.GetFileName(f) ?? f).Success).OrderBy(f => f).ToList();
-
-			if (logFiles.Count >= maxLogs)
-			{
-				foreach (var file in logFiles.Skip(maxLogs - 1).ToList())
-				{
-					logFiles.Remove(file);
-					File.Delete(file);
-				}
-			}
-
-			for (var i = logFiles.Count - 1; i >= 0; i--)
-			{
-				File.Move(logFiles[i], $"{filePath}.{i + 1}");
-			}
 		}
 	}
 }
