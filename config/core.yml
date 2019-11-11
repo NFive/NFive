@@ -22,7 +22,7 @@ locale:
 # Levels: Trace|Debug|Info|Warn|Error
 log:
   core: Trace
-  comms: Trace
+  comms: Debug
 
   plugins:
     # Default log level for plugins unless overridden
