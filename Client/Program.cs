@@ -15,11 +15,9 @@ using NFive.Client.Interface;
 using NFive.Client.Rpc;
 using NFive.SDK.Client;
 using NFive.SDK.Client.Configuration;
-using NFive.SDK.Client.Input;
 using NFive.SDK.Client.Services;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Events;
-using NFive.SDK.Core.Input;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Core.Plugins;
 
@@ -96,8 +94,10 @@ namespace NFive.Client
 			//RpcManager.OnRaw("gameEventTriggered", new Action<Player, string, List<dynamic>>(OnGameEventTriggeredRaw));
 			//RpcManager.OnRaw(FiveMClientEvents.PopulationPedCreating, new Action<float, float, float, uint, IPopulationPedCreatingSetter>(OnPopulationPedCreatingRaw));
 
-			// Load user key mappings
-			Input.UserMappings.AddRange(Enum.GetValues(typeof(InputControl)).OfType<InputControl>().Select(c => new Hotkey(c)));
+			// Provide raw BaseScript types to services
+			Service.EventHandlers = this.EventHandlers;
+			Service.Exports = this.Exports;
+			Service.Players = this.Players;
 
 			var plugins = await comms.Event(CoreEvents.ClientPlugins).ToServer().Request<List<Plugin>>();
 
