@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace NFive.Server.Diagnostics
 {
@@ -36,7 +36,7 @@ namespace NFive.Server.Diagnostics
 				}
 			}
 
-			Task.Factory.StartNew(() =>
+			ThreadPool.QueueUserWorkItem(s =>
 			{
 				using (var writer = File.AppendText(FilePath))
 				{
