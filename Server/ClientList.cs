@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using CitizenFX.Core;
 using Griffin.Container;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
+using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Events;
 
@@ -25,11 +25,11 @@ namespace NFive.Server
 		{
 			this.logger = logger;
 
-			//comms.Event(SessionEvents.ClientInitializing).FromClients().On(OnInitialize);
-			//comms.Event(NFiveServerEvents.PlayerDropped).FromServer().On<IClient, string, CallbackDelegate>(OnDropped);
+			comms.Event(SessionEvents.ClientInitialized).FromClients().On<IClient, Session>(OnInitialized);
+			comms.Event(SessionEvents.ClientDisconnected).FromServer().On<IClient, Session>(OnDisconnected);
 		}
 
-		private void OnInitialize(ICommunicationMessage e)
+		private void OnInitialized(ICommunicationMessage e, IClient client, Session session)
 		{
 			this.logger.Trace($"Client added: {e.Client.Name} [{e.Client.Handle}]");
 
@@ -38,13 +38,13 @@ namespace NFive.Server
 			this.ClientAdded?.Invoke(this, new ClientEventArgs(e.Client));
 		}
 
-		private void OnDropped(ICommunicationMessage e, IClient client, string disconnectMessage, CallbackDelegate drop)
+		private void OnDisconnected(ICommunicationMessage e, IClient client, Session session)
 		{
-			this.logger.Trace($"Client disconnected: {client.Name} [{e.Client.Handle}]");
+			this.logger.Trace($"Client disconnected: {client.Name} [{client.Handle}]");
 
 			this.Clients.RemoveAll(c => c.Handle == client.Handle);
 
-			this.ClientRemoved?.Invoke(this, new ClientEventArgs(e.Client));
+			this.ClientRemoved?.Invoke(this, new ClientEventArgs(client));
 		}
 	}
 }
