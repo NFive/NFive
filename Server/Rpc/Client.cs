@@ -60,7 +60,7 @@ namespace NFive.Server.Rpc
 			for (var i = 0; i < count; ++i)
 			{
 				var id = API.GetPlayerIdentifier(this.Handle.ToString(), i);
-				var parts = id.Split(new[] { ':' }, 2, StringSplitOptions.RemoveEmptyEntries);
+				var parts = id.Split(new[] { ':' }, 2);
 
 				results.Add(parts[0], parts[1]);
 			}

@@ -109,17 +109,14 @@ namespace NFive.Client
 
 				if (plugin == null)
 				{
-					this.logger.Debug($"Skipping {assembly.GetName().Name}");
+					this.logger.Warn($"Skipping {assembly.GetName().Name}, no client plugin");
 					continue;
 				}
 
 				this.logger.Info(plugin.FullName);
-				this.logger.Info($"\t{assembly.GetName().Name}");
 
 				foreach (var type in assembly.GetTypes().Where(t => !t.IsAbstract && t.IsSubclassOf(typeof(Service))))
 				{
-					this.logger.Info($"\t\t{type.FullName}");
-
 					var service = (Service)Activator.CreateInstance(type, new Logger($"Plugin|{type.Name}"), ticks, comms, commands, new OverlayManager(plugin.Name, nui), config.Item1);
 					await service.Loaded();
 
@@ -134,6 +131,8 @@ namespace NFive.Client
 			this.logger.Info("Plugins started");
 
 			comms.Event(CoreEvents.ClientInitialized).ToServer().Emit();
+
+			this.logger.Info("Client ready");
 
 			foreach (var service in this.services) await service.HoldFocus();
 		}
