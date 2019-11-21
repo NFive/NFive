@@ -25,17 +25,18 @@ namespace NFive.Server
 		{
 			this.logger = logger;
 
-			comms.Event(SessionEvents.ClientInitialized).FromClients().On<IClient, Session>(OnInitialized);
+			comms.Event(SessionEvents.ClientInitialized).FromServer().On<IClient, Session>(OnInitialized);
 			comms.Event(SessionEvents.ClientDisconnected).FromServer().On<IClient, Session>(OnDisconnected);
 		}
 
 		private void OnInitialized(ICommunicationMessage e, IClient client, Session session)
 		{
-			this.logger.Trace($"Client added: {e.Client.Name} [{e.Client.Handle}]");
+			this.logger.Trace($"Client added: {client.Name} [{client.Handle}]");
 
-			this.Clients.Add(e.Client);
+			this.Clients.Add(client);
 
-			this.ClientAdded?.Invoke(this, new ClientEventArgs(e.Client));
+			this.ClientAdded?.Invoke(this, new ClientEventArgs(client));
+			//this.ClientAdded?.Invoke(this, new ClientSessionEventArgs(client, session));
 		}
 
 		private void OnDisconnected(ICommunicationMessage e, IClient client, Session session)
@@ -45,6 +46,7 @@ namespace NFive.Server
 			this.Clients.RemoveAll(c => c.Handle == client.Handle);
 
 			this.ClientRemoved?.Invoke(this, new ClientEventArgs(client));
+			//this.ClientRemoved?.Invoke(this, new ClientSessionEventArgs(client, session));
 		}
 	}
 }
