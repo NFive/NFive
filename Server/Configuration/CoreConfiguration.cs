@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 using NFive.SDK.Core.Configuration;
 using NFive.SDK.Core.Controllers;
 using NFive.SDK.Core.Diagnostics;
+using TimeZoneConverter;
 
 namespace NFive.Server.Configuration
 {
@@ -21,7 +22,7 @@ namespace NFive.Server.Configuration
 			{
 				new CultureInfo("en-US")
 			},
-			TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time")
+			TimeZone = TZConvert.GetTimeZoneInfo("Pacific Standard Time")
 		};
 
 		public LogConfiguration Log { get; set; } = new LogConfiguration();
