@@ -50,7 +50,7 @@ build:
   verbosity: minimal
 
 after_build:
-- 7z a nfive.zip README.md LICENSE *.dll nfive.yml nfive.lock __resource.lua index.html config\
+- 7z a nfive.zip README.md LICENSE *.dll nfive.yml nfive.lock fxmanifest.lua index.html config\
 
 artifacts:
 - path: nfive.zip
