@@ -1,12 +1,88 @@
 name: Release
 
 on:
-  pull_request:
-    branches: [ master ]
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
-  Release:
+  calculate-version:
+    name: Calculate Version
     runs-on: ubuntu-latest
-    
+    outputs:
+      semVer: ${{ steps.gitversion.outputs.semVer }}
+
     steps:
-      - run: echo Snoogans
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0.9.7
+      with:
+        versionSpec: '5.x'
+
+    - name: Determine Version
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v0.9.7
+      with:
+        useConfigFile: true
+        configFilePath: ./GitVersion.yml
+
+  build:
+    name: Build and Release
+    runs-on: windows-latest
+    needs: calculate-version
+    env:
+      SEMVER: ${{ needs.calculate-version.outputs.semVer }}
+      ZipName: nfive_${{ needs.calculate-version.outputs.semVer }}.zip
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1.0.5
+      
+      - name: Restore dependencies
+        run: nuget restore NFive.sln
+
+      - name: Build the solution
+        run: msbuild NFive.sln /p:Configuration=Release
+
+      - name: Move files to artifact folder
+        shell: pwsh
+        run: |
+          mkdir Build        
+          Move-Item -Path README.md,LICENSE,*.dll,nfive.yml,nfive.lock,fxmanifest.lua,index.html,config -Destination Build
+        
+      - uses: papeloto/action-zip@v1
+        with:
+          files: Build/
+          dest: ${{ env.ZipName }}
+
+      # Create a Release on the GitHub project
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ env.SEMVER }}
+          release_name:  ${{ env.SEMVER }}
+          draft: false
+          prerelease: false
+
+      # Upload the Build Artifact to the Release
+      - name: Update release asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}  # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: .\${{ env.ZipName }}
+          asset_name: ${{ env.ZipName }}
+          asset_content_type: application/zip
