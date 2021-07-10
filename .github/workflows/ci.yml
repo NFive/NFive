@@ -11,23 +11,59 @@ on:
       - '**'
 
 jobs:
-  build:
-
-    runs-on: windows-latest
+  calculate-version:
+    name: Calculate Version
+    runs-on: ubuntu-latest
+    outputs:
+      semVer: ${{ steps.gitversion.outputs.semVer }}
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0.9.7
+      with:
+        versionSpec: '5.x'
 
-    - name: Setup NuGet
-      uses: NuGet/setup-nuget@v1.0.5
+    - name: Determine Version
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v0.9.7
+      with:
+        useConfigFile: true
+        configFilePath: ./GitVersion.yml
+
+  build:
+    runs-on: windows-latest
+    needs: calculate-version
+    env:
+      SEMVER: ${{ needs.calculate-version.outputs.semVer }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1.0.5
       
-    - name: Restore dependencies
-      run: nuget restore NFive.sln
+      - name: Restore dependencies
+        run: nuget restore NFive.sln
 
-    - name: Build the solution
-      run: msbuild NFive.sln /p:Configuration=Release
+      - name: Build the solution
+        run: msbuild NFive.sln /p:Configuration=Release
 
+      - name: Move files to artifact folder
+        shell: pwsh
+        run: |
+          mkdir Build        
+          Move-Item -Path README.md,LICENSE,*.dll,nfive.yml,nfive.lock,fxmanifest.lua,index.html,config -Destination Build
+        
+      - name: Attach Zip as build artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: nfive_${{ env.SEMVER }}
+          path: Build
 
