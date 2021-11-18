@@ -339,12 +339,29 @@ namespace NFive.Server.Controllers
 				ServerLogConfiguration.Output.ClientMirror
 			);
 
-			var locale = new Tuple<List<string>, string>(
-				ServerConfiguration.Locale.Culture.Select(c => c.Name).ToList(),
-				TZConvert.WindowsToIana(ServerConfiguration.Locale.TimeZone.Id, new RegionInfo(ServerConfiguration.Locale.Culture.First().Name).TwoLetterISORegionName)
-			);
+			var platform = (int)Environment.OSVersion.Platform;
+			var isWindows = platform != 4 && platform != 6 && platform != 128;
 
-			e.Reply(e.User, logs, locale);
+			if (isWindows)
+			{
+				var locale = new Tuple<List<string>, string>(
+					ServerConfiguration.Locale.Culture.Select(c => c.Name).ToList(),
+					TZConvert.WindowsToIana(ServerConfiguration.Locale.TimeZone.Id, new RegionInfo(ServerConfiguration.Locale.Culture.First().Name).TwoLetterISORegionName)
+				);
+
+					e.Reply(e.User, logs, locale);
+			}
+			else
+			{
+				var locale = new Tuple<List<string>, string>(
+					ServerConfiguration.Locale.Culture.Select(c => c.Name).ToList(),
+					ServerConfiguration.Locale.TimeZone.Id
+				);
+
+				e.Reply(e.User, logs, locale);
+			}
+
+
 		}
 
 		private async void OnInitialized(ICommunicationMessage e)
