@@ -1,6 +1,6 @@
 version: "{build}"
 
-image: Visual Studio 2017
+image: Visual Studio 2019
 configuration: Release
 platform: Any CPU
 clone_depth: 1
@@ -37,10 +37,10 @@ install:
 
 assembly_info:
   patch: true
-  file: Properties\AssemblyInfo.cs
-  assembly_version: "{version}"
-  assembly_file_version: "{version}"
-  assembly_informational_version: "{version}"
+  file: '**\Properties\AssemblyInfo.cs'
+  assembly_version: $(BUILD_VERSION)
+  assembly_file_version: $(BUILD_VERSION_FILE)
+  assembly_informational_version: $(BUILD_VERSION_FRIENDLY)
 
 before_build:
 - nuget restore
@@ -59,21 +59,6 @@ deploy:
 - provider: GitHub
   release: $(APPVEYOR_REPO_TAG_NAME)
   auth_token:
-    secure: 11Aj9GejhzBxJlpQAwmcgJKINliGVNQ/mWTTFZCylmKiwglzys7hWxRZiRfT7INp
+    secure: vHSyTGwtKB1CVyhDA5DUSpDnrBX6j9cjj46e1CUspjBEeKTRdSDewfRwq/1X0XNo
   on:
     APPVEYOR_REPO_TAG: true
-
-for:
--
-  branches:
-    only:
-      - master
-
-  environment:
-    BT_USER:
-      secure: WeKwDVyYUZltHMzCsNlq5w==
-    BT_KEY:
-      secure: piTpGhOfvdvWqMnPTWkLyuX/b1lHDazzSWt37UbgqUHCAdfsEb+0exY7AUnYzT7Z
-
-  deploy_script:
-  - curl -s -w "\n" -T "nfive.zip" -u"%BT_USER%:%BT_KEY%" "https://api.bintray.com/content/nfive/NFive/NFive/%BUILD_VERSION_FILE%/%BUILD_VERSION_FILE%/nfive.zip?publish=1"

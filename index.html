@@ -72,7 +72,7 @@
 				async send(event, data = null) {
 					console.log('[NUI] send: ' + this.name + ' - ' + event, JSON.stringify(data));
 
-					return await fetch('http://nfive/' + this.name + '/' + event, {
+					return await fetch('https://nfive/' + this.name + '/' + event, {
 						method: 'post',
 						headers: {
 							'Content-type': 'application/json; charset=UTF-8'
