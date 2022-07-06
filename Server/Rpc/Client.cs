@@ -44,8 +44,8 @@ namespace NFive.Server.Rpc
 
 			var ids = GetIdentifiers();
 
-			this.EndPoint = ids["ip"];
-			this.License = ids["license"];
+			this.EndPoint = ids.ContainsKey("ip") ? ids["ip"] : default;
+			this.License = ids.ContainsKey("license") ? ids["license"] : default; 
 			this.SteamId = ids.ContainsKey("steam") && !string.IsNullOrEmpty(ids["steam"]) ? long.Parse(ids["steam"], NumberStyles.HexNumber) : default(long?);
 			this.DiscordId = ids.ContainsKey("discord") && !string.IsNullOrEmpty(ids["discord"]) ? ulong.Parse(ids["discord"]) : default(ulong?);
 			this.LiveId = ids.ContainsKey("live") && !string.IsNullOrEmpty(ids["live"]) ? ulong.Parse(ids["live"]) : default(ulong?);
