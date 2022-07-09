@@ -58,7 +58,7 @@ jobs:
         shell: pwsh
         run: |
           $compress = @{
-            Path = "README.md", "LICENSE", "*.dll", "nfive.yml", "nfive.lock", "fxmanifest.lua", "index.html" "config/"
+            Path = "README.md", "LICENSE", "*.dll", "nfive.yml", "nfive.lock", "fxmanifest.lua", "index.html", "config/"
             CompressionLevel = "Fastest"
             DestinationPath = "nfive.zip"
             }
