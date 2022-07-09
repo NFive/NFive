@@ -71,7 +71,7 @@ jobs:
       - name: Attach Zip as build artifact
         uses: actions/upload-artifact@v3.1.0
         with:
-          name: nfive.zip
+          name: nfive
           path: |
             README.md
             LICENSE
