@@ -71,5 +71,13 @@ jobs:
       - name: Attach Zip as build artifact
         uses: actions/upload-artifact@v3.1.0
         with:
-          name: nfive
-          path: nfive.zip
+          name: nfive.zip
+          path: |
+            README.md
+            LICENSE
+            *.dll
+            nfive.yml
+            nfive.lock
+            fxmanifest.lua
+            index.html
+            config/
