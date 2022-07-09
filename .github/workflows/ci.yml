@@ -56,8 +56,7 @@ jobs:
         run: nuget restore NFive.sln
 
       - name: Build the solution
-        run: msbuild NFive.sln /p:Configuration=Release /p:Outdir=Build /p:AssemblyVersion=${{ needs.calculate-version.outputs.assemblySemVer}} \
-          /p:FileVersion=${{ needs.calculate-version.outputs.assemblySemFileVer}} /p:InformationalVersion=${{ needs.calculate-version.outputs.informationalVersion }}
+        run: msbuild NFive.sln /p:Configuration=Release /p:Outdir=Build /p:AssemblyVersion=${{ needs.calculate-version.outputs.assemblySemVer}} /p:FileVersion=${{ needs.calculate-version.outputs.assemblySemFileVer}} /p:InformationalVersion=${{ needs.calculate-version.outputs.informationalVersion }}
 
       - name: Create archive file
         shell: pwsh
