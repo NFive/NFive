@@ -75,7 +75,8 @@ jobs:
           path: |
             README.md
             LICENSE
-            *.dll
+            */*.dll
+            */*.dll
             nfive.yml
             nfive.lock
             fxmanifest.lua
