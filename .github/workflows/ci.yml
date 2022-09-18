@@ -63,7 +63,8 @@ jobs:
           Copy-Item -Path ".\Client\Build\*.dll" -Destination ".\Build" -PassThru -Force -Exclude CitizenFX.Core.Client.dll
           Copy-Item -Path ".\lib\*.dll" -Destination ".\Build" -PassThru -Force
           Copy-Item .\README.md,.\LICENSE,.\nfive.yml,.\nfive.lock,.\fxmanifest.lua,.\index.html -PassThru -Destination ".\Build"
-          Copy-Item .\config\* -Destination ".\Build\config" -PassThru 
+          New-Item ".\Build\config" -itemType Directory
+          Copy-Item .\config\* -Destination ".\Build\config" -PassThru -Recurse
 
       - name: Attach Zip as build artifact
         uses: actions/upload-artifact@v3.1.0
