@@ -1,5 +1,5 @@
-using System.Data.Entity;
 using JetBrains.Annotations;
+using Microsoft.EntityFrameworkCore;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Server.Storage;
 using NFive.Server.Models;
@@ -15,7 +15,7 @@ namespace NFive.Server.Storage
 
 		public DbSet<BootHistory> BootHistory { get; set; }
 
-		protected override void OnModelCreating(DbModelBuilder modelBuilder)
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			base.OnModelCreating(modelBuilder);
 

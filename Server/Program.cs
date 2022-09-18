@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity.Migrations;
-using System.Data.Entity.Migrations.Infrastructure;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Autofac;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using JetBrains.Annotations;
+using Microsoft.EntityFrameworkCore;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Events;
 using NFive.SDK.Core.Plugins;
@@ -21,14 +21,14 @@ using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Configuration;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Events;
-using NFive.SDK.Server.Migrations;
+using NFive.SDK.Server.IoC;
 using NFive.SDK.Server.Rcon;
+using NFive.SDK.Server.Storage;
 using NFive.Server.Communications;
 using NFive.Server.Configuration;
 using NFive.Server.Controllers;
 using NFive.Server.Diagnostics;
 using NFive.Server.Events;
-using NFive.Server.IoC;
 using NFive.Server.Rcon;
 using NFive.Server.Rpc;
 
@@ -108,16 +108,18 @@ namespace NFive.Server
 			assemblies.AddRange(graph.Plugins.Where(p => p.Server?.Include != null).SelectMany(p => p.Server.Include.Select(i => Assembly.LoadFrom(Path.Combine("plugins", p.Name.Vendor, p.Name.Project, $"{i}.net.dll")))));
 			assemblies.AddRange(graph.Plugins.Where(p => p.Server?.Main != null).SelectMany(p => p.Server.Main.Select(m => Assembly.LoadFrom(Path.Combine("plugins", p.Name.Vendor, p.Name.Project, $"{m}.net.dll")))));
 
-			var registrar = new ContainerRegistrar();
-			registrar.RegisterService<ILogger>(s => new Logger());
-			registrar.RegisterInstance<IRconManager>(rcon);
-			registrar.RegisterInstance<IBaseScriptProxy>(new BaseScriptProxy(this.EventHandlers, this.Exports, this.Players));
-			registrar.RegisterInstance<ICommunicationManager>(comms);
-			registrar.RegisterInstance<IClientList>(new ClientList(new Logger(config.Log.Core, "ClientList"), comms));
-			registrar.RegisterPluginComponents(assemblies.Distinct());
+			var builder = new ContainerBuilder();
+			builder.RegisterInstance(rcon).As<IRconManager>();
+			builder.RegisterInstance(comms).As<ICommunicationManager>();
+			builder.Register(s => new Logger()).As<ILogger>();
+			builder.RegisterInstance(new BaseScriptProxy(this.EventHandlers, this.Exports, this.Players)).As<IBaseScriptProxy>();
+			builder.RegisterInstance(new ClientList(new Logger(config.Log.Core, "ClientList"), comms)).As<IClientList>();
+
+			builder.RegisterAssemblyTypes(assemblies.ToArray()).Where(t => t.GetCustomAttribute<ComponentAttribute>()?.Lifetime == Lifetime.Singleton).SingleInstance();
+			builder.RegisterAssemblyTypes(assemblies.ToArray()).Where(t => t.GetCustomAttribute<ComponentAttribute>()?.Lifetime == Lifetime.Transient).InstancePerDependency();
 
 			// DI
-			var container = registrar.Build();
+			var container = builder.Build();
 
 			var pluginDefaultLogLevel = config.Log.Plugins.ContainsKey("default") ? config.Log.Plugins["default"] : LogLevel.Info;
 
@@ -158,20 +160,21 @@ namespace NFive.Server
 					var types = Assembly.LoadFrom(mainFile).GetTypes().Where(t => !t.IsAbstract && t.IsClass).ToList();
 
 					// Find migrations
-					foreach (var migrationType in types.Where(t => t.BaseType != null && t.BaseType.IsGenericType && t.BaseType.GetGenericTypeDefinition() == typeof(MigrationConfiguration<>)))
+					foreach (var migrationType in types.Where(t => t.BaseType != null && t.BaseType.IsGenericType && t.BaseType.GetGenericTypeDefinition() == typeof(EFContext<>)))
 					{
-						var configuration = (DbMigrationsConfiguration)Activator.CreateInstance(migrationType);
-						var migrator = new DbMigrator(configuration);
+						var migrator = ((DbContext)Activator.CreateInstance(migrationType)).Database;
 
-						if (!migrator.GetPendingMigrations().Any()) continue;
+						//var migrator = new DbMigrator(configuration);
 
-						if (!ServerConfiguration.AutomaticMigrations) throw new MigrationsPendingException($"Plugin {plugin.FullName} has pending migrations but automatic migrations are disabled");
+						if (!(await migrator.GetPendingMigrationsAsync()).Any()) continue;
 
-						foreach (var migration in migrator.GetPendingMigrations())
+						if (!ServerConfiguration.AutomaticMigrations) throw new Exception($"Plugin {plugin.FullName} has pending migrations but automatic migrations are disabled");
+
+						foreach (var migration in await migrator.GetPendingMigrationsAsync())
 						{
 							new Logger(config.Log.Core, "Database").Debug($"[{mainName}] Running migration: {migration}");
 
-							migrator.Update(migration);
+							await migrator.MigrateAsync();
 						}
 					}
 

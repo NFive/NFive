@@ -6,7 +6,6 @@ connection:
   user: root
   password: password
   charset: utf8mb4
-  logging: false
 
 migrations:
   automatic: true

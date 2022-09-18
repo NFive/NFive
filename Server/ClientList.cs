@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Griffin.Container;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Events;
+using NFive.SDK.Server.IoC;
 
 namespace NFive.Server
 {
