@@ -14,7 +14,7 @@
     <PackageReference Include="DotNetZip" Version="1.16.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" ExcludeAssets="Compile" GeneratePathProperty="true" />
-    <PackageReference Include="NFive.SDK.Plugins" Version="0.1.0-tags-0-0-1-beta.1" />
+    <PackageReference Include="NFive.SDK.Plugins" Version="0.1.0-tags-0-0-4-beta.1" />
     <PackageReference Include="NFive.SDK.Core" Version="0.1.0-tags-0-0-1-beta.1" />
     <PackageReference Include="NFive.SDK.Client" Version="0.1.0-tags-0-0-1-beta.1" />
     <PackageReference Include="NGettext" Version="0.6.7" />

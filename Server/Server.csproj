@@ -14,7 +14,7 @@
     <PackageReference Include="DotNetZip" Version="1.16.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
     <PackageReference Include="CitizenFX.Core.Server" version="1.0.5886" />
-    <PackageReference Include="NFive.SDK.Plugins" Version="0.1.0-tags-0-0-1-beta.1" />
+    <PackageReference Include="NFive.SDK.Plugins" Version="0.1.0-tags-0-0-4-beta.1" />
     <PackageReference Include="NFive.SDK.Core" Version="0.1.0-tags-0-0-1-beta.1" />
     <PackageReference Include="NFive.SDK.Server" Version="0.1.0-tags-0-0-2-beta.1" />
     <PackageReference Include="K4os.Compression.LZ4" Version="1.2.16" />
@@ -25,10 +25,9 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="SemanticVersioning" Version="2.0.2" />
     <PackageReference Include="SSH.NET" Version="2020.0.1" />
     <PackageReference Include="TimeZoneConverter" Version="5.0.0" />
-    <PackageReference Include="YamlDotNet" Version="11.2.1" />
+    <PackageReference Include="YamlDotNet" Version="12.0.1" />
   </ItemGroup>
 
 </Project>

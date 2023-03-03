@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/github/license/NFive/NFive.svg)](LICENSE)
 [![Discord](https://img.shields.io/discord/525451790876016651.svg)](https://discord.nfive.io/)
-[![Build Status](https://img.shields.io/appveyor/ci/NFive/nfive.svg)](https://ci.appveyor.com/project/NFive/nfive)
+[![Build Status](https://github.com/NFive/NFive/actions/workflows/ci.yml/badge.svg)](https://github.com/CitiWork/NFive/actions/workflows/ci.yml)
 [![Release Version](https://img.shields.io/github/release/NFive/NFive/all.svg)](https://github.com/NFive/NFive/releases)
 
 [NFive](https://nfive.io/) is a complete plugin framework for GTAV [FiveM](https://fivem.net/) servers built entirely in managed C#.
