@@ -1,3 +1,22 @@
+using Autofac;
+using CitizenFX.Core;
+using JetBrains.Annotations;
+using Microsoft.EntityFrameworkCore;
+using NFive.SDK.Core.Events;
+using NFive.SDK.Core.Plugins;
+using NFive.SDK.Plugins;
+using NFive.SDK.Plugins.Configuration;
+using NFive.SDK.Server;
+using NFive.SDK.Server.Configuration;
+using NFive.SDK.Server.Controllers;
+using NFive.SDK.Server.Events;
+using NFive.Server.Communications;
+using NFive.Server.Configuration;
+using NFive.Server.Controllers;
+using NFive.Server.Diagnostics;
+using NFive.Server.IoC;
+using NFive.Server.Rcon;
+using NFive.Server.Rpc;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -6,58 +25,42 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Autofac;
-using CitizenFX.Core;
-using CitizenFX.Core.Native;
-using JetBrains.Annotations;
-using Microsoft.EntityFrameworkCore;
-using NFive.SDK.Core.Diagnostics;
-using NFive.SDK.Core.Events;
-using NFive.SDK.Core.Plugins;
-using NFive.SDK.Plugins;
-using NFive.SDK.Plugins.Configuration;
-using NFive.SDK.Server;
-using NFive.SDK.Server.Communications;
-using NFive.SDK.Server.Configuration;
-using NFive.SDK.Server.Controllers;
-using NFive.SDK.Server.Events;
-using NFive.SDK.Server.IoC;
-using NFive.SDK.Server.Rcon;
-using NFive.SDK.Server.Storage;
-using NFive.Server.Communications;
-using NFive.Server.Configuration;
-using NFive.Server.Controllers;
-using NFive.Server.Diagnostics;
-using NFive.Server.Events;
-using NFive.Server.Rcon;
-using NFive.Server.Rpc;
+using static CitizenFX.Core.Native.API;
 
 namespace NFive.Server
 {
 	[UsedImplicitly]
-	public class Program : BaseScript
+	public class Program : ServerScript
 	{
 		private readonly Dictionary<Name, List<Controller>> controllers = new Dictionary<Name, List<Controller>>();
 
 		public Program()
-		{
-			Startup();
-		}
-
-		private async void Startup()
 		{
 			// Print exception messages in English
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
 			CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
 			// Set the AppDomain working directory to the current resource root
-			Environment.CurrentDirectory = Path.GetFullPath(API.GetResourcePath(API.GetCurrentResourceName()));
+			Environment.CurrentDirectory = Path.GetFullPath(GetResourcePath(GetCurrentResourceName()));
 
-			new Logger().Info($"NFive {typeof(Program).Assembly.GetCustomAttributes<AssemblyInformationalVersionAttribute>().First().InformationalVersion}");
+			this.Tick += OnFirstTick;
+		}
+
+		private async Task OnFirstTick()
+		{
+			this.Tick -= OnFirstTick;
+
+			await Startup();
+		}
+
+		private async Task Startup()
+		{
+			new Logger().Info($"Nfx {typeof(Program).Assembly.GetCustomAttributes<AssemblyInformationalVersionAttribute>().First().InformationalVersion}");
 
 			// TODO: Check and warn if local CitizenFX.Core.Server.dll is found
 
 			var config = ConfigurationManager.Load<CoreConfiguration>("core.yml");
+			var databaseConfig = ConfigurationManager.Load<DatabaseConfiguration>("database.yml");
 
 			// Use configured culture for output
 			Thread.CurrentThread.CurrentCulture = config.Locale.Culture.First();
@@ -66,105 +69,71 @@ namespace NFive.Server
 			ServerConfiguration.Locale = config.Locale;
 			ServerLogConfiguration.Output = config.Log.Output;
 
+			SetGameType(config.Display.Game);
+			SetMapName(config.Display.Map);
+
 			var logger = new Logger(config.Log.Core);
 
-			API.SetGameType(config.Display.Game);
-			API.SetMapName(config.Display.Map);
-
-			// Setup RPC handlers
-			RpcManager.Configure(config.Log.Comms, this.EventHandlers, this.Players);
-
-			var events = new EventManager(config.Log.Comms);
-			var comms = new CommunicationManager(events);
-			var rcon = new RconManager(comms);
-
-			// Load core controllers
-			try
-			{
-				var dbController = new DatabaseController(new Logger(config.Log.Core, "Database"), ConfigurationManager.Load<DatabaseConfiguration>("database.yml"), comms);
-				await dbController.Loaded();
-				this.controllers.Add(new Name("NFive/Database"), new List<Controller> { dbController });
-			}
-			catch (Exception ex)
-			{
-				logger.Error(ex, "Database connection error");
-				logger.Warn("Fatal error, exiting");
-				Environment.Exit(1);
-			}
-
-			var eventController = new EventController(new Logger(config.Log.Core, "FiveM"), comms);
-			await eventController.Loaded();
-			this.controllers.Add(new Name("NFive/RawEvents"), new List<Controller> { eventController });
-
-			var sessionController = new SessionController(new Logger(config.Log.Core, "Session"), ConfigurationManager.Load<SessionConfiguration>("session.yml"), comms);
-			await sessionController.Loaded();
-			this.controllers.Add(new Name("NFive/Session"), new List<Controller> { sessionController });
-
-			// Resolve dependencies
 			var graph = DefinitionGraph.Load();
 
-			// IoC
-			var assemblies = new List<Assembly>();
-			assemblies.AddRange(graph.Plugins.Where(p => p.Server?.Include != null).SelectMany(p => p.Server.Include.Select(i => Assembly.LoadFrom(Path.Combine("plugins", p.Name.Vendor, p.Name.Project, $"{i}.net.dll")))));
-			assemblies.AddRange(graph.Plugins.Where(p => p.Server?.Main != null).SelectMany(p => p.Server.Main.Select(m => Assembly.LoadFrom(Path.Combine("plugins", p.Name.Vendor, p.Name.Project, $"{m}.net.dll")))));
-
 			var builder = new ContainerBuilder();
-			builder.RegisterInstance(rcon).As<IRconManager>();
-			builder.RegisterInstance(comms).As<ICommunicationManager>();
-			builder.Register(s => new Logger()).As<ILogger>();
-			builder.RegisterInstance(new BaseScriptProxy(this.EventHandlers, this.Exports, this.Players)).As<IBaseScriptProxy>();
-			builder.RegisterInstance(new ClientList(new Logger(config.Log.Core, "ClientList"), comms)).As<IClientList>();
 
-			builder.RegisterAssemblyTypes(assemblies.ToArray()).Where(t => t.GetCustomAttribute<ComponentAttribute>()?.Lifetime == Lifetime.Singleton).SingleInstance();
-			builder.RegisterAssemblyTypes(assemblies.ToArray()).Where(t => t.GetCustomAttribute<ComponentAttribute>()?.Lifetime == Lifetime.Transient).InstancePerDependency();
+			builder.Register(c => this.Players).As<PlayerList>().SingleInstance();
 
-			// DI
+			builder.Register(c => new BaseScriptProxy(this.EventHandlers, this.Exports, c.Resolve<PlayerList>())).As<IBaseScriptProxy>().SingleInstance();
+
+			builder.RegisterModule(new CoreModule(config, databaseConfig));
+
+			builder.RegisterModule(new PluginModule(graph.Plugins, databaseConfig));
+
 			var container = builder.Build();
 
-			var pluginDefaultLogLevel = config.Log.Plugins.ContainsKey("default") ? config.Log.Plugins["default"] : LogLevel.Info;
-
-			// Load plugins into the AppDomain
-			foreach (var plugin in graph.Plugins)
+			using (var scope = container.BeginLifetimeScope())
 			{
-				logger.Info($"Loading {plugin.FullName}");
+				RpcManager.Configure(config.Log.Comms, this.EventHandlers, scope.Resolve<PlayerList>());
 
-				// Load include files
-				foreach (var includeName in plugin.Server?.Include ?? new List<string>())
+				// Load core controllers
+				try
 				{
-					var includeFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{includeName}.net.dll");
-					if (!File.Exists(includeFile)) throw new FileNotFoundException(includeFile);
+					var dbController = scope.Resolve<DatabaseController>();
+					await dbController.Loaded();
 
-					AppDomain.CurrentDomain.Load(File.ReadAllBytes(includeFile));
+					this.controllers.Add(new Name("Nfx/Database"), new List<Controller>
+					{
+						dbController
+					});
+				}
+				catch (Exception ex)
+				{
+					logger.Error(ex, "Database connection error");
+					logger.Warn("Fatal error, exiting");
+					Environment.Exit(1);
 				}
 
-				// Load main files
-				foreach (var mainName in plugin.Server?.Main ?? new List<string>())
+				var eventController = scope.Resolve<EventController>();
+				await eventController.Loaded();
+
+				this.controllers.Add(new Name("Nfx/RawEvents"), new List<Controller>
 				{
-					var mainFile = Path.Combine("plugins", plugin.Name.Vendor, plugin.Name.Project, $"{mainName}.net.dll");
-					if (!File.Exists(mainFile)) throw new FileNotFoundException(mainFile);
+					eventController
+				});
 
-					var asm = Assembly.LoadFrom(mainFile);
+				var sessionController = scope.Resolve<SessionController>();
+				await sessionController.Loaded();
 
-					var sdkVersion = asm.GetCustomAttribute<ServerPluginAttribute>();
+				this.controllers.Add(new Name("Nfx/Session"), new List<Controller>
+				{
+					sessionController
+				});
 
-					if (sdkVersion == null)
+				// Load plugins
+				foreach (var plugin in graph.Plugins)
+				{
+					var dbContexts = scope.ResolveNamed<IEnumerable<DbContext>>(plugin.Name);
+
+					foreach (var ctx in dbContexts)
 					{
-						throw new Exception("Unable to load outdated SDK plugin"); // TODO
-					}
-
-					if (sdkVersion.Target != SDK.Server.SDK.Version)
-					{
-						throw new Exception("Unable to load outdated SDK plugin");
-					}
-
-					var types = Assembly.LoadFrom(mainFile).GetTypes().Where(t => !t.IsAbstract && t.IsClass).ToList();
-
-					// Find migrations
-					foreach (var migrationType in types.Where(t => t.BaseType != null && t.BaseType.IsGenericType && t.BaseType.GetGenericTypeDefinition() == typeof(EFContext<>)))
-					{
-						var migrator = ((DbContext)Activator.CreateInstance(migrationType)).Database;
-
-						//var migrator = new DbMigrator(configuration);
+						var migrator = ctx.Database;
 
 						if (!(await migrator.GetPendingMigrationsAsync()).Any()) continue;
 
@@ -172,76 +141,39 @@ namespace NFive.Server
 
 						foreach (var migration in await migrator.GetPendingMigrationsAsync())
 						{
-							new Logger(config.Log.Core, "Database").Debug($"[{mainName}] Running migration: {migration}");
+							new Logger(config.Log.Core, "Database").Debug($"[{plugin.FullName}] Running migration: {migration}");
 
 							await migrator.MigrateAsync();
 						}
 					}
 
-					// Find controllers
-					foreach (var controllerType in types.Where(t => t.IsSubclassOf(typeof(Controller)) || t.IsSubclassOf(typeof(ConfigurableController<>))))
-					{
-						var logLevel = config.Log.Plugins.ContainsKey(plugin.Name) ? config.Log.Plugins[plugin.Name] : pluginDefaultLogLevel;
+					var controllers = scope.ResolveNamed<IEnumerable<Controller>>(plugin.Name);
 
-						var constructorArgs = new List<object>
-						{
-							new Logger(logLevel, plugin.Name)
-						};
+					if (!controllers.Any()) continue;
 
-						// Check if controller is configurable
-						if (controllerType.BaseType != null && controllerType.BaseType.IsGenericType && controllerType.BaseType.GetGenericTypeDefinition() == typeof(ConfigurableController<>))
-						{
-							// Initialize the controller configuration
-							constructorArgs.Add(ConfigurationManager.InitializeConfig(plugin.Name, controllerType.BaseType.GetGenericArguments()[0]));
-						}
+					foreach (var controller in controllers) await controller.Loaded();
 
-						// Resolve IoC arguments
-						constructorArgs.AddRange(controllerType.GetConstructors()[0].GetParameters().Skip(constructorArgs.Count).Select(p => container.Resolve(p.ParameterType)));
+					this.controllers.Add(plugin.Name, controllers.ToList());
 
-						Controller controller = null;
-
-						try
-						{
-							// Construct controller instance
-							controller = (Controller)Activator.CreateInstance(controllerType, constructorArgs.ToArray());
-						}
-						catch (Exception ex)
-						{
-							// TODO: Dispose of controller
-
-							logger.Error(ex, $"Unhandled exception in plugin {plugin.FullName}");
-						}
-
-						if (controller == null) continue;
-
-						try
-						{
-							await controller.Loaded();
-
-							if (!this.controllers.ContainsKey(plugin.Name)) this.controllers.Add(plugin.Name, new List<Controller>());
-							this.controllers[plugin.Name].Add(controller);
-						}
-						catch (Exception ex)
-						{
-							// TODO: Dispose of controller
-
-							logger.Error(ex, $"Unhandled exception loading plugin {plugin.FullName}");
-						}
-					}
+					logger.Trace($"Adding {controllers.Count()} controllers from plugin {plugin.Name}");
 				}
+
+				await Task.WhenAll(this.controllers.SelectMany(c => c.Value).Select(s => s.Started()).ToArray());
+
+				var rcon = scope.Resolve<RconManager>();
+
+				var comms = scope.Resolve<CommunicationManager>();
+
+				rcon.Controllers = this.controllers;
+
+				comms.Event(CoreEvents.ClientPlugins).FromClients().OnRequest(e => e.Reply(graph.Plugins));
+
+				logger.Debug($"{graph.Plugins.Count.ToString(CultureInfo.InvariantCulture)} plugin(s) loaded, {this.controllers.Count.ToString(CultureInfo.InvariantCulture)} controller(s) created");
+
+				comms.Event(ServerEvents.ServerInitialized).ToServer().Emit();
+
+				logger.Info("Server ready");
 			}
-
-			await Task.WhenAll(this.controllers.SelectMany(c => c.Value).Select(s => s.Started()));
-
-			rcon.Controllers = this.controllers;
-
-			comms.Event(CoreEvents.ClientPlugins).FromClients().OnRequest(e => e.Reply(graph.Plugins));
-
-			logger.Debug($"{graph.Plugins.Count.ToString(CultureInfo.InvariantCulture)} plugin(s) loaded, {this.controllers.Count.ToString(CultureInfo.InvariantCulture)} controller(s) created");
-
-			comms.Event(ServerEvents.ServerInitialized).ToServer().Emit();
-
-			logger.Info("Server ready");
 		}
 	}
 }

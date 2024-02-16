@@ -27,10 +27,6 @@ namespace NFive.Server.Controllers
 			ServerConfiguration.DatabaseConnection = this.Configuration.Connection.ToString();
 			ServerConfiguration.AutomaticMigrations = this.Configuration.Migrations.Automatic;
 
-			// Enable SQL query logging
-			var optionsBuilder = new DbContextOptionsBuilder<EFContext<StorageContext>>();
-			optionsBuilder.UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole()));
-
 			BootHistory lastBoot;
 
 			using (var context = new StorageContext())
@@ -45,10 +41,7 @@ namespace NFive.Server.Controllers
 				{
 					context.Database.Migrate();
 
-					foreach (var migration in context.Database.GetAppliedMigrations())
-					{
-						this.Logger.Debug($"Applied migration: {migration}");
-					}
+					foreach (var migration in context.Database.GetAppliedMigrations()) this.Logger.Debug($"Applied migration: {migration}");
 				}
 
 				lastBoot = context.BootHistory.OrderByDescending(b => b.Created).FirstOrDefault() ?? new BootHistory();
