@@ -11,20 +11,21 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       semVer: ${{ steps.gitversion.outputs.semVer }}
+      assemblySemVer: ${{ steps.gitversion.outputs.assemblySemVer }}
 
     steps:
-      - uses: actions/checkout@v2.4.2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v0.9.7
+        uses: gittools/actions/gitversion/setup@v0.10.2
         with:
           versionSpec: "5.x"
 
       - name: Determine Version
         id: gitversion
-        uses: gittools/actions/gitversion/execute@v0.9.7
+        uses: gittools/actions/gitversion/execute@v0.10.2
         with:
           useConfigFile: true
           configFilePath: ./.github/version.yml
@@ -35,13 +36,11 @@ jobs:
     needs: calculate-version
     env:
       SEMVER: ${{ needs.calculate-version.outputs.semVer }}
+      ASSEMBLYSEMVER: ${{ needs.calculate-version.outputs.assemblySemVer }}
       ZipName: NFive-${{ needs.calculate-version.outputs.semVer }}.zip
 
     steps:
-      - uses: actions/checkout@v2.4.2
-
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.1
+      - uses: actions/checkout@v4
 
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v1.0.6
@@ -50,19 +49,18 @@ jobs:
         run: nuget restore NFive.sln
 
       - name: Build the solution
-        run: msbuild NFive.sln /p:Configuration=Release /p:Outdir=Build
+        run: dotnet build -c Release -o Build /p:Version=${{env.ASSEMBLYSEMVER}} NFive.sln 
 
       - uses: vimtor/action-zip@v1
         with:
           files: Build/
           dest: ${{ env.ZipName }}
 
-      # Create a Release on the GitHub project
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.SEMVER }}
           release_name: ${{ env.SEMVER }}
@@ -79,14 +77,13 @@ jobs:
           Copy-Item .\README.md,.\LICENSE,.\nfive.yml,.\nfive.lock,.\fxmanifest.lua,.\index.html -PassThru -Destination ".\Build"
           Copy-Item .\config\* -Destination ".\Build\config" -PassThru 
 
-      # Upload the Build Artifact to the Release
       - name: Update release asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: .\${{ env.ZipName }}
           asset_name: ${{ env.ZipName }}
           asset_content_type: application/zip
