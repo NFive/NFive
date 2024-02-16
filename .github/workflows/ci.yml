@@ -57,7 +57,7 @@ jobs:
       - name: Prepare build artifact
         shell: pwsh
         run: |
-          New-Item "Build" -itemType Directory
+          New-Item "Build" -itemType Directory -Force
           Copy-Item -Path ".\Server\Build\*.dll" -Destination ".\Build" -PassThru -Force -Exclude CitizenFX.Core.Server.dll 
           Copy-Item -Path ".\Client\Build\*.dll" -Destination ".\Build" -PassThru -Force -Exclude CitizenFX.Core.Client.dll
           Copy-Item -Path ".\lib\*.dll" -Destination ".\Build" -PassThru -Force
