@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CitizenFX.Core.Client" Version="1.0.5886" />
+    <PackageReference Include="CitizenFX.Core.Client" Version="1.0.5886" ExcludeAssets="runtime" />
     <PackageReference Include="DotNetZip" Version="1.16.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" ExcludeAssets="Compile" GeneratePathProperty="true" />

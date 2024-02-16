@@ -58,12 +58,10 @@ jobs:
         shell: pwsh
         run: |
           New-Item "Build" -itemType Directory -Force
-          Copy-Item -Path ".\Server\Build\*.dll" -Destination ".\Build" -PassThru -Force -Exclude CitizenFX.Core.Server.dll 
-          Copy-Item -Path ".\Client\Build\*.dll" -Destination ".\Build" -PassThru -Force -Exclude CitizenFX.Core.Client.dll
           Copy-Item -Path ".\lib\*.dll" -Destination ".\Build" -PassThru -Force
-          Copy-Item .\README.md,.\LICENSE,.\nfive.yml,.\nfive.lock,.\fxmanifest.lua,.\index.html -PassThru -Destination ".\Build"
-          New-Item ".\Build\config" -itemType Directory
-          Copy-Item .\config\* -Destination ".\Build\config" -PassThru -Recurse
+          Copy-Item .\README.md,.\LICENSE,.\nfive.yml,.\nfive.lock,.\fxmanifest.lua,.\index.html -PassThru -Destination ".\Build" -Force
+          New-Item ".\Build\config" -itemType Directory -Force
+          Copy-Item .\config\* -Destination ".\Build\config" -PassThru -Recurse -Force
 
       - name: Attach Zip as build artifact
         uses: actions/upload-artifact@v4
