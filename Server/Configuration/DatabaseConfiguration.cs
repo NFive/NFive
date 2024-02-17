@@ -1,6 +1,6 @@
-using System;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Controllers;
+using System;
 
 namespace NFive.Server.Configuration
 {
@@ -30,10 +30,9 @@ namespace NFive.Server.Configuration
 
 			public string Charset { get; set; } = "utf8mb4";
 
-			// ReSharper disable once RedundantDefaultMemberInitializer
-			public bool Logging { get; set; } = false;
+			public bool Logging { get; set; }
 
-			public override string ToString() => $"Host={this.Host};Port={this.Port};Database={this.Database};User Id={this.User};Password={this.Password};CharSet={this.Charset};SSL Mode=None;AllowPublicKeyRetrieval=true;Logging={this.Logging}";
+			public override string ToString() => $"Host={this.Host};Port={this.Port};Database={this.Database};User Id={this.User};Password={this.Password};CharSet={this.Charset};SSL Mode=None;AllowPublicKeyRetrieval=true";
 		}
 
 		[PublicAPI]

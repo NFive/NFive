@@ -1,16 +1,18 @@
 using System;
-using System.Data.Entity.Migrations;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using MySql.Data.MySqlClient;
-using NFive.SDK.Core.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Events;
+using NFive.SDK.Server.Storage;
 using NFive.Server.Configuration;
 using NFive.Server.Models;
 using NFive.Server.Storage;
+using ILogger = NFive.SDK.Core.Diagnostics.ILogger;
 using ServerConfiguration = NFive.SDK.Server.Configuration.ServerConfiguration;
 
 namespace NFive.Server.Controllers
@@ -25,26 +27,21 @@ namespace NFive.Server.Controllers
 			ServerConfiguration.DatabaseConnection = this.Configuration.Connection.ToString();
 			ServerConfiguration.AutomaticMigrations = this.Configuration.Migrations.Automatic;
 
-			// Enable SQL query logging
-			MySqlTrace.Switch.Level = SourceLevels.All;
-			MySqlTrace.Listeners.Add(new ConsoleTraceListener());
-
 			BootHistory lastBoot;
 
 			using (var context = new StorageContext())
 			{
 				// Create database if needed
-				if (!context.Database.Exists())
+				if (!((RelationalDatabaseCreator)context.GetService<IDatabaseCreator>()).Exists())
 				{
 					this.Logger.Info($"No existing database found, creating new database \"{this.Configuration.Connection.Database}\"");
 				}
 
-				var migrator = new DbMigrator(new Migrations.Configuration());
-				foreach (var migration in migrator.GetPendingMigrations())
+				if (context.Database.GetPendingMigrations().Any())
 				{
-					this.Logger.Debug($"Running migration: {migration}");
+					context.Database.Migrate();
 
-					migrator.Update(migration);
+					foreach (var migration in context.Database.GetAppliedMigrations()) this.Logger.Debug($"Applied migration: {migration}");
 				}
 
 				lastBoot = context.BootHistory.OrderByDescending(b => b.Created).FirstOrDefault() ?? new BootHistory();
@@ -68,12 +65,12 @@ namespace NFive.Server.Controllers
 				try
 				{
 					using (var context = new StorageContext())
-					using (var transaction = context.Database.BeginTransaction())
+					using (var transaction = await context.Database.BeginTransactionAsync())
 					{
 						this.currentBoot.LastActive = DateTime.UtcNow;
-						context.BootHistory.AddOrUpdate(this.currentBoot);
+						context.BootHistory.Update(this.currentBoot);
 						await context.SaveChangesAsync();
-						transaction.Commit();
+						await transaction.CommitAsync();
 					}
 				}
 				catch (Exception ex)

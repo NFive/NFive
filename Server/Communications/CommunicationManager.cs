@@ -1,5 +1,5 @@
-using Griffin.Container;
 using NFive.SDK.Server.Communications;
+using NFive.SDK.Server.IoC;
 using NFive.Server.Events;
 
 namespace NFive.Server.Communications

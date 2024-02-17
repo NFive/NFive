@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  calculate-version:
+    name: Calculate Version
+    runs-on: ubuntu-latest
+    outputs:
+      semVer: ${{ steps.gitversion.outputs.semVer }}
+      assemblySemVer: ${{ steps.gitversion.outputs.assemblySemVer }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0.11.0
+        with:
+          versionSpec: "5.x"
+
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0.11.0
+        with:
+          useConfigFile: true
+          configFilePath: ./.github/version.yml
+
+  build:
+    name: Build and Release
+    runs-on: windows-latest
+    needs: calculate-version
+    env:
+      SEMVER: ${{ needs.calculate-version.outputs.semVer }}
+      ZipName: NFive-${{ needs.calculate-version.outputs.semVer }}.zip
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 2.0.x
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}\.nuget\packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Build the solution
+        run: dotnet build -c Release -o Build /p:Version=${{env.SEMVER}} NFive.sln 
+
+      - uses: vimtor/action-zip@v1
+        with:
+          files: Build/
+          dest: ${{ env.ZipName }}
+
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.SEMVER }}
+          release_name: ${{ env.SEMVER }}
+          draft: false
+          prerelease: false
+
+      - name: Prepare build artifact
+        shell: pwsh
+        run: |
+          New-Item "Build" -itemType Directory -Force
+          Copy-Item -Path ".\Server\Build\*.dll" -Destination ".\Build" -PassThru -Force -Exclude CitizenFX.Core.Server.dll 
+          Copy-Item -Path ".\Client\Build\*.dll" -Destination ".\Build" -PassThru -Force -Exclude CitizenFX.Core.Client.dll
+          Copy-Item -Path ".\lib\*.dll" -Destination ".\Build" -PassThru -Force
+          Copy-Item .\README.md,.\LICENSE,.\nfive.yml,.\nfive.lock,.\fxmanifest.lua,.\index.html -PassThru -Destination ".\Build"
+          Copy-Item .\config\* -Destination ".\Build\config" -PassThru 
+
+      - name: Update release asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: .\${{ env.ZipName }}
+          asset_name: ${{ env.ZipName }}
+          asset_content_type: application/zip

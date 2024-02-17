@@ -44,8 +44,7 @@ namespace NFive.Server.Communications
 			{
 				using (var context = new StorageContext())
 				{
-					context.Configuration.ProxyCreationEnabled = false;
-					context.Configuration.LazyLoadingEnabled = false;
+					context.ChangeTracker.LazyLoadingEnabled = false;
 
 					return context.Users.Single(u => u.License == this.Client.License);
 				}
@@ -55,8 +54,7 @@ namespace NFive.Server.Communications
 			{
 				using (var context = new StorageContext())
 				{
-					context.Configuration.ProxyCreationEnabled = false;
-					context.Configuration.LazyLoadingEnabled = false;
+					context.ChangeTracker.LazyLoadingEnabled = false;
 
 					var clientSession = context.Sessions.Single(s => s.UserId == this.User.Id && s.Disconnected == null);
 					clientSession.Handle = client.Handle;

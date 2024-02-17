@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Griffin.Container;
 using JetBrains.Annotations;
 using NFive.SDK.Core.Diagnostics;
 using NFive.SDK.Core.Models.Player;
 using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Events;
+using NFive.SDK.Server.IoC;
 
 namespace NFive.Server
 {
@@ -15,7 +15,7 @@ namespace NFive.Server
 	{
 		private readonly ILogger logger;
 
-		public List<IClient> Clients { get; } = new List<IClient>();
+		public Dictionary<Session, IClient> Clients { get; } = new Dictionary<Session, IClient>();
 
 		public event EventHandler<ClientEventArgs> ClientAdded;
 
@@ -33,7 +33,7 @@ namespace NFive.Server
 		{
 			this.logger.Trace($"Client added: {client.Name} [{client.Handle}]");
 
-			this.Clients.Add(client);
+			this.Clients.Add(session, client);
 
 			this.ClientAdded?.Invoke(this, new ClientEventArgs(client));
 			//this.ClientAdded?.Invoke(this, new ClientSessionEventArgs(client, session));
@@ -43,7 +43,7 @@ namespace NFive.Server
 		{
 			this.logger.Trace($"Client disconnected: {client.Name} [{client.Handle}]");
 
-			this.Clients.RemoveAll(c => c.Handle == client.Handle);
+			this.Clients.Remove(session);
 
 			this.ClientRemoved?.Invoke(this, new ClientEventArgs(client));
 			//this.ClientRemoved?.Invoke(this, new ClientSessionEventArgs(client, session));

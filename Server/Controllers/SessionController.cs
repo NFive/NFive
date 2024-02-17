@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data.Entity.Migrations;
-using System.Data.Entity.Validation;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -17,6 +15,7 @@ using NFive.SDK.Server.Communications;
 using NFive.SDK.Server.Configuration;
 using NFive.SDK.Server.Controllers;
 using NFive.SDK.Server.Events;
+using NFive.SDK.Server.Storage;
 using NFive.Server.Configuration;
 using NFive.Server.Events;
 using NFive.Server.Rpc;
@@ -125,19 +124,19 @@ namespace NFive.Server.Controllers
 			var lastActive = await this.comms.Event(BootEvents.GetLastActiveTime).ToServer().Request<DateTime>();
 
 			using (var context = new StorageContext())
-			using (var transaction = context.Database.BeginTransaction())
+			using (var transaction = await context.Database.BeginTransactionAsync())
 			{
-				lastActive = lastActive == default(DateTime) ? DateTime.UtcNow : lastActive;
+				lastActive = lastActive == default ? DateTime.UtcNow : lastActive;
 				var disconnectedSessions = context.Sessions.Where(s => s.Disconnected == null).ToList();
 				foreach (var disconnectedSession in disconnectedSessions)
 				{
 					disconnectedSession.Disconnected = lastActive;
 					disconnectedSession.DisconnectReason = "Session killed, disconnect time set to last server active time";
-					context.Sessions.AddOrUpdate(disconnectedSession);
+					context.Sessions.Update(disconnectedSession);
 				}
 
-				context.SaveChanges();
-				transaction.Commit();
+				await context.SaveChangesAsync();
+				await transaction.CommitAsync();
 			}
 		}
 
@@ -157,10 +156,9 @@ namespace NFive.Server.Controllers
 			this.comms.Event(SessionEvents.ClientConnecting).ToServer().Emit(client, deferrals);
 
 			using (var context = new StorageContext())
-			using (var transaction = context.Database.BeginTransaction())
+			using (var transaction = await context.Database.BeginTransactionAsync())
 			{
-				context.Configuration.ProxyCreationEnabled = false;
-				context.Configuration.LazyLoadingEnabled = false;
+				context.ChangeTracker.LazyLoadingEnabled = false;
 
 				try
 				{
@@ -207,21 +205,21 @@ namespace NFive.Server.Controllers
 
 					// Save changes
 					await context.SaveChangesAsync();
-					transaction.Commit();
+					await transaction.CommitAsync();
 				}
-				catch (DbEntityValidationException ex)
+				catch (EntityValidationException ex)
 				{
-					var errorMessages = ex.EntityValidationErrors.SelectMany(x => x.ValidationErrors).Select(x => x.ErrorMessage);
+					var errorMessages = ex.ValidationErrors.SelectMany(x => x.ErrorMessage);
 
 					var fullErrorMessage = string.Join("; ", errorMessages);
 
 					var exceptionMessage = string.Concat(ex.Message, " The Validation errors are: ", fullErrorMessage);
-					transaction.Rollback();
-					throw new DbEntityValidationException(exceptionMessage, ex.EntityValidationErrors);
+					await transaction.RollbackAsync();
+					throw new EntityValidationException(exceptionMessage, ex.ValidationErrors);
 				}
 				catch (Exception ex)
 				{
-					transaction.Rollback();
+					await transaction.RollbackAsync();
 
 					this.Logger.Error(ex);
 				}
@@ -289,14 +287,14 @@ namespace NFive.Server.Controllers
 
 			using (var context = new StorageContext())
 			{
-				context.Configuration.LazyLoadingEnabled = false;
+				context.ChangeTracker.LazyLoadingEnabled = false;
 
 				var session = this.sessions.Select(s => s.Value).OrderBy(s => s.Created).FirstOrDefault(s => s.User.License == client.License && s.Disconnected == null && s.DisconnectReason == null);
 				if (session == null) throw new Exception($"No session to end for disconnected user \"{client.Name}\""); // TODO: SessionException
 
 				session.Disconnected = DateTime.UtcNow;
 				session.DisconnectReason = disconnectReason;
-				context.Sessions.AddOrUpdate(session);
+				context.Sessions.Update(session);
 				await context.SaveChangesAsync();
 
 				lock (this.threadLock)
@@ -352,13 +350,13 @@ namespace NFive.Server.Controllers
 			var session = this.sessions.Select(s => s.Value).Single(s => s.User.Id == e.User.Id);
 
 			using (var context = new StorageContext())
-			using (var transaction = context.Database.BeginTransaction())
+			using (var transaction = await context.Database.BeginTransactionAsync())
 			{
 				session.Connected = DateTime.UtcNow;
 
-				context.Sessions.AddOrUpdate(session);
+				context.Sessions.Update(session);
 				await context.SaveChangesAsync();
-				transaction.Commit();
+				await transaction.CommitAsync();
 			}
 
 			this.comms.Event(SessionEvents.ClientInitialized).ToServer().Emit(e.Client, session);

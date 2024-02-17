@@ -1,99 +1,30 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{41366D79-1B1D-4145-9036-CA4AFEC37AD1}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NFive.Client</RootNamespace>
+    <TargetFrameworks>net471</TargetFrameworks>
     <AssemblyName>NFive.Client.net</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <RootNamespace>NFive.Client</RootNamespace>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AssemblyTitle>NFive Client</AssemblyTitle>
+    <Product>NFive Client</Product>
+    <Copyright>Copyright © NFive 2018-2024</Copyright>
+    <FileVersion>1.0.0</FileVersion>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>portable</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>..\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowedReferenceRelatedFileExtensions>
-      .allowedextension
-    </AllowedReferenceRelatedFileExtensions>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugSymbols>false</DebugSymbols>
-    <DebugType>none</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>..\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowedReferenceRelatedFileExtensions>
-      .allowedextension
-    </AllowedReferenceRelatedFileExtensions>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="CitizenFX.Core.Client, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\CitizenFX.Core.Client.1.0.4410\lib\net45\CitizenFX.Core.Client.dll</HintPath>
-      <Private>False</Private>
+    <PackageReference Include="CitizenFX.Core.Client" Version="1.0.5886" ExcludeAssets="runtime" />
+    <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" ExcludeAssets="Compile" GeneratePathProperty="true" />
+    <PackageReference Include="NFive.SDK.Plugins" Version="0.1.4" />
+    <PackageReference Include="NFive.SDK.Core" Version="0.1.4" />
+    <PackageReference Include="NFive.SDK.Client" Version="0.1.4" />
+    <PackageReference Include="NGettext" Version="0.6.7" />
+    <Reference Include="Newtonsoft.Json">
+	    <HintPath>$(PkgNewtonsoft_Json)\lib\portable-net40+sl5+win8+wp8+wpa81\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="DotNetZip, Version=1.15.0.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
-      <HintPath>..\packages\DotNetZip.1.15.0\lib\net40\DotNetZip.dll</HintPath>
-    </Reference>
-    <Reference Include="JetBrains.Annotations, Version=2021.2.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
-      <HintPath>..\packages\JetBrains.Annotations.2021.2.0\lib\net20\JetBrains.Annotations.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="NFive.SDK.Client.net, Version=0.1.0.69, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NFive.SDK.Client.0.1.0.69\lib\net452\NFive.SDK.Client.net.dll</HintPath>
-    </Reference>
-    <Reference Include="NFive.SDK.Core.net, Version=0.1.0.62, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NFive.SDK.Core.0.1.0.62\lib\net452\NFive.SDK.Core.net.dll</HintPath>
-    </Reference>
-    <Reference Include="NGettext, Version=0.6.1.0, Culture=neutral, PublicKeyToken=08d3d1c89dfd2985, processorArchitecture=MSIL">
-      <HintPath>..\packages\NGettext.0.6.6\lib\net45\NGettext.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Commands\CommandManager.cs" />
-    <Compile Include="Communications\CommunicationManager.cs" />
-    <Compile Include="Communications\CommunicationMessage.cs" />
-    <Compile Include="Communications\CommunicationReceiveClient.cs" />
-    <Compile Include="Communications\CommunicationReceiveServer.cs" />
-    <Compile Include="Communications\CommunicationTarget.cs" />
-    <Compile Include="Communications\CommunicationTransmitClient.cs" />
-    <Compile Include="Communications\CommunicationTransmitServer.cs" />
-    <Compile Include="Diagnostics\Logger.cs" />
-    <Compile Include="Events\EventManager.cs" />
-    <Compile Include="Events\PedSpawnOptions.cs" />
-    <Compile Include="Events\TickManager.cs" />
-    <Compile Include="Interface\NuiManager.cs" />
-    <Compile Include="Interface\OverlayManager.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Rpc\RpcPacker.cs" />
-    <Compile Include="Rpc\InboundMessage.cs" />
-    <Compile Include="Rpc\OutboundMessage.cs" />
-    <Compile Include="Rpc\RpcManager.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="CopyLinkedContentFiles" BeforeTargets="Build">
-    <Copy SourceFiles="..\lib\System.ComponentModel.DataAnnotations.dll" DestinationFiles="..\System.ComponentModel.DataAnnotations.dll" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
-    <Copy SourceFiles="..\packages\Newtonsoft.Json.12.0.2\lib\portable-net40+sl5+win8+wp8+wpa81\Newtonsoft.Json.dll" DestinationFiles="..\Newtonsoft.Json.dll" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
-  </Target>
+
 </Project>
