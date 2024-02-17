@@ -19,6 +19,7 @@ using NFive.Server.Rcon;
 using NFive.Server.Rpc;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -55,7 +56,7 @@ namespace NFive.Server
 
 		private async Task Startup()
 		{
-			new Logger().Info($"Nfx {typeof(Program).Assembly.GetCustomAttributes<AssemblyInformationalVersionAttribute>().First().InformationalVersion}");
+			new Logger().Info($"NFive {typeof(Program).Assembly.GetCustomAttributes<AssemblyInformationalVersionAttribute>().First().InformationalVersion}");
 
 			// TODO: Check and warn if local CitizenFX.Core.Server.dll is found
 
@@ -98,7 +99,7 @@ namespace NFive.Server
 					var dbController = scope.Resolve<DatabaseController>();
 					await dbController.Loaded();
 
-					this.controllers.Add(new Name("Nfx/Database"), new List<Controller>
+					this.controllers.Add(new Name("NFive/Database"), new List<Controller>
 					{
 						dbController
 					});
@@ -113,7 +114,7 @@ namespace NFive.Server
 				var eventController = scope.Resolve<EventController>();
 				await eventController.Loaded();
 
-				this.controllers.Add(new Name("Nfx/RawEvents"), new List<Controller>
+				this.controllers.Add(new Name("NFive/RawEvents"), new List<Controller>
 				{
 					eventController
 				});
@@ -121,7 +122,7 @@ namespace NFive.Server
 				var sessionController = scope.Resolve<SessionController>();
 				await sessionController.Loaded();
 
-				this.controllers.Add(new Name("Nfx/Session"), new List<Controller>
+				this.controllers.Add(new Name("NFive/Session"), new List<Controller>
 				{
 					sessionController
 				});
