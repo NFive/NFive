@@ -19,13 +19,13 @@ jobs:
           fetch-depth: 0
 
       - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v0.10.2
+        uses: gittools/actions/gitversion/setup@v0.11.0
         with:
           versionSpec: "5.x"
 
       - name: Determine Version
         id: gitversion
-        uses: gittools/actions/gitversion/execute@v0.10.2
+        uses: gittools/actions/gitversion/execute@v0.11.0
         with:
           useConfigFile: true
           configFilePath: ./.github/version.yml
@@ -36,20 +36,25 @@ jobs:
     needs: calculate-version
     env:
       SEMVER: ${{ needs.calculate-version.outputs.semVer }}
-      ASSEMBLYSEMVER: ${{ needs.calculate-version.outputs.assemblySemVer }}
       ZipName: NFive-${{ needs.calculate-version.outputs.semVer }}.zip
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup NuGet
-        uses: NuGet/setup-nuget@v1.0.6
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 2.0.x
 
-      - name: Restore dependencies
-        run: nuget restore NFive.sln
+      - uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}\.nuget\packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
       - name: Build the solution
-        run: dotnet build -c Release -o Build /p:Version=${{env.ASSEMBLYSEMVER}} NFive.sln 
+        run: dotnet build -c Release -o Build /p:Version=${{env.SEMVER}} NFive.sln 
 
       - uses: vimtor/action-zip@v1
         with:
@@ -70,7 +75,7 @@ jobs:
       - name: Prepare build artifact
         shell: pwsh
         run: |
-          New-Item "Build" -itemType Directory
+          New-Item "Build" -itemType Directory -Force
           Copy-Item -Path ".\Server\Build\*.dll" -Destination ".\Build" -PassThru -Force -Exclude CitizenFX.Core.Server.dll 
           Copy-Item -Path ".\Client\Build\*.dll" -Destination ".\Build" -PassThru -Force -Exclude CitizenFX.Core.Client.dll
           Copy-Item -Path ".\lib\*.dll" -Destination ".\Build" -PassThru -Force
