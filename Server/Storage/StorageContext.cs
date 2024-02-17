@@ -31,6 +31,7 @@ namespace NFive.Server.Storage
 			base.OnModelCreating(modelBuilder);
 
 			modelBuilder.Entity<User>().HasIndex(u => u.License).IsUnique();
+			modelBuilder.Entity<Session>().Ignore(s => s.Handle);
 		}
 
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
