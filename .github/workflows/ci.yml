@@ -60,7 +60,7 @@ jobs:
         run: dotnet restore NFive.sln
 
       - name: Build the solution
-        run: dotnet build --no-restore -c Release -o Build /p:Version=${{env.SEMVER}} NFive.sln
+        run: dotnet build --no-restore -c Release -o Build /p:InformationalVersion=${{env.SEMVER}} /p:Version=${{env.SEMVER}} NFive.sln
 
       - name: Prepare build artifact
         shell: pwsh
